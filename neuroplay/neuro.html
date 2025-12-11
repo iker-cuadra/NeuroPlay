@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+ 
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neuroplay</title>
+ 
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+ 
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+ 
+<style>
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+}
+ 
+/* Header y botón */
+header {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+}
+ 
+/* Botón moderno con gradiente animado */
+.btn-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 25px;
+    font-size: 18px;
+    border-radius: 50px;
+    cursor: pointer;
+    color: #fff;
+    border: none;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    background: #7a7676;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+ 
+.btn-top::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 300%;
+    height: 100%;
+    background: linear-gradient(90deg, #7a7676, #968c8c, #c9beb6);
+    transition: all 0.4s ease;
+    z-index: -1;
+}
+ 
+.btn-top:hover::before {
+    left: 0;
+}
+ 
+.btn-top:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+ 
+.btn-top i {
+    transition: transform 0.4s ease;
+}
+ 
+.btn-top:hover i {
+    transform: rotate(20deg);
+}
+ 
+.inicio {
+    position: relative;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 20px;
+    box-sizing: border-box;
+ 
+    /* Imagen de fondo */
+    background: url('img/fondo.svg') no-repeat center center;
+    background-size: cover;
+}
+ 
+ 
+/* Capa oscura para contraste */
+.capa-oscura {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+ 
+/* Contenido centrado */
+.contenido {
+    position: relative;
+    text-align: center;
+    color: #fff;
+    z-index: 1;
+}
+ 
+.contenido h1 {
+    font-size: 90px;
+    margin: 0;
+    font-weight: 600;
+    text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
+}
+ 
+.contenido p {
+    font-size: 32px;
+    margin: 15px 0 0 0;
+    font-weight: 400;
+    text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.5);
+}
+ 
+/* RESPONSIVO MEJORADO */
+@media (max-width: 1024px) {
+    .contenido h1 {
+        font-size: 70px;
+    }
+    .contenido p {
+        font-size: 28px;
+    }
+}
+ 
+@media (max-width: 768px) {
+    .inicio {
+        padding: 0 15px;
+    }
+    .contenido h1 {
+        font-size: 50px;
+    }
+    .contenido p {
+        font-size: 22px;
+    }
+    .btn-top {
+        font-size: 16px;
+        padding: 10px 20px;
+    }
+}
+ 
+@media (max-width: 480px) {
+    .contenido h1 {
+        font-size: 36px;
+    }
+    .contenido p {
+        font-size: 18px;
+    }
+    header {
+        top: 15px;
+        right: 15px;
+    }
+    .btn-top {
+        padding: 8px 18px;
+        font-size: 14px;
+    }
+}
+</style>
+ 
+<script>
+function bloquearAtras() {
+    window.location.href = window.location.href;
+}
+ 
+history.pushState(null, "", location.href);
+window.addEventListener("popstate", function () {
+    bloquearAtras();
+});
+ 
+setInterval(function () {
+    history.pushState(null, "", location.href);
+}, 100);
+</script>
+ 
+</head>
+ 
+<body>
+ 
+<header>
+    <button class="btn-top" onclick="window.location.href='../index.php'">
+        <i class="fas fa-user"></i> Iniciar sesión
+    </button>
+</header>
+ 
+<section class="inicio">
+    <div class="capa-oscura"></div>
+    <div class="contenido">
+        <h1>Neuroplay</h1>
+        <p>Centro de día Pere Bas</p>
+    </div>
+</section>
+ 
+</body>
+</html>

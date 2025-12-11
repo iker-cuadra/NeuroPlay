@@ -1,0 +1,74 @@
+html, body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+}
+
+body{
+  overflow:hidden;   /* evita que se vea blanco debajo */
+}
+
+header{
+  position:absolute;
+  top:25px;
+  right:30px;
+  z-index:3;
+}
+
+.btn-top{
+  background: rgba(255,255,255, .2);
+  backdrop-filter: blur(8px);
+  color:#ffffff;
+  padding: .7rem 1.8rem;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 100px;
+  cursor:pointer;
+  font-size: .95rem;
+  font-weight:500;
+  transition: .25s ease;
+}
+
+.btn-top:hover{
+  background: rgba(255,255,255,.32);
+  border-color: rgba(255,255,255,.4);
+  transform: translateY(-2px);
+}
+
+
+.inicio{
+  position: relative;
+  width:100%;
+  height:100vh;
+  background: url('../img/fondo.svg') no-repeat center center;
+  background-size: cover;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.capa-oscura{
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,.45);
+}
+
+.contenido{
+  position:relative;
+  text-align:center;
+  color:#fff;
+}
+
+.contenido h1{
+  font-size: clamp(3rem, 6vw, 5rem);
+  margin-bottom: 0.1rem;
+}
+
+.contenido p{
+  font-size: clamp(1.2rem, 2vw, 2rem);
+  margin-top: 0;
+}
+

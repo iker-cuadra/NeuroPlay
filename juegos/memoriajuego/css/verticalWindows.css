@@ -1,0 +1,39 @@
+/*VARIABLES*/
+:root {
+    --gridHeight: 80px;
+    --gridWidht: 80px;
+}
+
+/*MODAL INICIAL */
+.modal-content {
+    width: 95%;
+}
+
+/* GRID */
+.wrapper {
+    padding: 3%;
+    gap: 18px;
+}
+
+.carta input[type='image'] {
+    width: var(--gridWidht);
+    height: var(--gridHeight);
+}
+
+.mostrar {
+    transform: rotateY(180deg) scale(1.2);
+    -ms-transform: rotateY(180deg) scale(1.2); /* IE 9  */
+    -moz-transform: rotateY(180deg) scale(1.2); /* Firefox */
+    -webkit-transform: rotateY(180deg) scale(1.2); /* Safari and Chrome */
+    -o-transform: rotateY(180deg) scale(1.2); /* Opera */
+}
+
+/*BOTONES*/
+.btn {
+    padding: 4px 7px;
+    font-size: 14px;
+}
+
+.btn:hover, .btn.cancel:hover, .btn.neutral:hover {
+    padding: 1px 4px;
+}

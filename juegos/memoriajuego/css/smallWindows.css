@@ -1,0 +1,29 @@
+/*VARIABLES*/
+:root {
+    --gridHeight: 100px;
+    --gridWidht: 100px;
+}
+
+/*MODAL INICIAL */
+.modal-content {
+    width: 80%;
+}
+
+/* GRID */
+.wrapper {
+    padding: 3%;
+    gap: 18px;
+}
+
+.mostrar {
+    transform: rotateY(180deg) scale(1.15);
+    -ms-transform: rotateY(180deg) scale(1.15); /* IE 9  */
+    -moz-transform: rotateY(180deg) scale(1.15); /* Firefox */
+    -webkit-transform: rotateY(180deg) scale(1.15); /* Safari and Chrome */
+    -o-transform: rotateY(180deg) scale(1.15); /* Opera */
+}
+
+input[type='image'] {
+    height: var(--gridHeight);
+    width: var(--gridWidht);
+}

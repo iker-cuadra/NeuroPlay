@@ -1,0 +1,16 @@
+/*VARIABLES*/
+:root {
+    --gridHeight: 110px;
+    --gridWidht: 110px;
+}
+
+/* GRID */
+.wrapper {
+    padding: 2%;
+    gap: 22px;
+}
+
+input[type='image'] {
+    height: var(--gridHeight);
+    width: var(--gridWidht);
+}
