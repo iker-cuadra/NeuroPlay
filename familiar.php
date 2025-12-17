@@ -1,16 +1,21 @@
 <?php
+// Asegúrate de iniciar la sesión si 'auth.php' no lo hace
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 require_once "includes/conexion.php";
-require_once "includes/auth.php";  
+require_once "includes/auth.php"; 
  
 // Solo permite acceso a familiares
-requireRole("familiar");  
+requireRole("familiar"); 
  
 // Evitar volver atrás con el navegador una vez cerrada la sesión
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 header("Expires: 0");
  
-$nombre = $_SESSION["nombre"];
+// Asumimos que el nombre del usuario logueado se guarda en $_SESSION["nombre"]
+$nombre = $_SESSION["nombre"] ?? 'Familiar';
 ?>
  
 <!DOCTYPE html>
@@ -20,10 +25,8 @@ $nombre = $_SESSION["nombre"];
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Panel del Familiar</title>
  
-<!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
  
-<!-- Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
  
 <style>
@@ -56,6 +59,13 @@ html, body {
     left: 20px;
     font-size: 20px;
     font-weight: 600;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 5px; /* Pequeño ajuste para el saludo */
 }
  
 /* BOTÓN CERRAR SESIÓN MODERNO */
@@ -192,31 +202,27 @@ html, body {
  
 <body>
  
-<!-- ENCABEZADO -->
 <div class="header">
-    <div class="user-role">Familiar</div>
+    
+    <div class="user-role">Panel del Familiar</div>
     <a href="logout.php" class="logout-button">
         <i class="fas fa-sign-out-alt"></i> Cerrar sesión
     </a>
 </div>
  
-<!-- TARJETAS MODERNAS -->
 <div class="main-section">
     <div class="card" onclick="location.href='seguimiento.php'">
         <img src="imagenes/progreso.png" alt="Seguimiento de progreso">
         <h2>Progreso</h2>
     </div>
  
-    <div class="card" onclick="location.href='actividades.php'">
+    <div class="card" onclick="location.href='lista_profesionales.php'">
         <img src="imagenes/profesionales.png" alt="Profesionales">
         <h2>Profesionales</h2>
     </div>
 </div>
  
-<!-- IMAGEN INFERIOR -->
-<div class="bottom-image">
-    <img src="imagenes/footerfoto.png" alt="imagen inferior">
-</div>
+
  
 </body>
 </html>

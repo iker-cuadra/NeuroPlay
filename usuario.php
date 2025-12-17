@@ -211,7 +211,7 @@ $nombre = $_SESSION["nombre"];
         <div class="game-card">
             <h2>Lógica</h2>
             <div class="image-wrapper">
-                <img src="imagenes/logica.png" alt="Juego de lógica">
+                <img src="imagenes/logica.png" alt="Juego de lógica" onclick="location.href='juegos/logicajuego/logica.php'">>
             </div>
             <button class="btn-play" onclick="location.href='juegos/logicajuego/logica.php'">Jugar</button>
         </div>
@@ -219,25 +219,21 @@ $nombre = $_SESSION["nombre"];
         <div class="game-card">
             <h2>Memoria</h2>
             <div class="image-wrapper">
-                <img src="imagenes/memoria.png" alt="Juego de memoria">
+                <img src="imagenes/memoria.png" alt="Juego de memoria" onclick="location.href='juegos/memoriajuego/memoria.php'">
             </div>
-            <button class="btn-play" onclick="location.href='juegos/memoriajuego/index.html'">Jugar</button>
+            <button class="btn-play" onclick="location.href='juegos/memoriajuego/memoria.php'">Jugar</button>
         </div>
 
         <div class="game-card">
             <h2>Razonamiento</h2>
             <div class="image-wrapper">
-                <img src="imagenes/razonamiento.png" alt="Juego de razonamiento">
+                <img src="imagenes/razonamiento.png" alt="Juego de razonamiento" onclick="location.href='juegos/razonamientojuego/razonamiento.php'">>
             </div>
             <button class="btn-play" onclick="location.href='juegos/razonamientojuego/razonamiento.php'">Jugar</button>
         </div>
 
     </div>
 
-    <!-- IMAGEN INFERIOR -->
-    <div class="bottom-image">
-        <img src="imagenes/footerfoto.png" alt="imagen inferior">
-    </div>
 
 </body>
 
