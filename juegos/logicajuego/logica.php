@@ -31,37 +31,45 @@ if (!$dificultad_logica) {
             margin: 0;
             padding: 0;
             height: 100%;
-            overflow: hidden;
             font-family: Arial, Helvetica, sans-serif;
-            background: #887d7dff;
+            background: #887d7dff; /* Fondo general */
             color: #111;
         }
 
-        /* HEADER SUPERIOR */
-        .header {
+        /* ENVOLTORIO A PANTALLA COMPLETA */
+        .game-wrapper {
+            height: 100vh;
             width: 100%;
-            height: 160px;
-            background-image: url('../../imagenes/Banner.svg');
-            background-size: cover;
-            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+
+        /* CONTENEDOR DEL JUEGO (AMPLIADO) */
+        .game-container {
             position: relative;
-            color: white;
+            width: min(1000px, 100%);
+            height: 100%;
+            max-height: 720px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 24px 24px 28px 24px;
+            box-sizing: border-box;
         }
 
-        .user-role {
-            position: absolute;
-            bottom: 10px;
-            left: 20px;
-            font-size: 20px;
-            font-weight: bold;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
-        }
-
-        /* FLECHA DE VOLVER */
+        /* FLECHA DE VOLVER (MISMO ESTILO QUE OTRAS, PERO NEGRA) */
         .back-arrow {
             position: absolute;
-            top: 15px;
-            left: 15px;
+            top: 18px;
+            left: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -80,30 +88,27 @@ if (!$dificultad_logica) {
             transform: translateX(-2px);
         }
 
-        /* CONTENEDOR CENTRAL DEL JUEGO */
-        .game-container {
-            height: calc(100vh - 160px); /* solo header, sin footer */
-            width: 90%;
-            margin: 0 auto;
-            background: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.18);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 24px;
-            box-sizing: border-box;
+        /* ETIQUETA DEL JUEGO EN LA PARTE SUPERIOR */
+        .game-title-pill {
+            margin-top: 4px;
+            margin-bottom: 8px;
+            padding: 6px 18px;
+            border-radius: 999px;
+            background: #f3f4f6;
+            font-size: 14px;       /* un poco más grande */
+            font-weight: bold;
+            color: #555;
         }
 
         .game-header {
+            margin-top: 28px; /* deja hueco a la flecha */
             margin-bottom: 16px;
             text-align: center;
         }
 
         .game-header h2 {
             margin: 0 0 6px 0;
-            font-size: 26px;
+            font-size: 32px;     /* TÍTULO MÁS GRANDE */
             color: #222;
         }
 
@@ -125,6 +130,7 @@ if (!$dificultad_logica) {
 
         /* CONTENEDOR LÓGICA */
         .logic-area {
+            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -133,8 +139,8 @@ if (!$dificultad_logica) {
 
         .sudoku-grid {
             display: grid;
-            grid-template-columns: repeat(4, 64px);
-            grid-template-rows: repeat(4, 64px);
+            grid-template-columns: repeat(4, 80px);  /* MÁS GRANDES */
+            grid-template-rows: repeat(4, 80px);     /* MÁS GRANDES */
             gap: 8px;
             padding: 14px;
             border-radius: 18px;
@@ -143,29 +149,29 @@ if (!$dificultad_logica) {
         }
 
         .sudoku-cell {
-            width: 64px;
-            height: 64px;
+            width: 80px;
+            height: 80px;
             border-radius: 10px;
-            border: 2px solid #555;              /* bordes más oscuros */
+            border: 2px solid #555;
             text-align: center;
-            font-size: 26px;
+            font-size: 32px;      /* Texto acorde al tamaño */
             font-weight: bold;
             box-sizing: border-box;
             box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-            background: #ffffff;                  /* fondo claro */
-            color: #111;                          /* texto muy contrastado */
+            background: #ffffff;
+            color: #111;
         }
 
         .sudoku-cell:disabled {
-            background: #2f3742;                  /* fondo oscuro */
-            color: #ffffff;                       /* texto blanco */
+            background: #2f3742;
+            color: #ffffff;
             border-color: #10141a;
             font-weight: 700;
         }
 
         .sudoku-cell:focus {
             outline: none;
-            border-color: #0070f3;                /* azul intenso al foco */
+            border-color: #0070f3;
             box-shadow: 0 0 0 3px rgba(0,112,243,0.35);
         }
 
@@ -210,7 +216,7 @@ if (!$dificultad_logica) {
         .logic-message {
             margin-top: 16px;
             font-size: 16px;
-            color: #1b5e20;      /* verde oscuro */
+            color: #1b5e20;
             font-weight: 600;
             min-height: 22px;
             text-align: center;
@@ -218,56 +224,61 @@ if (!$dificultad_logica) {
 
         @media (max-width: 768px) {
             .game-container {
-                width: 95%;
                 padding: 18px;
             }
 
+            .game-header {
+                margin-top: 32px;
+            }
+
             .sudoku-grid {
-                grid-template-columns: repeat(4, 56px);
-                grid-template-rows: repeat(4, 56px);
+                grid-template-columns: repeat(4, 68px);
+                grid-template-rows: repeat(4, 68px);
             }
 
             .sudoku-cell {
-                width: 56px;
-                height: 56px;
-                font-size: 22px;
+                width: 68px;
+                height: 68px;
+                font-size: 26px;
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- HEADER -->
-    <div class="header">
-        <a href="../../usuario.php" class="back-arrow">
-            <svg xmlns="http://www.w3.org/2000/svg" height="34" width="34" viewBox="0 0 24 24" fill="white">
-                <path d="M14.7 20.3 6.4 12l8.3-8.3 1.4 1.4L9.2 12l6.9 6.9Z"/>
-            </svg>
-        </a>
-        <div class="user-role">Juego: Lógica</div>
-    </div>
+    <div class="game-wrapper">
+        <div class="game-container">
+            <!-- Flecha de volver dentro del contenedor (negra) -->
+            <a href="../../usuario.php" class="back-arrow">
+                <svg xmlns="http://www.w3.org/2000/svg" height="26" width="26" viewBox="0 0 24 24" fill="#000000">
+                    <path d="M14.7 20.3 6.4 12l8.3-8.3 1.4 1.4L9.2 12l6.9 6.9Z"/>
+                </svg>
+            </a>
 
-    <!-- CONTENEDOR CENTRAL -->
-    <div class="game-container">
-        <div class="game-header">
-            <h2>Sudoku 4x4</h2>
-            <p>Completa el tablero con los números del <strong>1 al 4</strong>, sin repetir en filas ni columnas.</p>
-            <p>Dificultad asignada: <strong><?= htmlspecialchars($dificultad_logica) ?></strong></p>
-            <p class="timer">Tiempo: <span id="timer">00:00</span></p>
+            <div class="game-title-pill">
+                Juego: Lógica
+            </div>
+
+            <div class="game-header">
+                <h2>Sudoku 4x4</h2>
+                <p>Completa el tablero con los números del <strong>1 al 4</strong>, sin repetir en filas ni columnas.</p>
+                <p>Dificultad asignada: <strong><?= htmlspecialchars($dificultad_logica) ?></strong></p>
+                <p class="timer">Tiempo: <span id="timer">00:00</span></p>
+            </div>
+
+            <div class="logic-area">
+                <div id="zona-logica"></div>
+            </div>
+
+            <div id="logic-message" class="logic-message"></div>
         </div>
-
-        <div class="logic-area">
-            <div id="zona-logica"></div>
-        </div>
-
-        <div id="logic-message" class="logic-message"></div>
     </div>
 
     <script>
         // Dificultad desde PHP (Fácil / Intermedio / Difícil)
         const dificultadLogicaBD = "<?= htmlspecialchars($dificultad_logica, ENT_QUOTES) ?>";
 
-        // Normalizamos a 'facil' / 'medio' / 'dificil' si quisieras variar celdas vacías
+        // Normalizamos a 'facil' / 'medio' / 'dificil'
         let currentDifficulty = 'medio';
         if (dificultadLogicaBD === 'Fácil') {
             currentDifficulty = 'facil';
