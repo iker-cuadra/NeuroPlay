@@ -100,29 +100,52 @@ $mensajes = $stmt_mensajes->fetchAll(PDO::FETCH_ASSOC);
     <style>
         /* Estilos Generales y Reset */
         body {
-            font-family: 'Poppins', sans-serif;
-           background: #887d7dff;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+    font-family: 'Poppins', sans-serif;
+    background: transparent; /* Quitamos el gris sólido */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+.canvas-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: -1;
+    background: #e5e5e5;
+    background-image:
+        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
+        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%),
+        radial-gradient(at 0% 100%, hsla(321,0%,100%,1) 0, transparent 50%),
+        radial-gradient(at 100% 100%, hsla(0,0%,80%,1) 0, transparent 50%);
+    background-size: 200% 200%;
+    animation: meshMove 12s infinite alternate ease-in-out;
+}
+@keyframes meshMove {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
+}
  
         /* Contenedor Principal */
         .chat-container {
-            width: 95%;
-            max-width: 900px;
-            height: 95vh;
-            background: #ffffff;
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.25);
-            border-radius: 15px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
-        }
+    width: 95%;
+    max-width: 900px;
+    height: 95vh;
+    /* CAMBIO: Blanco semi-transparente con desenfoque */
+    background: rgba(255, 255, 255, 0.8); 
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.25);
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
        
         /* Encabezado del Chat (Fijo y Moderno) */
         .chat-header {
@@ -161,14 +184,14 @@ $mensajes = $stmt_mensajes->fetchAll(PDO::FETCH_ASSOC);
  
         /* Área de Mensajes */
         .messages-area {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background: #f7f7f7;
-        }
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: rgba(247, 247, 247, 0.4); /* Fondo muy sutil para mensajes */
+}
        
         /* Burbujas de Mensajes */
         .message {
@@ -313,9 +336,8 @@ $mensajes = $stmt_mensajes->fetchAll(PDO::FETCH_ASSOC);
     </style>
 </head>
 <body>
- 
-<div class="chat-container">
- 
+    <div class="canvas-bg"></div> <div class="chat-container">
+
     <div class="chat-header">
         <a href="#" onclick="goBack()" class="back-button"><i class="fas fa-arrow-left"></i></a>
         <h1><?= $nombre_chat ?></h1>
@@ -367,6 +389,6 @@ $mensajes = $stmt_mensajes->fetchAll(PDO::FETCH_ASSOC);
     const messagesArea = document.getElementById('messages-area');
     messagesArea.scrollTop = messagesArea.scrollHeight;
 </script>
- 
+ </div>
 </body>
 </html>

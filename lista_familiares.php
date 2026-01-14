@@ -44,11 +44,30 @@ try {
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Poppins', sans-serif;
-            background: #887d7dff;
-        }
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background: transparent; /* Quitamos el gris #887d7dff */
+}
+.canvas-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: -1;
+    background: #e5e5e5;
+    background-image:
+        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
+        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%),
+        radial-gradient(at 0% 100%, hsla(321,0%,100%,1) 0, transparent 50%),
+        radial-gradient(at 100% 100%, hsla(0,0%,80%,1) 0, transparent 50%);
+    background-size: 200% 200%;
+    animation: meshMove 12s infinite alternate ease-in-out;
+}
+@keyframes meshMove {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
+}
 
         /* HEADER (igual que el del primer archivo) */
         .header{
@@ -105,16 +124,20 @@ try {
         }
 
         .familiar-card {
-            text-align: center;
-            width: 260px;
-            padding: 30px;
-            border-radius: 20px;
-            background: #fff;
-            border: 1px solid #eee;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
+    text-align: center;
+    width: 260px;
+    padding: 30px;
+    border-radius: 20px;
+    /* CAMBIO: Blanco semi-transparente con desenfoque */
+    background: rgba(255, 255, 255, 0.85); 
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
 
         .familiar-card:hover {
             transform: translateY(-10px);
@@ -170,9 +193,7 @@ try {
 </head>
 
 <body>
-
-    <div class="header">
-        <!-- Flecha para volver al panel del profesional (INTACTA) -->
+    <div class="canvas-bg"></div> <div class="header">
         <a href="profesional.php" class="back-arrow" aria-label="Volver al panel del profesional">
             <svg xmlns="http://www.w3.org/2000/svg" height="34" width="34" viewBox="0 0 24 24" fill="white">
                 <path d="M14.7 20.3 6.4 12l8.3-8.3 1.4 1.4L9.2 12l6.9 6.9Z" />
@@ -208,6 +229,8 @@ try {
                 No se encontraron familiares registrados.
             </div>
         <?php endif; ?>
+    </div>
+    </div>
     </div>
 
 </body>
