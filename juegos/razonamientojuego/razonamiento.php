@@ -34,7 +34,7 @@ if (!$dificultad_razonamiento) {
             height: 100%;
             overflow: hidden;
             font-family: Arial, Helvetica, sans-serif;
-            background: #f2f2f2;
+            background: #887d7dff;
             color: #111827;
         }
 
@@ -280,13 +280,17 @@ if (!$dificultad_razonamiento) {
     <script>
         // Dificultad desde PHP
         let currentDifficulty = "<?= htmlspecialchars($dificultad_razonamiento, ENT_QUOTES) ?>";
-        if (currentDifficulty === 'media') {
-            currentDifficulty = 'medio';
-        }
+        if (currentDifficulty === 'media') currentDifficulty = 'medio';
 
-        // ===== TEMPORIZADOR =====
+        // ===== TIEMPO TOTAL (NO SE REINICIA) =====
+        const MAX_SECONDS = 90; // 1 minuto y medio
         let segundos = 0;
         let timerInterval = null;
+        let gameOver = false;
+        let resultadoGuardado = false;
+
+        // ===== PUNTUACIÓN TOTAL =====
+        let puntos = 0;
 
         function formatearTiempo(s) {
             const min = String(Math.floor(s / 60)).padStart(2, '0');
@@ -294,15 +298,27 @@ if (!$dificultad_razonamiento) {
             return `${min}:${seg}`;
         }
 
-        function iniciarTemporizador() {
+        function actualizarTiempoUI() {
+            const t = document.getElementById('tiempo');
+            if (t) t.textContent = `${formatearTiempo(segundos)} / ${formatearTiempo(MAX_SECONDS)}`;
+        }
+
+        function iniciarTemporizadorUnaVez() {
             detenerTemporizador();
             segundos = 0;
-            const t = document.getElementById('tiempo');
-            if (t) t.textContent = formatearTiempo(segundos);
+            gameOver = false;
+            resultadoGuardado = false;
+            actualizarTiempoUI();
 
             timerInterval = setInterval(() => {
+                if (gameOver) return;
+
                 segundos++;
-                if (t) t.textContent = formatearTiempo(segundos);
+                actualizarTiempoUI();
+
+                if (segundos >= MAX_SECONDS) {
+                    finalizarJuegoPorTiempo();
+                }
             }, 1000);
         }
 
@@ -313,27 +329,43 @@ if (!$dificultad_razonamiento) {
             }
         }
 
-        // ===== GUARDAR RESULTADO EN BD =====
+        function finalizarJuegoPorTiempo() {
+            if (gameOver) return;
+            gameOver = true;
+            detenerTemporizador();
+
+            const msgDiv = document.getElementById('razonamiento-mensaje');
+            if (msgDiv) {
+                msgDiv.textContent = `⏳ Tiempo agotado. Puntuación final: ${puntos}`;
+                msgDiv.classList.remove('ok');
+                msgDiv.classList.add('err');
+            }
+
+            // Bloquear interacción
+            const area = document.getElementById("zona-razonamiento");
+            if (area) area.style.pointerEvents = "none";
+
+            // Guardar SOLO UNA VEZ (con tu guardar_resultado.php)
+            if (!resultadoGuardado) {
+                resultadoGuardado = true;
+                guardarResultadoRazonamiento(puntos, MAX_SECONDS);
+            }
+        }
+
+        // ===== GUARDAR RESULTADO EN BD (compatible con tu PHP) =====
         function guardarResultadoRazonamiento(puntuacion, tiempoSegundos) {
             fetch('../../guardar_resultado.php', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    tipo_juego: 'razonamiento',
-                    dificultad: currentDifficulty,
+                    tipo_juego: 'razonamiento',   
                     puntuacion: puntuacion,
                     tiempo_segundos: tiempoSegundos
                 })
             })
                 .then(r => r.json())
-                .then(data => {
-                    console.log('Resultado razonamiento guardado:', data);
-                })
-                .catch(err => {
-                    console.error('Error al guardar resultado de razonamiento', err);
-                });
+                .then(data => console.log('Resultado razonamiento guardado:', data))
+                .catch(err => console.error('Error al guardar resultado de razonamiento', err));
         }
 
         // ============================================
@@ -341,6 +373,8 @@ if (!$dificultad_razonamiento) {
         // ============================================
 
         function loadReasoningGame(area) {
+            if (gameOver) return;
+
             if (currentDifficulty === 'facil') {
                 loadReasoningGameFacil(area);
             } else if (currentDifficulty === 'medio') {
@@ -350,43 +384,36 @@ if (!$dificultad_razonamiento) {
             }
         }
 
-        // RAZONAMIENTO - FÁCIL (Patrones simples de 2 elementos)
         function loadReasoningGameFacil(area) {
             const patterns = [
                 { sequence: ['★', '◆', '★', '◆'], answer: '★' },
                 { sequence: ['●', '■', '●', '■'], answer: '●' },
                 { sequence: ['▲', '▼', '▲', '▼'], answer: '▲' }
             ];
-
             const pattern = patterns[Math.floor(Math.random() * patterns.length)];
             createReasoningInterface(area, pattern, ['★', '◆', '●', '■', '▲', '▼']);
         }
 
-        // RAZONAMIENTO - MEDIO (Patrones de 3 elementos)
         function loadReasoningGameMedio(area) {
             const patterns = [
                 { sequence: ['★', '◆', '●', '★', '◆'], answer: '●' },
                 { sequence: ['■', '▲', '▼', '■', '▲'], answer: '▼' },
                 { sequence: ['●', '●', '■', '●', '●'], answer: '■' }
             ];
-
             const pattern = patterns[Math.floor(Math.random() * patterns.length)];
             createReasoningInterface(area, pattern, ['★', '◆', '●', '■', '▲', '▼']);
         }
 
-        // RAZONAMIENTO - DIFÍCIL (Patrones más largos)
         function loadReasoningGameDificil(area) {
             const patterns = [
                 { sequence: ['★', '◆', '●', '■', '★', '◆', '●'], answer: '■' },
                 { sequence: ['▲', '▲', '▼', '▼', '▲', '▲'], answer: '▼' },
                 { sequence: ['★', '●', '●', '★', '■', '■', '★'], answer: '▲' }
             ];
-
             const pattern = patterns[Math.floor(Math.random() * patterns.length)];
             createReasoningInterface(area, pattern, ['★', '◆', '●', '■', '▲', '▼', '♦', '♠']);
         }
 
-        // Función compartida para crear la interfaz de razonamiento
         function createReasoningInterface(area, pattern, availableSymbols) {
             area.innerHTML = '';
 
@@ -409,62 +436,51 @@ if (!$dificultad_razonamiento) {
             const options = document.createElement('div');
             options.className = 'pattern-container';
 
+            // Opciones: 1 correcta + 2 incorrectas
             const selectedOptions = [pattern.answer];
-
-            // Agregar 2 opciones incorrectas
             while (selectedOptions.length < 3) {
                 const opt = availableSymbols[Math.floor(Math.random() * availableSymbols.length)];
-                if (!selectedOptions.includes(opt)) {
-                    selectedOptions.push(opt);
-                }
+                if (!selectedOptions.includes(opt)) selectedOptions.push(opt);
             }
-
-            // Mezclar opciones
             selectedOptions.sort(() => Math.random() - 0.5);
+
+            let bloqueado = false; // evita doble click mientras cambia secuencia
 
             selectedOptions.forEach(opt => {
                 const btn = document.createElement('div');
                 btn.className = 'pattern-option';
+
                 const span = document.createElement('span');
                 span.textContent = opt;
                 btn.appendChild(span);
 
                 btn.onclick = function () {
-                    // Si ya hemos validado, que no haga nada
-                    if (btn.classList.contains('correct') || btn.classList.contains('incorrect')) {
-                        return;
-                    }
+                    if (gameOver || bloqueado) return;
+
+                    bloqueado = true;
 
                     if (opt === pattern.answer) {
-                        // Correcto
+                        puntos += 100;
+
                         btn.classList.add('correct');
                         if (msgDiv) {
-                            msgDiv.textContent = '¡Correcto! Buen trabajo.';
+                            msgDiv.textContent = '¡Correcto!';
                             msgDiv.classList.remove('err');
                             msgDiv.classList.add('ok');
                         }
-
-                        // Parar tiempo y guardar resultado (100 puntos)
-                        detenerTemporizador();
-                        const tiempoFinal = segundos;
-                        const puntuacion = 100;
-                        guardarResultadoRazonamiento(puntuacion, tiempoFinal);
-
-                        // Mostrar nuevo ejercicio tras una pequeña pausa
-                        setTimeout(() => {
-                            iniciarTemporizador();
-                            loadReasoningGame(area);
-                        }, 1200);
-
                     } else {
-                        // Incorrecto
                         btn.classList.add('incorrect');
                         if (msgDiv) {
-                            msgDiv.textContent = 'Incorrecto, inténtalo de nuevo.';
+                            msgDiv.textContent = 'Incorrecto. Nueva secuencia...';
                             msgDiv.classList.remove('ok');
                             msgDiv.classList.add('err');
                         }
                     }
+
+                    // Cambia LA SECUENCIA (nuevo patrón) sin reiniciar cronómetro
+                    setTimeout(() => {
+                        loadReasoningGame(area);
+                    }, 350);
                 };
 
                 options.appendChild(btn);
@@ -473,13 +489,16 @@ if (!$dificultad_razonamiento) {
             area.appendChild(options);
         }
 
-        // Iniciar juego al cargar la página
         document.addEventListener("DOMContentLoaded", function () {
             const area = document.getElementById("zona-razonamiento");
-            iniciarTemporizador();
+            if (area) area.style.pointerEvents = "auto";
+            iniciarTemporizadorUnaVez();
             loadReasoningGame(area);
         });
     </script>
+
+
+
 
 </body>
 

@@ -33,7 +33,7 @@ if (!$dificultad_logica) {
             height: 100%;
             overflow: hidden;
             font-family: Arial, Helvetica, sans-serif;
-            background: #d7dde5; /* más contraste de fondo */
+            background: #887d7dff;
             color: #111;
         }
 

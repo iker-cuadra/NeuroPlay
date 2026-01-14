@@ -101,7 +101,7 @@ $mensajes = $stmt_mensajes->fetchAll(PDO::FETCH_ASSOC);
         /* Estilos Generales y Reset */
         body {
             font-family: 'Poppins', sans-serif;
-            background: #a8a8a8;
+           background: #887d7dff;
             margin: 0;
             padding: 0;
             display: flex;

@@ -1,55 +1,74 @@
 <?php
 // guardar_resultado.php
-// Guarda en BD la puntuación y tiempo de cada partida (memoria / logica / razonamiento)
+// Archivo en la RAÍZ del proyecto
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-header('Content-Type: application/json; charset=utf-8');
+header('Content-Type: application/json; charset=UTF-8');
 
-// Solo aceptamos POST (se llama desde fetch)
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['ok' => false, 'error' => 'Método no permitido']);
+require_once "includes/conexion.php";
+require_once "includes/auth.php";
+
+// Solo usuarios pueden guardar resultados
+try {
+    requireRole("usuario");
+} catch (Throwable $e) {
+    http_response_code(403);
+    echo json_encode([
+        'ok'    => false,
+        'error' => 'No autorizado'
+    ]);
     exit;
 }
 
-require_once __DIR__ . "/includes/conexion.php";
-require_once __DIR__ . "/includes/auth.php";
+$usuario_id = $_SESSION['usuario_id'] ?? 0;
 
-// Debe haber usuario logueado
-if (!isset($_SESSION['usuario_id'])) {
-    echo json_encode(['ok' => false, 'error' => 'Usuario no autenticado']);
-    exit;
+// 1) LEER DATOS (JSON o POST normal)
+$rawBody = file_get_contents('php://input');
+$data    = json_decode($rawBody, true);
+
+// Si no viene JSON (por si algún juego envia formulario normal)
+if (!is_array($data) || empty($data)) {
+    $data = $_POST;
 }
 
-$usuario_id = (int)$_SESSION['usuario_id'];
-
-// Leer JSON enviado por fetch()
-$input = file_get_contents("php://input");
-$data  = json_decode($input, true);
-
-if (!is_array($data)) {
-    echo json_encode(['ok' => false, 'error' => 'JSON inválido']);
-    exit;
-}
-
+// 2) LIMPIAR / VALIDAR
 $tipo_juego      = $data['tipo_juego']      ?? '';
-$puntuacion      = isset($data['puntuacion'])      ? (int)$data['puntuacion']      : 0;
+$puntuacion      = isset($data['puntuacion']) ? (int)$data['puntuacion'] : 0;
 $tiempo_segundos = isset($data['tiempo_segundos']) ? (int)$data['tiempo_segundos'] : 0;
 $dificultad      = $data['dificultad']      ?? '';
 
-if ($tipo_juego === '' || $dificultad === '') {
-    echo json_encode(['ok' => false, 'error' => 'Datos incompletos']);
+// valores válidos según tu ENUM de la tabla
+$validGames = ['memoria', 'logica', 'razonamiento', 'atencion'];
+
+if ($usuario_id <= 0) {
+    http_response_code(400);
+    echo json_encode([
+        'ok'    => false,
+        'error' => 'Usuario no válido en sesión'
+    ]);
+    exit;
+}
+
+if (!in_array($tipo_juego, $validGames, true)) {
+    http_response_code(400);
+    echo json_encode([
+        'ok'    => false,
+        'error' => 'tipo_juego no válido',
+        'debug_tipo_juego_recibido' => $tipo_juego
+    ]);
     exit;
 }
 
 try {
+    // 3) INSERTAR EN LA TABLA resultados_juego
     $stmt = $conexion->prepare("
         INSERT INTO resultados_juego
-            (usuario_id, tipo_juego, puntuacion, tiempo_segundos, dificultad, fecha_juego)
+            (usuario_id, tipo_juego, puntuacion, tiempo_segundos, dificultad)
         VALUES
-            (?, ?, ?, ?, ?, NOW())
+            (?, ?, ?, ?, ?)
     ");
     $stmt->execute([
         $usuario_id,
@@ -59,7 +78,22 @@ try {
         $dificultad
     ]);
 
-    echo json_encode(['ok' => true]);
+    echo json_encode([
+        'ok'        => true,
+        'insert_id' => $conexion->lastInsertId(),
+        'debug'     => [
+            'usuario_id'      => $usuario_id,
+            'tipo_juego'      => $tipo_juego,
+            'puntuacion'      => $puntuacion,
+            'tiempo_segundos' => $tiempo_segundos,
+            'dificultad'      => $dificultad
+        ]
+    ]);
 } catch (PDOException $e) {
-    echo json_encode(['ok' => false, 'error' => 'Error BD: ' . $e->getMessage()]);
+    http_response_code(500);
+    echo json_encode([
+        'ok'       => false,
+        'error'    => 'Error al guardar en la base de datos',
+        'sqlError' => $e->getMessage()
+    ]);
 }

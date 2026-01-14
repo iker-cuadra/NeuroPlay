@@ -38,30 +38,30 @@ try {
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Poppins', sans-serif;
-            background: #ffffff;
-            color: #333;
+        :root{
+            --header-h: 160px;
         }
 
-        /* ENCABEZADO SUPERIOR */
-        .header {
+        html, body{
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Poppins', sans-serif;
+            background: #887d7dff;
+        }
+
+        /* HEADER igual que el del primer archivo */
+        .header{
             width: 100%;
-            height: 160px;
+            height: var(--header-h);
             background-image: url('imagenes/Banner.svg');
             background-size: cover;
             background-position: center;
-            color: white;
-            text-align: center;
-            padding-top: 40px;
             position: relative;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
-        /* Flecha de volver */
-        .back-arrow {
+        /* Flecha volver (igual que el primer archivo) */
+        .back-arrow{
             position: absolute;
             top: 15px;
             left: 15px;
@@ -71,24 +71,18 @@ try {
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            cursor: pointer;
         }
+        .back-arrow svg{ transition: opacity 0.2s ease-in-out; }
+        .back-arrow:hover svg{ opacity: 0.75; }
 
-        .back-arrow svg {
-            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
-        }
-
-        .back-arrow:hover svg {
-            opacity: 0.75;
-            transform: translateX(-2px);
-        }
-
-        .user-role {
+        /* Etiqueta inferior (igual que el primer archivo) */
+        .user-role{
             position: absolute;
             bottom: 10px;
             left: 20px;
-            font-size: 20px;
-            font-weight: 600;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
         }
 
         /* SECCIÓN DE TARJETAS */
@@ -171,7 +165,7 @@ try {
             </svg>
         </a>
 
-        <div class="user-role">Panel del Familiar</div>
+        <div class="user-role">Profesionales</div>
     </div>
 
     <div class="main-section">

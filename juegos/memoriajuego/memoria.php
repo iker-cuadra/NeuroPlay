@@ -27,46 +27,134 @@ if (!$dificultad_memoria) {
     <title>Juego de Memoria</title>
 
     <style>
+        /* ==========================
+           NUEVA ESTÉTICA (DARK UI)
+           - Fondo oscuro
+           - Contraste alto en cartas/botones/tipografía
+           - Misma funcionalidad
+        ========================== */
+
+        :root{
+            --bg-0: #070A12;
+            --bg-1: #0B1020;
+            --bg-2: #0F172A;
+
+            --panel: rgba(255,255,255,.06);
+            --panel-border: rgba(255,255,255,.10);
+            --shadow: 0 18px 50px rgba(0,0,0,.55);
+
+            --text: #E5E7EB;
+            --muted: rgba(229,231,235,.70);
+
+            --accent: #7C3AED;     /* morado */
+            --accent-2: #22C55E;   /* verde */
+            --danger: #EF4444;     /* rojo */
+
+            --card-bg: rgba(255,255,255,.07);
+            --card-border: rgba(255,255,255,.12);
+            --card-shadow: 0 14px 30px rgba(0,0,0,.40);
+
+            --btn-bg: rgba(255,255,255,.08);
+            --btn-border: rgba(255,255,255,.14);
+            --btn-shadow: 0 12px 24px rgba(0,0,0,.35);
+
+            --radius-xl: 24px;
+            --radius-lg: 18px;
+            --radius-md: 14px;
+
+            --header-h: 160px;
+        }
+
+        *{ box-sizing: border-box; }
+
         html, body {
             margin: 0;
             padding: 0;
             height: 100%;
             overflow: hidden;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f2f2f2;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+            background:
+                radial-gradient(900px 450px at 15% 20%, rgba(124,58,237,.22), transparent 55%),
+                radial-gradient(800px 380px at 85% 35%, rgba(34,197,94,.16), transparent 60%),
+                linear-gradient(180deg, var(--bg-0), var(--bg-1) 40%, var(--bg-2));
+            color: var(--text);
         }
 
-        /* HEADER SUPERIOR */
+        /* HEADER SUPERIOR (banner + overlay oscuro) */
         .header {
             width: 100%;
-            height: 160px;
+            height: var(--header-h);
             background-image: url('../../imagenes/Banner.svg');
             background-size: cover;
             background-position: center;
             position: relative;
             color: white;
+            overflow: hidden;
+        }
+
+        .header::after{
+            content:"";
+            position:absolute;
+            inset:0;
+            background:
+                linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.40) 55%, rgba(0,0,0,.70)),
+                radial-gradient(650px 220px at 20% 20%, rgba(124,58,237,.35), transparent 60%),
+                radial-gradient(600px 240px at 85% 35%, rgba(34,197,94,.22), transparent 60%);
+            pointer-events:none;
         }
 
         .user-role {
             position: absolute;
-            bottom: 10px;
-            left: 20px;
-            font-size: 20px;
-            font-weight: bold;
+            bottom: 12px;
+            left: 18px;
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: .2px;
+            z-index: 2;
+            display:flex;
+            align-items:center;
+            gap:10px;
         }
 
-        /* FLECHA DE VOLVER */
+        .user-role::before{
+            content:"";
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, var(--accent), #A78BFA);
+            box-shadow: 0 0 0 4px rgba(124,58,237,.18);
+        }
+
+        /* FLECHA DE VOLVER (más moderna) */
         .back-arrow {
             position: absolute;
-            top: 15px;
-            left: 15px;
+            top: 14px;
+            left: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 38px;
-            height: 38px;
+            width: 44px;
+            height: 44px;
             cursor: pointer;
             text-decoration: none;
+            z-index: 2;
+
+            border-radius: 14px;
+            background: rgba(255,255,255,.10);
+            border: 1px solid rgba(255,255,255,.18);
+            box-shadow: 0 14px 30px rgba(0,0,0,.35);
+            backdrop-filter: blur(10px);
+            transition: transform .18s ease, background .18s ease, border-color .18s ease;
+        }
+
+        .back-arrow:hover{
+            transform: translateY(-2px);
+            background: rgba(255,255,255,.14);
+            border-color: rgba(255,255,255,.26);
+        }
+
+        .back-arrow:active{
+            transform: translateY(0px);
         }
 
         .back-arrow svg {
@@ -74,156 +162,265 @@ if (!$dificultad_memoria) {
         }
 
         .back-arrow:hover svg {
-            opacity: 0.7;
+            opacity: 0.9;
         }
 
-        /* CONTENEDOR CENTRAL DEL JUEGO */
+        /* CONTENEDOR CENTRAL DEL JUEGO (glass oscuro) */
         .game-container {
-            height: calc(100vh - 160px); /* solo restamos el header */
-            width: 90%;
+            height: calc(100vh - var(--header-h));
+            width: min(1180px, 92%);
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: var(--radius-xl);
+
+            background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.05));
+            border: 1px solid var(--panel-border);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
             align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
+            padding: 16px 18px;
+            overflow: hidden;
+            min-height: 0;
         }
 
         .game-header {
-            margin-bottom: 16px;
             text-align: center;
+            flex: 0 0 auto;
+            padding: 10px 12px 8px;
+            border-radius: var(--radius-lg);
+            background: rgba(0,0,0,.18);
+            border: 1px solid rgba(255,255,255,.10);
+            width: min(820px, 100%);
         }
 
         .game-header h2 {
-            margin: 0 0 8px 0;
-            font-size: 24px;
+            margin: 0 0 6px 0;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: .2px;
         }
 
         .game-header p {
-            margin: 4px 0;
-            font-size: 16px;
-            color: #555;
+            margin: 3px 0;
+            font-size: 14px;
+            color: var(--muted);
         }
 
         .game-header p strong {
-            color: #111;
+            color: var(--text);
+            font-weight: 900;
         }
 
         /* TIME DISPLAY */
         .timer {
-            font-weight: bold;
-            font-size: 18px;
+            font-weight: 900;
+            font-size: 15px;
             margin-top: 4px;
+            color: var(--text);
         }
 
-        /* GRID DEL JUEGO DE MEMORIA */
+        .timer span{
+            display:inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            margin-left: 6px;
+            background: rgba(124,58,237,.14);
+            border: 1px solid rgba(124,58,237,.26);
+        }
+
+        /* GRID (AUTO-AJUSTE SIN SCROLL) */
         .memory-grid {
+            --cols: 4;
+            --card: 92px;
+            --gap: 14px;
+
             display: grid;
-            grid-template-columns: repeat(4, minmax(60px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(var(--cols), var(--card));
+            gap: var(--gap);
+
             width: 100%;
-            max-width: 520px;
-            margin-top: 10px;
+            justify-content: center;
+            align-content: center;
+
+            flex: 1 1 auto;
+            min-height: 0;
+            margin-top: 12px;
         }
 
+        /* CARTA: más contrastada y moderna */
         .memory-card {
-            background: #4a4a4a;
-            color: white;
-            border-radius: 12px;
-            height: 90px;
+            width: var(--card);
+            height: var(--card);
+            border-radius: 18px;
+
+            background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+            border: 1px solid var(--card-border);
+            box-shadow: var(--card-shadow);
+
+            color: transparent;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
+
             cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
             user-select: none;
+
+            transition: transform .16s ease, box-shadow .16s ease, filter .16s ease, border-color .16s ease;
+            position: relative;
+            overflow: hidden;
         }
 
-        /* Fondo con imagen cuando la carta está oculta */
+        .memory-card::before{
+            content:"";
+            position:absolute;
+            inset:-40%;
+            background: radial-gradient(circle at 30% 30%, rgba(124,58,237,.28), transparent 45%),
+                        radial-gradient(circle at 70% 70%, rgba(34,197,94,.18), transparent 50%);
+            transform: rotate(12deg);
+            opacity: .55;
+            pointer-events:none;
+        }
+
         .memory-card.hidden-symbol {
-            background: #887d7dff url('neuroplay.png') center/cover no-repeat;
-            color: transparent;
+            background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
         }
 
-        .memory-card.revealed {
-            background: #4a4a4a;
-            color: #fff;
-        }
-
-        .memory-card.matched {
-            background: #7bc47f;
-            color: #fff;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.25);
-            cursor: default;
+        /* Logo en la carta oculta */
+        .memory-card.hidden-symbol::after{
+            content:"";
+            position:absolute;
+            inset: 18%;
+            background: url('neuroplay.png') center/contain no-repeat;
+            opacity: .92;
+            filter: drop-shadow(0 10px 18px rgba(0,0,0,.45));
         }
 
         .memory-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+            box-shadow: 0 18px 40px rgba(0,0,0,.48);
+            filter: brightness(1.03);
+            border-color: rgba(255,255,255,.20);
         }
 
-        /* BOTONES INFERIORES */
+        .memory-card:active{
+            transform: translateY(-1px);
+        }
+
+        .memory-card.revealed {
+            color: transparent;
+        }
+
+        /* Coincidencia */
+        .memory-card.matched {
+            cursor: default;
+            border: 2px solid rgba(34,197,94,.85);
+            box-shadow: 0 20px 44px rgba(0,0,0,.52);
+        }
+
+        .memory-card.matched::after{
+            content:"✓";
+            position:absolute;
+            top: 10px;
+            right: 12px;
+            font-weight: 1000;
+            color: rgba(34,197,94,.95);
+            text-shadow: 0 10px 18px rgba(0,0,0,.45);
+            font-size: 18px;
+        }
+
+        /* BOTONES INFERIORES (pill, gradiente) */
         .buttons-row {
-            margin-top: 18px;
+            margin-top: 10px;
             display: flex;
             gap: 12px;
             justify-content: center;
             flex-wrap: wrap;
+            flex: 0 0 auto;
+            width: 100%;
         }
 
         .btn-game {
-            background: #4a4a4a;
-            color: #fff;
             border: none;
-            border-radius: 20px;
-            padding: 10px 20px;
-            font-size: 15px;
             cursor: pointer;
-            font-weight: 600;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-            transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            font-weight: 900;
+            letter-spacing: .2px;
+
+            padding: 10px 16px;
+            border-radius: 999px;
+
+            background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+            color: var(--text);
+            border: 1px solid var(--btn-border);
+            box-shadow: var(--btn-shadow);
+            backdrop-filter: blur(10px);
+
+            transition: transform .16s ease, box-shadow .16s ease, filter .16s ease, background .16s ease, border-color .16s ease;
+            min-width: 170px;
         }
 
         .btn-game:hover {
-            background: #333;
             transform: translateY(-2px);
-            box-shadow: 0 5px 14px rgba(0,0,0,0.25);
+            box-shadow: 0 18px 36px rgba(0,0,0,.44);
+            filter: brightness(1.04);
+            border-color: rgba(255,255,255,.22);
         }
 
+        .btn-game:active {
+            transform: translateY(0);
+            box-shadow: var(--btn-shadow);
+        }
+
+        /* Botón primario visual (reiniciar) */
+        #btn-restart{
+            background: linear-gradient(180deg, rgba(124,58,237,.42), rgba(124,58,237,.18));
+            border-color: rgba(124,58,237,.40);
+        }
+        #btn-restart:hover{
+            background: linear-gradient(180deg, rgba(124,58,237,.52), rgba(124,58,237,.22));
+        }
+
+        /* Botón secundario (volver) */
+        #btn-volver{
+            background: linear-gradient(180deg, rgba(34,197,94,.30), rgba(34,197,94,.12));
+            border-color: rgba(34,197,94,.32);
+        }
+        #btn-volver:hover{
+            background: linear-gradient(180deg, rgba(34,197,94,.38), rgba(34,197,94,.16));
+        }
+
+        /* Mensaje motivación */
         .motivacion {
-            margin-top: 14px;
-            font-size: 16px;
-            color: #2e7d32;
-            font-weight: 600;
+            margin-top: 10px;
+            font-size: 14px;
+            color: rgba(229,231,235,.92);
+            font-weight: 800;
             text-align: center;
-            min-height: 22px; /* para que no salte el layout al aparecer */
+            min-height: 22px;
+            flex: 0 0 auto;
+
+            width: min(820px, 100%);
+            padding: 10px 12px;
+            border-radius: var(--radius-lg);
+            background: rgba(0,0,0,.18);
+            border: 1px solid rgba(255,255,255,.10);
         }
 
+        /* Responsive */
         @media (max-width: 768px) {
             .game-container {
                 width: 95%;
-                padding: 16px;
+                padding: 14px 14px;
             }
 
-            .memory-card {
-                height: 70px;
-                font-size: 26px;
-            }
+            .game-header h2 { font-size: 18px; }
 
-            .buttons-row {
-                flex-direction: column;
-            }
+            .btn-game { width: 100%; min-width: 0; }
+        }
 
-            .btn-game {
-                width: 100%;
-                text-align: center;
-            }
+        @media (prefers-reduced-motion: reduce){
+            *{ transition:none !important; }
         }
     </style>
 </head>
@@ -231,7 +428,7 @@ if (!$dificultad_memoria) {
 
     <!-- HEADER -->
     <div class="header">
-        <a href="../../usuario.php" class="back-arrow">
+        <a href="../../usuario.php" class="back-arrow" aria-label="Volver">
             <svg xmlns="http://www.w3.org/2000/svg" height="34" width="34" viewBox="0 0 24 24" fill="white">
                 <path d="M14.7 20.3 6.4 12l8.3-8.3 1.4 1.4L9.2 12l6.9 6.9Z" />
             </svg>
@@ -242,7 +439,7 @@ if (!$dificultad_memoria) {
     <!-- CONTENEDOR DEL JUEGO -->
     <div class="game-container">
         <div class="game-header">
-            <h2>Encuentra las parejas</h2>
+            <h2>Encuentra las parejas de colores</h2>
             <p>Dificultad asignada: <strong><?= htmlspecialchars($dificultad_memoria) ?></strong></p>
             <p class="timer">Tiempo: <span id="timer">00:00</span></p>
         </div>
@@ -307,9 +504,7 @@ if (!$dificultad_memoria) {
 
             fetch('../../guardar_resultado.php', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     tipo_juego: 'memoria',
                     puntuacion: puntos,
@@ -335,15 +530,62 @@ if (!$dificultad_memoria) {
                 "¡Gran trabajo! Tu concentración mejora cada día.",
                 "¡Excelente! Has completado todas las parejas.",
             ];
-            const idx = Math.floor(Math.random() * mensajes.length);
-            return mensajes[idx];
+            return mensajes[Math.floor(Math.random() * mensajes.length)];
         }
+
+        // ==========================
+        //  AUTO-AJUSTE: cartas lo más grandes posible SIN scroll
+        // ==========================
+        const gridFitState = { count: 0, cols: 4 };
+
+        function fitGridToContainer() {
+            const area = document.getElementById("zona-memoria");
+            if (!area || !gridFitState.count) return;
+
+            const cols = gridFitState.cols;
+            const rows = Math.ceil(gridFitState.count / cols);
+
+            const container = document.querySelector(".game-container");
+            const header = document.querySelector(".game-header");
+            const buttons = document.querySelector(".buttons-row");
+            const motiv = document.getElementById("motivacion");
+
+            if (!container || !header || !buttons || !motiv) return;
+
+            const gap = Math.max(10, Math.min(18, Math.floor(container.clientWidth / 80)));
+            area.style.setProperty("--gap", gap + "px");
+
+            const cs = getComputedStyle(container);
+            const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+            const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+
+            const availableW = container.clientWidth - padX;
+            const availableH =
+                container.clientHeight
+                - padY
+                - header.offsetHeight
+                - buttons.offsetHeight
+                - motiv.offsetHeight
+                - 18; // margen de seguridad
+
+            const sizeByW = Math.floor((availableW - gap * (cols - 1)) / cols);
+            const sizeByH = Math.floor((availableH - gap * (rows - 1)) / rows);
+
+            const minCard = 34;
+            const cardSize = Math.max(minCard, Math.min(sizeByW, sizeByH));
+
+            area.style.setProperty("--cols", cols);
+            area.style.setProperty("--card", cardSize + "px");
+        }
+
+        window.addEventListener("resize", () => {
+            requestAnimationFrame(fitGridToContainer);
+        });
 
         // ==========================
         //  FUNCIÓN PRINCIPAL
         // ==========================
         function loadMemoryGame(area) {
-            // Limpiar mensaje
             if (motivacionDiv) motivacionDiv.textContent = "";
             resetTimer();
 
@@ -359,42 +601,30 @@ if (!$dificultad_memoria) {
         // MEMORIA - FÁCIL (4 pares, 8 cartas)
         function loadMemoryGameFacil(area) {
             const pairs = 4;
-            const symbols = ['★', '◆', '●', '■'];
+            const colors = ['#EF4444','#3B82F6','#10B981','#F97316'];
             const cards = [];
-
-            for (let i = 0; i < pairs; i++) {
-                cards.push(symbols[i], symbols[i]);
-            }
+            for (let i = 0; i < pairs; i++) cards.push(colors[i], colors[i]);
             cards.sort(() => Math.random() - 0.5);
-
             createMemoryGrid(area, cards, 4);
         }
 
         // MEMORIA - INTERMEDIO (6 pares, 12 cartas)
         function loadMemoryGameMedio(area) {
             const pairs = 6;
-            const symbols = ['★', '◆', '●', '■', '▲', '♦'];
+            const colors = ['#EF4444','#3B82F6','#10B981','#F97316','#A855F7','#FACC15'];
             const cards = [];
-
-            for (let i = 0; i < pairs; i++) {
-                cards.push(symbols[i], symbols[i]);
-            }
+            for (let i = 0; i < pairs; i++) cards.push(colors[i], colors[i]);
             cards.sort(() => Math.random() - 0.5);
-
             createMemoryGrid(area, cards, 4);
         }
 
         // MEMORIA - DIFÍCIL (8 pares, 16 cartas)
         function loadMemoryGameDificil(area) {
             const pairs = 8;
-            const symbols = ['★', '◆', '●', '■', '▲', '♦', '♣', '♠'];
+            const colors = ['#EF4444','#3B82F6','#10B981','#F97316','#A855F7','#FACC15','#EC4899','#22C55E'];
             const cards = [];
-
-            for (let i = 0; i < pairs; i++) {
-                cards.push(symbols[i], symbols[i]);
-            }
+            for (let i = 0; i < pairs; i++) cards.push(colors[i], colors[i]);
             cards.sort(() => Math.random() - 0.5);
-
             createMemoryGrid(area, cards, 4);
         }
 
@@ -403,28 +633,35 @@ if (!$dificultad_memoria) {
         // ==========================
         function createMemoryGrid(area, cards, columns) {
             area.innerHTML = "";
-            area.style.gridTemplateColumns = `repeat(${columns}, minmax(60px, 1fr))`;
+            gridFitState.count = cards.length;
+            gridFitState.cols = columns;
 
             let firstCard = null;
             let secondCard = null;
             let lockBoard = false;
             let matchedPairs = 0;
 
-            cards.forEach((symbol, index) => {
+            cards.forEach((color, index) => {
                 const card = document.createElement("div");
                 card.classList.add("memory-card", "hidden-symbol");
-                card.dataset.symbol = symbol;
+                card.dataset.color = color;
                 card.dataset.index = index;
-                card.textContent = symbol;
 
                 card.addEventListener("click", function () {
                     if (lockBoard) return;
                     if (card.classList.contains("matched")) return;
                     if (card === firstCard) return;
 
-                    // Mostrar la carta
+                    // Mostrar la carta (color)
                     card.classList.remove("hidden-symbol");
                     card.classList.add("revealed");
+                    card.style.backgroundColor = card.dataset.color;
+                    card.style.backgroundImage = 'none';
+
+                    // Ocultamos el overlay decorativo para que el color se vea limpio
+                    card.style.setProperty('--_dummy', '1'); // no-op
+                    card.querySelector?.(':scope'); // no-op, evita warnings
+                    card.style.filter = 'none';
 
                     if (!firstCard) {
                         firstCard = card;
@@ -434,18 +671,18 @@ if (!$dificultad_memoria) {
                     secondCard = card;
                     lockBoard = true;
 
-                    const isMatch = firstCard.dataset.symbol === secondCard.dataset.symbol;
+                    const isMatch = firstCard.dataset.color === secondCard.dataset.color;
 
                     if (isMatch) {
                         firstCard.classList.add("matched");
                         secondCard.classList.add("matched");
+
                         firstCard = null;
                         secondCard = null;
                         lockBoard = false;
 
                         matchedPairs++;
                         if (matchedPairs === cards.length / 2) {
-                            // Juego completado
                             clearInterval(timerInterval);
                             const puntosFinales = 100;
                             const segundosTotales = elapsedSeconds;
@@ -454,7 +691,8 @@ if (!$dificultad_memoria) {
 
                             setTimeout(() => {
                                 if (motivacionDiv) {
-                                    motivacionDiv.textContent = obtenerMensajeMotivacion() +
+                                    motivacionDiv.textContent =
+                                        obtenerMensajeMotivacion() +
                                         ` (Tiempo: ${document.getElementById('timer').textContent})`;
                                 } else {
                                     alert("¡Has completado el juego de memoria!");
@@ -465,9 +703,15 @@ if (!$dificultad_memoria) {
                         setTimeout(() => {
                             firstCard.classList.add("hidden-symbol");
                             firstCard.classList.remove("revealed");
+                            firstCard.style.backgroundColor = '';
+                            firstCard.style.backgroundImage = '';
+                            firstCard.style.filter = '';
 
                             secondCard.classList.add("hidden-symbol");
                             secondCard.classList.remove("revealed");
+                            secondCard.style.backgroundColor = '';
+                            secondCard.style.backgroundImage = '';
+                            secondCard.style.filter = '';
 
                             firstCard = null;
                             secondCard = null;
@@ -479,8 +723,10 @@ if (!$dificultad_memoria) {
                 area.appendChild(card);
             });
 
-            // Empezamos el temporizador cuando el tablero está listo
-            startTimer();
+            requestAnimationFrame(() => {
+                fitGridToContainer();
+                startTimer();
+            });
         }
 
         // Iniciar juego al cargar la página

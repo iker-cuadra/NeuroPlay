@@ -15,7 +15,6 @@ header("Expires: 0");
 
 // Obtener el nombre del profesional logueado (AÚN SE GUARDA, PERO NO SE USA EN EL HTML)
 $nombre_profesional = $_SESSION['nombre'] ?? 'Profesional';
-
 ?>
 
 <!DOCTYPE html>
@@ -27,45 +26,52 @@ $nombre_profesional = $_SESSION['nombre'] ?? 'Profesional';
     <title>Panel del Profesional</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
     <style>
-        html, body {
+        :root{
+            --header-h: 160px;
+        }
+
+        html,
+        body {
             margin: 0;
             padding: 0;
             height: 100%;
             overflow: hidden;
             font-family: 'Poppins', sans-serif;
-            background: #b3b3b3ff; /* gris claro */
+            background: #887d7dff;
         }
-        
-        .header {
+
+        /* Layout como en el primer archivo */
+        .layout{
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER igual que el del primer archivo */
+        .header{
             width: 100%;
-            height: 160px;
+            height: var(--header-h);
             background-image: url('imagenes/Banner.svg');
             background-size: cover;
             background-position: center;
-            color: white;
-            text-align: center;
-            padding-top: 40px;
             position: relative;
+            flex: 0 0 auto;
         }
 
-        .header h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 600;
-        }
-
-        .user-role {
+        /* etiqueta inferior */
+        .user-role{
             position: absolute;
             bottom: 10px;
             left: 20px;
-            font-size: 20px;
-            font-weight: 600;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
         }
 
+        /* BOTÓN CERRAR SESIÓN: INTACTO (mismo CSS) */
         .logout-button {
             position: absolute;
             top: 15px;
@@ -82,7 +88,6 @@ $nombre_profesional = $_SESSION['nombre'] ?? 'Profesional';
             border: none;
             cursor: pointer;
             text-decoration: none;
-            position: absolute;
             z-index: 10;
             overflow: hidden;
             transition: all 0.3s ease;
@@ -116,14 +121,15 @@ $nombre_profesional = $_SESSION['nombre'] ?? 'Profesional';
             transform: rotate(20deg);
         }
 
+        /* MAIN */
         .main-section {
-            height: calc(100vh - 160px - 160px); 
+            flex: 1 1 auto;
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 50px; 
+            gap: 50px;
             flex-wrap: wrap;
-            padding: 0; 
+            padding: 0;
         }
 
         .card {
@@ -154,6 +160,15 @@ $nombre_profesional = $_SESSION['nombre'] ?? 'Profesional';
         .card h2 {
             font-size: 24px;
             font-weight: 600;
+            margin: 0;
+        }
+
+        /* Subtítulo debajo de Usuarios/Familiares */
+        .card-subtitle {
+            margin-top: 4px;
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 500;
         }
 
         @media (max-width: 900px) {
@@ -170,7 +185,7 @@ $nombre_profesional = $_SESSION['nombre'] ?? 'Profesional';
             .card img {
                 width: 180px;
                 height: 180px;
-                height: auto; 
+                height: auto;
             }
 
             .card h2 {
@@ -182,33 +197,55 @@ $nombre_profesional = $_SESSION['nombre'] ?? 'Profesional';
                 font-size: 14px;
             }
         }
+
+        /* Línea decorativa bajo la etiqueta */
+        .card-label::after {
+            content: '';
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: #3b82f6;
+            margin: 8px auto 0;
+            transition: width 0.3s ease;
+        }
+
+        /* AUMENTAR LÍNEA AL HACER HOVER EN LA TARJETA */
+        .card-label:hover::after {
+            width: 60px;
+        }
     </style>
 </head>
 
 <body>
 
+<div class="layout">
+
     <div class="header">
         <div class="user-role">Panel del Profesional</div>
+
+        <!-- BOTÓN CERRAR SESIÓN: INTACTO -->
         <a href="logout.php" class="logout-button">
             <i class="fas fa-sign-out-alt"></i> Cerrar sesión
         </a>
     </div>
 
     <div class="main-section">
-        
-        <div class="card" onclick="location.href='gestionar_users.php'">
+
+        <div class="card card-label" onclick="location.href='gestionar_users.php'">
             <img src="imagenes/usuarios.png" alt="Usuarios">
             <h2>Usuarios</h2>
+            <p class="card-subtitle">Gestionar</p>
         </div>
 
-        <div class="card" onclick="location.href='lista_familiares.php'">
+        <div class="card card-label" onclick="location.href='lista_familiares.php'">
             <img src="imagenes/familiares.png" alt="Familiares">
             <h2>Familiares</h2>
+            <p class="card-subtitle">Chatear</p>
         </div>
-        
+
     </div>
 
-  
+</div>
 
 </body>
 </html>

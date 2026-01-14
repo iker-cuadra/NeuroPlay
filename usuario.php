@@ -9,7 +9,6 @@ header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 header("Expires: 0");
 
-
 // Información del usuario logueado
 $nombre = $_SESSION["nombre"];
 ?>
@@ -19,6 +18,9 @@ $nombre = $_SESSION["nombre"];
 <head>
     <meta charset="UTF-8">
     <title>Panel del Usuario</title>
+
+    <!-- Para que funcione el icono del botón (igual que profesional.php) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
     <style>
         html,
@@ -32,7 +34,7 @@ $nombre = $_SESSION["nombre"];
             background: #887d7dff;
         }
 
-        /* ENCABEZADO SUPERIOR */
+        /* ENCABEZADO SUPERIOR (igual que profesional.php) */
         .header {
             width: 100%;
             height: 160px;
@@ -40,22 +42,67 @@ $nombre = $_SESSION["nombre"];
             background-size: cover;
             background-position: center;
             position: relative;
-            color: white;
-            text-align: center;
-            padding-top: 40px;
+            flex: 0 0 auto;
         }
 
-        .header h1 {
-            font-size: 36px;
-            font-weight: 300;
-        }
-
+        /* Etiqueta inferior (igual que profesional.php) */
         .user-role {
             position: absolute;
             bottom: 10px;
             left: 20px;
+            color: white;
+            font-weight: 700;
             font-size: 18px;
-            font-weight: bold;
+        }
+
+        /* BOTÓN CERRAR SESIÓN (igual que profesional.php) */
+        .logout-button {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 22px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 50px;
+            background: #7a7676;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            z-index: 10;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .logout-button i {
+            transition: transform 0.4s ease;
+        }
+
+        .logout-button::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 300%;
+            height: 100%;
+            background: linear-gradient(90deg, #7a7676, #968c8c, #c9beb6);
+            transition: all 0.4s ease;
+            z-index: -1;
+        }
+
+        .logout-button:hover::before {
+            left: 0;
+        }
+
+        .logout-button:hover {
+            transform: translateY(-3px);
+        }
+
+        .logout-button:hover i {
+            transform: rotate(20deg);
         }
 
         /* SECCIÓN CENTRAL DE JUEGOS */
@@ -170,39 +217,17 @@ $nombre = $_SESSION["nombre"];
                 font-size: 15px;
             }
         }
-
-        .logout-button {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-
-            background: rgba(0, 0, 0, 0.45);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: bold;
-
-            transition: background 0.25s ease, transform 0.25s ease;
-        }
-
-        .logout-button:hover {
-            background: rgba(0, 0, 0, 0.65);
-            transform: scale(1.05);
-        }
-        
     </style>
 </head>
 
 <body>
 
-    <!-- ENCABEZADO -->
+    <!-- ENCABEZADO (igual que profesional.php) -->
     <div class="header">
-        <!-- BOTÓN DE CERRAR SESIÓN -->
-        <a href="logout.php" class="logout-button">Cerrar sesión</a>
-
-        <div class="user-role">Usuario</div>
+        <a href="logout.php" class="logout-button">
+            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+        </a>
+        <div class="user-role">Panel del Usuario</div>
     </div>
 
     <!-- TARJETAS DE JUEGOS -->
@@ -211,7 +236,8 @@ $nombre = $_SESSION["nombre"];
         <div class="game-card">
             <h2>Lógica</h2>
             <div class="image-wrapper">
-                <img src="imagenes/logica.png" alt="Juego de lógica" onclick="location.href='juegos/logicajuego/logica.php'">>
+                <img src="imagenes/logica.png" alt="Juego de lógica"
+                    onclick="location.href='juegos/logicajuego/logica.php'">>
             </div>
             <button class="btn-play" onclick="location.href='juegos/logicajuego/logica.php'">Jugar</button>
         </div>
@@ -219,7 +245,8 @@ $nombre = $_SESSION["nombre"];
         <div class="game-card">
             <h2>Memoria</h2>
             <div class="image-wrapper">
-                <img src="imagenes/memoria.png" alt="Juego de memoria" onclick="location.href='juegos/memoriajuego/memoria.php'">
+                <img src="imagenes/memoria.png" alt="Juego de memoria"
+                    onclick="location.href='juegos/memoriajuego/memoria.php'">
             </div>
             <button class="btn-play" onclick="location.href='juegos/memoriajuego/memoria.php'">Jugar</button>
         </div>
@@ -227,13 +254,21 @@ $nombre = $_SESSION["nombre"];
         <div class="game-card">
             <h2>Razonamiento</h2>
             <div class="image-wrapper">
-                <img src="imagenes/razonamiento.png" alt="Juego de razonamiento" onclick="location.href='juegos/razonamientojuego/razonamiento.php'">>
+                <img src="imagenes/razonamiento.png" alt="Juego de razonamiento"
+                    onclick="location.href='juegos/razonamientojuego/razonamiento.php'">>
             </div>
             <button class="btn-play" onclick="location.href='juegos/razonamientojuego/razonamiento.php'">Jugar</button>
         </div>
 
+        <div class="game-card">
+            <h2>Atención</h2>
+            <div class="image-wrapper">
+                <img src="imagenes/atencion.jpg" alt="Juego de lógica"
+                    onclick="location.href='juegos/atencionjuego/atencion.php'">>
+            </div>
+            <button class="btn-play" onclick="location.href='juegos/atencionjuego/atencion.php'">Jugar</button>
+        </div>
     </div>
-
 
 </body>
 

@@ -23,6 +23,27 @@ if (!isset($_SESSION["csrf"])) {
 }
 
 // -------------------------
+// FILTRO POR ROL (GET)
+// -------------------------
+$filtro_rol = $_GET["filtro_rol"] ?? "todos";
+$roles_validos = ["todos", "usuario", "familiar", "profesional"];
+if (!in_array($filtro_rol, $roles_validos, true)) {
+    $filtro_rol = "todos";
+}
+
+// Helper para mantener filtro en enlaces
+function qs_keep(array $extra = []): string {
+    $keep = [];
+    if (isset($_GET["filtro_rol"]) && $_GET["filtro_rol"] !== "todos") {
+        $keep["filtro_rol"] = $_GET["filtro_rol"];
+    }
+    unset($keep["eliminar_id"]);
+
+    $all = array_merge($keep, $extra);
+    return $all ? ("?" . http_build_query($all)) : "";
+}
+
+// -------------------------
 // ELIMINAR USUARIO (GET)
 // -------------------------
 if (isset($_GET['eliminar_id'])) {
@@ -38,8 +59,9 @@ if (isset($_GET['eliminar_id'])) {
         $stmt_foto->execute([$eliminar_id]);
         $foto_a_eliminar = $stmt_foto->fetchColumn();
 
-        // 3) Eliminar archivo foto si aplica
-        if (!empty($foto_a_eliminar) && $foto_a_eliminar !== 'default.png' && file_exists('uploads/' . $foto_a_eliminar)) {
+        // 3) Eliminar archivo foto si aplica (si no es un default)
+        $defaults = ["default.png", "default_usuario.png", "default_familiar.png"];
+        if (!empty($foto_a_eliminar) && !in_array($foto_a_eliminar, $defaults, true) && file_exists('uploads/' . $foto_a_eliminar)) {
             unlink('uploads/' . $foto_a_eliminar);
         }
 
@@ -52,7 +74,7 @@ if (isset($_GET['eliminar_id'])) {
         $_SESSION["flash_error"] = "Error al eliminar: " . $e->getMessage();
     }
 
-    header("Location: gestionar_users.php");
+    header("Location: gestionar_users.php" . qs_keep());
     exit;
 }
 
@@ -64,7 +86,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_id"])) {
     // CSRF check
     if (!isset($_POST["csrf"]) || $_POST["csrf"] !== $_SESSION["csrf"]) {
         $_SESSION["flash_error"] = "Token inválido. Recarga la página e inténtalo de nuevo.";
-        header("Location: gestionar_users.php");
+        header("Location: gestionar_users.php" . qs_keep());
         exit;
     }
 
@@ -76,7 +98,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_id"])) {
 
     if ($id <= 0 || $nombre === "" || $email === "" || $rol === "") {
         $_SESSION["flash_error"] = "Nombre, email y rol son obligatorios.";
-        header("Location: gestionar_users.php?editar_id=" . $id);
+        header("Location: gestionar_users.php" . qs_keep(["editar_id" => $id]));
         exit;
     }
 
@@ -87,7 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_id"])) {
 
     if ($foto_actual === false) {
         $_SESSION["flash_error"] = "El usuario no existe.";
-        header("Location: gestionar_users.php");
+        header("Location: gestionar_users.php" . qs_keep());
         exit;
     }
 
@@ -96,37 +118,65 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_id"])) {
     $stmt->execute([$email, $id]);
     if ((int)$stmt->fetchColumn() > 0) {
         $_SESSION["flash_error"] = "Ese email ya está registrado por otro usuario.";
-        header("Location: gestionar_users.php?editar_id=" . $id);
+        header("Location: gestionar_users.php" . qs_keep(["editar_id" => $id]));
         exit;
     }
 
+    // -------------------------
     // Manejo de nueva foto (opcional)
+    // -------------------------
     $foto_nueva = $foto_actual ?: "default.png";
 
-    if (!empty($_FILES["foto"]["name"]) && $_FILES["foto"]["error"] === UPLOAD_ERR_OK) {
+    if (isset($_FILES["foto"]) && $_FILES["foto"]["name"] !== "") {
+
+        // Si el usuario eligió archivo pero PHP reporta error, NO lo ignores
+        if ($_FILES["foto"]["error"] !== UPLOAD_ERR_OK) {
+            $errores = [
+                UPLOAD_ERR_INI_SIZE   => "La imagen supera el límite permitido por el servidor (php.ini).",
+                UPLOAD_ERR_FORM_SIZE  => "La imagen supera el límite permitido por el formulario.",
+                UPLOAD_ERR_PARTIAL    => "La imagen se subió parcialmente. Inténtalo de nuevo.",
+                UPLOAD_ERR_NO_FILE    => "No se seleccionó ninguna imagen.",
+                UPLOAD_ERR_NO_TMP_DIR => "Falta la carpeta temporal del servidor.",
+                UPLOAD_ERR_CANT_WRITE => "No se pudo guardar la imagen (permisos del servidor).",
+                UPLOAD_ERR_EXTENSION  => "Una extensión de PHP bloqueó la subida de la imagen."
+            ];
+            $_SESSION["flash_error"] = $errores[$_FILES["foto"]["error"]] ?? "Error al subir la imagen.";
+            header("Location: gestionar_users.php" . qs_keep(["editar_id" => $id]));
+            exit;
+        }
+
         if (!is_dir("uploads")) {
             mkdir("uploads", 0777, true);
+        }
+
+        // Validar que realmente es una imagen
+        $tmp = $_FILES["foto"]["tmp_name"];
+        if (@getimagesize($tmp) === false) {
+            $_SESSION["flash_error"] = "El archivo seleccionado no es una imagen válida.";
+            header("Location: gestionar_users.php" . qs_keep(["editar_id" => $id]));
+            exit;
         }
 
         $ext = strtolower(pathinfo($_FILES["foto"]["name"], PATHINFO_EXTENSION));
         $permitidos = ["jpg", "jpeg", "png", "webp"];
 
-        if (!in_array($ext, $permitidos)) {
+        if (!in_array($ext, $permitidos, true)) {
             $_SESSION["flash_error"] = "Formato de imagen no permitido (JPG, PNG, WEBP).";
-            header("Location: gestionar_users.php?editar_id=" . $id);
+            header("Location: gestionar_users.php" . qs_keep(["editar_id" => $id]));
             exit;
         }
 
-        $foto_nueva = uniqid("foto_") . "." . $ext;
+        $foto_nueva = uniqid("foto_", true) . "." . $ext;
 
-        if (!move_uploaded_file($_FILES["foto"]["tmp_name"], "uploads/" . $foto_nueva)) {
+        if (!move_uploaded_file($tmp, "uploads/" . $foto_nueva)) {
             $_SESSION["flash_error"] = "No se pudo subir la imagen (permisos o ruta).";
-            header("Location: gestionar_users.php?editar_id=" . $id);
+            header("Location: gestionar_users.php" . qs_keep(["editar_id" => $id]));
             exit;
         }
 
-        // borrar foto anterior si era subida (no default)
-        if (!empty($foto_actual) && $foto_actual !== "default.png" && file_exists("uploads/" . $foto_actual)) {
+        // borrar foto anterior si era subida (no defaults)
+        $defaults = ["default.png", "default_usuario.png", "default_familiar.png"];
+        if (!empty($foto_actual) && !in_array($foto_actual, $defaults, true) && file_exists("uploads/" . $foto_actual)) {
             unlink("uploads/" . $foto_actual);
         }
     }
@@ -155,7 +205,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_id"])) {
         $_SESSION["flash_error"] = "Error al actualizar: " . $e->getMessage();
     }
 
-    header("Location: gestionar_users.php?editar_id=" . $id);
+    header("Location: gestionar_users.php" . qs_keep(["editar_id" => $id]));
     exit;
 }
 
@@ -171,10 +221,16 @@ if (isset($_GET["editar_id"])) {
 }
 
 // -------------------------
-// LISTA USUARIOS
+// LISTA USUARIOS (con filtro)
 // -------------------------
-$stmt = $conexion->query("SELECT id, nombre, email, rol, foto FROM usuarios ORDER BY id DESC");
-$usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+if ($filtro_rol === "todos") {
+    $stmt = $conexion->query("SELECT id, nombre, email, rol, foto FROM usuarios ORDER BY id DESC");
+    $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $stmt = $conexion->prepare("SELECT id, nombre, email, rol, foto FROM usuarios WHERE rol = ? ORDER BY id DESC");
+    $stmt->execute([$filtro_rol]);
+    $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 // Flash (leer y limpiar)
 $flash_success = $_SESSION["flash_success"];
@@ -195,7 +251,6 @@ $_SESSION["flash_error"] = "";
 <style>
 :root{
     --header-h: 160px;
-    --footer-h: 160px;
     --bg: #f0f2f5;
     --card: #ffffff;
     --shadow: 0 12px 30px rgba(0,0,0,0.10);
@@ -208,21 +263,23 @@ $_SESSION["flash_error"] = "";
 
 *{ box-sizing: border-box; }
 
+/* Sin scroll en la página */
 html, body{
     margin: 0;
     padding: 0;
-    height: auto;
+    height: 100%;
+    overflow: hidden;
 }
 
 body{
     font-family: 'Poppins', sans-serif;
     background: var(--bg);
-    overflow: auto;
     color: var(--text);
+    background: #887d7dff;
 }
 
 .layout{
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
 }
@@ -235,6 +292,7 @@ body{
     background-size: cover;
     background-position: center;
     position: relative;
+    flex: 0 0 auto;
 }
 
 /* Flecha volver */
@@ -264,11 +322,13 @@ body{
 
 /* Central */
 .page-content{
-    flex: 1;
+    flex: 1 1 auto;
     display: flex;
     justify-content: center;
     align-items: flex-start;
     padding: 14px 16px;
+    overflow: hidden;
+    min-height: 0;
 }
 
 /* Panel blanco */
@@ -278,10 +338,14 @@ body{
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     padding: 16px;
+
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-bottom: 14px;
+
+    height: 100%;
+    overflow: hidden;
+    min-height: 0;
 }
 
 .panel-header{
@@ -302,6 +366,7 @@ body{
     display: flex;
     gap: 10px;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .btn{
@@ -328,12 +393,56 @@ body{
 .btn-primary:hover{ background: var(--btn-hover); transform: translateY(-1px); }
 .btn-primary:active{ transform: scale(0.98); }
 
-.btn-ghost{
+/* ✅ FILTRO COMO BOTONES (visible) */
+.filter-buttons{
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
     background: #eef0f3;
-    color: #333;
+    border-radius: 16px;
+    padding: 6px;
+    border: 1px solid #dde2ea;
 }
-.btn-ghost:hover{ background: #e2e5ea; transform: translateY(-1px); }
-.btn-ghost:active{ transform: scale(0.98); }
+
+.filter-buttons .label{
+    font-size: 13px;
+    font-weight: 900;
+    color: #333;
+    padding: 0 8px 0 6px;
+}
+
+.filter-buttons a{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    text-decoration: none;
+    font-weight: 900;
+    font-size: 13px;
+    color: #333;
+    background: #ffffff;
+    border: 1px solid #e7e9ee;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+}
+
+.filter-buttons a:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+    border-color: #d6dae3;
+}
+
+.filter-buttons a.active{
+    background: #4a4a4a;
+    color: #fff;
+    border-color: #4a4a4a;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.16);
+}
+
+.filter-buttons a:active{
+    transform: scale(0.98);
+}
 
 /* Flash */
 .flash{
@@ -354,6 +463,7 @@ body{
     display: flex;
     gap: 14px;
     align-items: stretch;
+    flex: 0 0 auto;
 }
 
 .edit-left{
@@ -370,8 +480,8 @@ body{
 }
 
 .edit-photo{
-    width: 86px;
-    height: 86px;
+    width: 92px;
+    height: 92px;
     border-radius: 50%;
     object-fit: cover;
     border: 3px solid #f0f0f0;
@@ -467,14 +577,22 @@ body{
 .btn-cancel{
     background: #eef0f3;
     color: #333;
+    border-radius: 14px;
+    padding: 10px 14px;
+    text-decoration: none;
+    font-weight: 800;
 }
 .btn-cancel:hover{ background:#e2e5ea; transform: translateY(-1px); }
 .btn-cancel:active{ transform: scale(0.98); }
 
-/* Tabla dentro del panel */
+/* Tabla dentro del panel: SOLO aquí scrollea */
 .table-wrap{
     width: 100%;
     overflow-x: auto;
+
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 0;
 }
 
 table{
@@ -492,9 +610,13 @@ thead th{
     padding: 10px 12px;
     background: white;
     border-bottom: 1px solid #eceff3;
+
+    position: sticky;
+    top: 0;
+    z-index: 2;
 }
 
-th:nth-child(1), th:nth-child(2), th:nth-child(6){ text-align:center; }
+th:nth-child(1), th:nth-child(5){ text-align:center; }
 
 tbody tr{
     background: #fff;
@@ -516,17 +638,16 @@ td{
     word-break: break-word;
 }
 
-td:nth-child(1), td:nth-child(2), td:nth-child(6){ text-align:center; }
+td:nth-child(1), td:nth-child(5){ text-align:center; }
 
 .user-photo{
-    width: 46px;
-    height: 46px;
+    width: 58px;
+    height: 58px;
     border-radius: 50%;
     object-fit: cover;
     border: 3px solid #f0f0f0;
 }
 
-/* Rol badge */
 .role-badge{
     display: inline-block;
     padding: 6px 10px;
@@ -539,50 +660,64 @@ td:nth-child(1), td:nth-child(2), td:nth-child(6){ text-align:center; }
 .role-badge.familiar{ background:#fce4ec; color:#ad1457; }
 .role-badge.profesional{ background:#e8f5e9; color:#2e7d32; }
 
-/* Acciones */
 .action-row{
     display: inline-flex;
-    gap: 8px;
+    gap: 10px;
     flex-wrap: wrap;
     justify-content: center;
 }
 
-.btn-edit{
+.action-btn{
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 9px 12px;
-    border-radius: 12px;
+    padding: 10px 14px;
+    border-radius: 14px;
     text-decoration: none;
     font-weight: 900;
-    background: #e8f0ff;
-    border: 1px solid #d7e4ff;
-    color: #1e4db7;
-    transition: transform .2s ease, filter .2s ease;
-}
-.btn-edit:hover{ transform: translateY(-1px); filter: brightness(1.03); }
-.btn-edit:active{ transform: scale(0.95); }
-
-.btn-eliminar{
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 12px;
-    border-radius: 12px;
-    text-decoration: none;
-    color: #f75555;
-    font-weight: 900;
-    background: #ffebeb;
-    border: 1px solid #ffd2d2;
-    transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+    font-size: 13px;
+    line-height: 1;
+    border: 1px solid transparent;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.10);
+    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+    user-select: none;
     white-space: nowrap;
 }
-.btn-eliminar:hover{
-    background:#ff4d4f;
-    color:#fff;
-    transform: scale(1.03);
+
+.action-btn i{ font-size: 14px; }
+
+.action-btn:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px rgba(0,0,0,0.14);
+    filter: brightness(1.02);
 }
-.btn-eliminar:active{ transform: scale(0.95); }
+
+.action-btn:active{
+    transform: translateY(0px);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.10);
+}
+
+.btn-evaluar{
+    background: linear-gradient(180deg, #ecfdf5, #dcfce7);
+    border-color: #bbf7d0;
+    color: #166534;
+}
+.btn-evaluar:hover{ background: linear-gradient(180deg, #dcfce7, #bbf7d0); }
+
+.btn-editar{
+    background: linear-gradient(180deg, #eef2ff, #e0e7ff);
+    border-color: #c7d2fe;
+    color: #1e3a8a;
+}
+.btn-editar:hover{ background: linear-gradient(180deg, #e0e7ff, #c7d2fe); }
+
+.btn-eliminar{
+    background: linear-gradient(180deg, #fff1f2, #ffe4e6);
+    border-color: #fecdd3;
+    color: #9f1239;
+}
+.btn-eliminar:hover{ background: linear-gradient(180deg, #ffe4e6, #fecdd3); }
 
 @media (max-width: 980px){
     .edit-card{ flex-direction: column; }
@@ -590,11 +725,8 @@ td:nth-child(1), td:nth-child(2), td:nth-child(6){ text-align:center; }
     .form-grid{ grid-template-columns: 1fr; }
 }
 
-/* Ajuste de ancho para la columna de acciones tras añadir el botón "Evaluar" */
 @media (min-width: 1000px) {
-    th:nth-child(6) {
-        width: 340px; /* Suficiente espacio para 3 botones */
-    }
+    th:nth-child(5) { width: 340px; }
 }
 </style>
 </head>
@@ -617,6 +749,37 @@ td:nth-child(1), td:nth-child(2), td:nth-child(6){ text-align:center; }
             <div class="panel-header">
                 <h1>Panel de Gestión de Usuarios</h1>
                 <div class="actions">
+
+                    <!-- ✅ FILTRO COMO BOTONES -->
+                    <div class="filter-buttons" aria-label="Filtro por rol">
+                        <span class="label">Ver:</span>
+
+                        <a class="<?= $filtro_rol==="todos" ? "active" : "" ?>"
+                           href="gestionar_users.php<?= htmlspecialchars(qs_keep(["filtro_rol" => "todos"])) ?>">
+                            <i class="fas fa-layer-group"></i> Todos
+                        </a>
+
+                        <a class="<?= $filtro_rol==="usuario" ? "active" : "" ?>"
+                           href="gestionar_users.php<?= htmlspecialchars(qs_keep(["filtro_rol" => "usuario"])) ?>">
+                            <i class="fas fa-user"></i> Usuarios
+                        </a>
+
+                        <a class="<?= $filtro_rol==="familiar" ? "active" : "" ?>"
+                           href="gestionar_users.php<?= htmlspecialchars(qs_keep(["filtro_rol" => "familiar"])) ?>">
+                            <i class="fas fa-users"></i> Familiares
+                        </a>
+
+                        <a class="<?= $filtro_rol==="profesional" ? "active" : "" ?>"
+                           href="gestionar_users.php<?= htmlspecialchars(qs_keep(["filtro_rol" => "profesional"])) ?>">
+                            <i class="fas fa-user-tie"></i> Profesionales
+                        </a>
+
+                        <?php if (isset($_GET["editar_id"])): ?>
+                            <!-- Mantener edición si estaba abierta -->
+                            <input type="hidden" name="editar_id" value="<?= (int)$_GET["editar_id"] ?>">
+                        <?php endif; ?>
+                    </div>
+
                     <a class="btn btn-primary" href="crear_usuario.php">
                         <i class="fas fa-plus"></i> Crear usuario
                     </a>
@@ -632,24 +795,25 @@ td:nth-child(1), td:nth-child(2), td:nth-child(6){ text-align:center; }
 
             <?php if ($editar_user): ?>
                 <?php
-                    $ruta_foto_edit = 'uploads/default.png';
-                    if ($editar_user['rol'] === 'profesional' && $editar_user['foto'] === 'default.png') {
-                        $ruta_foto_edit = 'imagenes/admin.jpg';
-                    } elseif (!empty($editar_user['foto']) && $editar_user['foto'] !== 'default.png') {
-                        $ruta_foto_edit = 'uploads/' . htmlspecialchars($editar_user['foto']);
+                    $foto_edit = $editar_user["foto"] ?? "default.png";
+                    if ($foto_edit === "") $foto_edit = "default.png";
+                    $ruta_foto_edit = "uploads/" . $foto_edit;
+
+                    $cache_edit = "";
+                    if (file_exists($ruta_foto_edit)) {
+                        $cache_edit = "?v=" . filemtime($ruta_foto_edit);
                     }
                 ?>
                 <div class="edit-card">
                     <div class="edit-left">
-                        <img class="edit-photo" src="<?= $ruta_foto_edit ?>" alt="Foto">
+                        <img class="edit-photo" src="<?= htmlspecialchars($ruta_foto_edit) . $cache_edit ?>" alt="Foto">
                         <div class="meta">
-                            <div><strong>ID:</strong> <?= (int)$editar_user["id"] ?></div>
                             <div><strong>Rol:</strong> <?= htmlspecialchars($editar_user["rol"]) ?></div>
                         </div>
                     </div>
 
                     <div class="edit-right">
-                        <a class="close-edit" href="gestionar_users.php" title="Cerrar">✕</a>
+                        <a class="close-edit" href="gestionar_users.php<?= htmlspecialchars(qs_keep()) ?>" title="Cerrar">✕</a>
                         <h2>Editar usuario: <?= htmlspecialchars($editar_user["nombre"]) ?></h2>
 
                         <form method="POST" enctype="multipart/form-data">
@@ -688,7 +852,7 @@ td:nth-child(1), td:nth-child(2), td:nth-child(6){ text-align:center; }
                             </div>
 
                             <div class="form-actions">
-                                <a class="btn btn-cancel" href="gestionar_users.php">Cancelar</a>
+                                <a class="btn-cancel" href="gestionar_users.php<?= htmlspecialchars(qs_keep()) ?>">Cancelar</a>
                                 <button class="btn btn-save" type="submit">
                                     <i class="fas fa-save"></i> Guardar cambios
                                 </button>
@@ -702,8 +866,7 @@ td:nth-child(1), td:nth-child(2), td:nth-child(6){ text-align:center; }
                 <table>
                     <thead>
                         <tr>
-                            <th style="width:70px;">ID</th>
-                            <th style="width:80px;">Foto</th>
+                            <th style="width:100px;">Foto</th>
                             <th>Nombre</th>
                             <th>Email</th>
                             <th style="width:130px;">Rol</th>
@@ -713,18 +876,20 @@ td:nth-child(1), td:nth-child(2), td:nth-child(6){ text-align:center; }
 
                     <tbody>
                     <?php foreach ($usuarios as $u):
-                        $ruta_foto = 'uploads/default.png';
-                        if ($u['rol'] === 'profesional' && $u['foto'] === 'default.png') {
-                            $ruta_foto = 'imagenes/admin.jpg';
-                        } elseif (!empty($u['foto']) && $u['foto'] !== 'default.png') {
-                            $ruta_foto = 'uploads/' . htmlspecialchars($u['foto']);
+                        $foto = $u["foto"] ?? "default.png";
+                        if ($foto === "") $foto = "default.png";
+
+                        $ruta_foto = "uploads/" . $foto;
+
+                        $cache_row = "";
+                        if (file_exists($ruta_foto)) {
+                            $cache_row = "?v=" . filemtime($ruta_foto);
                         }
                     ?>
                         <tr>
-                            <td><?= (int)$u["id"] ?></td>
                             <td>
                                 <img class="user-photo"
-                                     src="<?= $ruta_foto ?>"
+                                     src="<?= htmlspecialchars($ruta_foto) . $cache_row ?>"
                                      alt="Foto de <?= htmlspecialchars($u["nombre"]) ?>">
                             </td>
                             <td><?= htmlspecialchars($u["nombre"]) ?></td>
@@ -737,17 +902,20 @@ td:nth-child(1), td:nth-child(2), td:nth-child(6){ text-align:center; }
                             <td>
                                 <div class="action-row">
                                     <?php if ($u['rol'] === 'usuario'): ?>
-                                        <a class="btn-edit" href="evaluar_usuario.php?user_id=<?= (int)$u["id"] ?>" title="Ver Evaluación">
+                                        <a class="action-btn btn-evaluar"
+                                           href="evaluar_usuario.php<?= htmlspecialchars(qs_keep(["user_id" => (int)$u["id"]])) ?>"
+                                           title="Ver Evaluación">
                                             <i class="fas fa-cog"></i> Evaluar
                                         </a>
                                     <?php endif; ?>
 
-                                    <a class="btn-edit" href="gestionar_users.php?editar_id=<?= (int)$u["id"] ?>">
+                                    <a class="action-btn btn-editar"
+                                       href="gestionar_users.php<?= htmlspecialchars(qs_keep(["editar_id" => (int)$u["id"]])) ?>">
                                         <i class="fas fa-pen"></i> Editar
                                     </a>
 
-                                    <a class="btn-eliminar"
-                                       href="gestionar_users.php?eliminar_id=<?= (int)$u['id'] ?>"
+                                    <a class="action-btn btn-eliminar"
+                                       href="gestionar_users.php<?= htmlspecialchars(qs_keep(["eliminar_id" => (int)$u["id"]])) ?>"
                                        onclick="return confirm('¿Seguro que deseas eliminar a <?= htmlspecialchars($u['nombre']) ?>? Esta acción eliminará permanentemente todos sus datos, incluyendo el historial de chat.');">
                                         <i class="fas fa-trash-alt"></i> Eliminar
                                     </a>

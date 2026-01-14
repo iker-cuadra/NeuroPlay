@@ -24,10 +24,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["save_evaluation"])) {
     $profesional_id = $_SESSION["usuario_id"] ?? 0;
     $fecha          = date('Y-m-d H:i:s');
 
-    // Obtener los tres valores de dificultad del POST
+    // Obtener los valores de dificultad del POST
     $memoria      = trim($_POST["memoria"] ?? "Fácil");
     $logica       = trim($_POST["logica"] ?? "Fácil");
     $razonamiento = trim($_POST["razonamiento"] ?? "Fácil");
+    $atencion     = trim($_POST["atencion"] ?? "Fácil"); // NUEVO
 
     try {
         if ($user_id_post > 0 && $profesional_id > 0) {
@@ -38,6 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["save_evaluation"])) {
                 SET dificultad_memoria       = ?,
                     dificultad_logica        = ?,
                     dificultad_razonamiento  = ?,
+                    dificultad_atencion      = ?,   -- NUEVO
                     asignado_por             = ?,
                     fecha_actualizacion      = ?
                 WHERE usuario_id = ?
@@ -46,6 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["save_evaluation"])) {
                 $memoria,
                 $logica,
                 $razonamiento,
+                $atencion,
                 $profesional_id,
                 $fecha,
                 $user_id_post
@@ -55,14 +58,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["save_evaluation"])) {
             if ($stmt_update->rowCount() === 0) {
                 $stmt_insert = $conexion->prepare("
                     INSERT INTO dificultades_asignadas
-                        (usuario_id, dificultad_memoria, dificultad_logica, dificultad_razonamiento, asignado_por, fecha_actualizacion)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                        (usuario_id,
+                         dificultad_memoria,
+                         dificultad_logica,
+                         dificultad_razonamiento,
+                         dificultad_atencion,
+                         asignado_por,
+                         fecha_actualizacion)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                 ");
                 $stmt_insert->execute([
                     $user_id_post,
                     $memoria,
                     $logica,
                     $razonamiento,
+                    $atencion,
                     $profesional_id,
                     $fecha
                 ]);
@@ -118,6 +128,7 @@ $stmt_eval = $conexion->prepare("
     SELECT dificultad_memoria,
            dificultad_logica,
            dificultad_razonamiento,
+           dificultad_atencion,  -- NUEVO
            fecha_actualizacion,
            asignado_por,
            (SELECT nombre FROM usuarios WHERE id = asignado_por) AS asignador_nombre
@@ -134,20 +145,22 @@ $niveles_opciones = [
     'Difícil'     => 'Difícil'
 ];
 
-// Configuración de niveles por defecto
+// Configuración de niveles por defecto (incluimos Atención)
 $niveles_actuales = [
     'memoria'      => ['nivel' => 'Fácil', 'asignador' => 'N/A', 'fecha' => 'N/A'],
     'logica'       => ['nivel' => 'Fácil', 'asignador' => 'N/A', 'fecha' => 'N/A'],
     'razonamiento' => ['nivel' => 'Fácil', 'asignador' => 'N/A', 'fecha' => 'N/A'],
+    'atencion'     => ['nivel' => 'Fácil', 'asignador' => 'N/A', 'fecha' => 'N/A'], // NUEVO
 ];
 $ultima_actualizacion = 'N/A';
 $ultimo_profesional   = 'N/A';
 
 if ($res) {
     // Mapear las columnas a la estructura de niveles_actuales
-    $niveles_actuales['memoria']['nivel']      = htmlspecialchars($res['dificultad_memoria']);
-    $niveles_actuales['logica']['nivel']       = htmlspecialchars($res['dificultad_logica']);
-    $niveles_actuales['razonamiento']['nivel'] = htmlspecialchars($res['dificultad_razonamiento']);
+    $niveles_actuales['memoria']['nivel']      = htmlspecialchars($res['dificultad_memoria']      ?: 'Fácil');
+    $niveles_actuales['logica']['nivel']       = htmlspecialchars($res['dificultad_logica']       ?: 'Fácil');
+    $niveles_actuales['razonamiento']['nivel'] = htmlspecialchars($res['dificultad_razonamiento'] ?: 'Fácil');
+    $niveles_actuales['atencion']['nivel']     = htmlspecialchars($res['dificultad_atencion']     ?: 'Fácil');
 
     $asignador        = htmlspecialchars($res['asignador_nombre']);
     $fecha_raw        = strtotime($res['fecha_actualizacion']);
@@ -217,25 +230,34 @@ $_SESSION["flash_error"]   = "";
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; height: auto; }
-body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); }
+body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); background: #887d7dff; }
 
 .layout { min-height: 100vh; display: flex; flex-direction: column; }
-.header {
+/* HEADER banner */
+.header{
     width: 100%;
     height: var(--header-h);
     background-image: url('imagenes/Banner.svg');
     background-size: cover;
     background-position: center;
     position: relative;
+    flex: 0 0 auto;
 }
-.back-arrow {
-    position: absolute; top: 15px; left: 15px;
-    width: 38px; height: 38px;
-    display: flex; align-items: center; justify-content: center;
+
+/* Flecha volver */
+.back-arrow{
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-decoration: none;
 }
-.back-arrow svg { transition: opacity 0.2s ease-in-out; }
-.back-arrow:hover svg { opacity: 0.75; }
+.back-arrow svg{ transition: opacity 0.2s ease-in-out; }
+.back-arrow:hover svg{ opacity: 0.75; }
 .user-role {
     position: absolute; bottom: 10px; left: 20px;
     color: white; font-weight: 700; font-size: 18px;
@@ -320,13 +342,28 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
     border-radius: 15px;
     box-shadow: 0 6px 16px rgba(0,0,0,0.06);
 }
+
+/* 4 columnas en escritorio */
 .evaluation-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 20px;
     margin-top: 10px;
     margin-bottom: 20px;
 }
+
+/* Responsive: 2 columnas en tablets, 1 en móvil */
+@media (max-width: 900px) {
+    .evaluation-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@media (max-width: 600px) {
+    .evaluation-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .eval-item {
     padding: 15px;
     border-radius: 15px;
@@ -388,7 +425,7 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
 }
 .form-actions {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: 10px;
     margin-top: 15px;
     padding-top: 15px;
@@ -465,18 +502,8 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
 .history-tag.memoria { background:#e0f7fa; color:#006064; }
 .history-tag.logica { background:#e8f5e9; color:#2e7d32; }
 .history-tag.razonamiento { background:#fff3e0; color:#e65100; }
+.history-tag.atencion { background:#ede7f6; color:#4527a0; }
 
-.bottom-image {
-    width: 100%;
-    height: var(--footer-h);
-    overflow: hidden;
-}
-.bottom-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
 @media (max-width: 768px) {
     .form-actions { flex-direction: column; align-items: stretch; }
     .form-actions .btn { width: 100%; justify-content: center; }
@@ -529,24 +556,7 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
 
                 <div class="evaluation-grid">
 
-                    <div class="eval-item">
-                        <h3><i class="fas fa-brain"></i> Memoria</h3>
-                        <div class="current-level">Nivel <?= htmlspecialchars($niveles_actuales['memoria']['nivel']) ?></div>
-
-                        <label for="memoria">Asignar Nuevo Nivel:</label>
-                        <select name="memoria" id="memoria">
-                            <?php foreach ($niveles_opciones as $valor => $etiqueta): ?>
-                                <option value="<?= $valor ?>" <?= $niveles_actuales['memoria']['nivel'] == $valor ? 'selected' : '' ?>>
-                                    <?= $etiqueta ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <div class="last-update-info">
-                            Última Modificación: <?= $niveles_actuales['memoria']['fecha'] ?><br>
-                            Profesional: <?= $niveles_actuales['memoria']['asignador'] ?>
-                        </div>
-                    </div>
-
+                    <!-- PRIMERO: LÓGICA -->
                     <div class="eval-item">
                         <h3><i class="fas fa-lightbulb"></i> Lógica</h3>
                         <div class="current-level">Nivel <?= htmlspecialchars($niveles_actuales['logica']['nivel']) ?></div>
@@ -565,6 +575,26 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
                         </div>
                     </div>
 
+                    <!-- SEGUNDO: MEMORIA -->
+                    <div class="eval-item">
+                        <h3><i class="fas fa-brain"></i> Memoria</h3>
+                        <div class="current-level">Nivel <?= htmlspecialchars($niveles_actuales['memoria']['nivel']) ?></div>
+
+                        <label for="memoria">Asignar Nuevo Nivel:</label>
+                        <select name="memoria" id="memoria">
+                            <?php foreach ($niveles_opciones as $valor => $etiqueta): ?>
+                                <option value="<?= $valor ?>" <?= $niveles_actuales['memoria']['nivel'] == $valor ? 'selected' : '' ?>>
+                                    <?= $etiqueta ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="last-update-info">
+                            Última Modificación: <?= $niveles_actuales['memoria']['fecha'] ?><br>
+                            Profesional: <?= $niveles_actuales['memoria']['asignador'] ?>
+                        </div>
+                    </div>
+
+                    <!-- TERCERO: RAZONAMIENTO -->
                     <div class="eval-item">
                         <h3><i class="fas fa-cogs"></i> Razonamiento</h3>
                         <div class="current-level">Nivel <?= htmlspecialchars($niveles_actuales['razonamiento']['nivel']) ?></div>
@@ -583,10 +613,28 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
                         </div>
                     </div>
 
+                    <!-- CUARTO: ATENCIÓN -->
+                    <div class="eval-item">
+                        <h3><i class="fas fa-bullseye"></i> Atención</h3>
+                        <div class="current-level">Nivel <?= htmlspecialchars($niveles_actuales['atencion']['nivel']) ?></div>
+
+                        <label for="atencion">Asignar Nuevo Nivel:</label>
+                        <select name="atencion" id="atencion">
+                            <?php foreach ($niveles_opciones as $valor => $etiqueta): ?>
+                                <option value="<?= $valor ?>" <?= $niveles_actuales['atencion']['nivel'] == $valor ? 'selected' : '' ?>>
+                                    <?= $etiqueta ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="last-update-info">
+                            Última Modificación: <?= $niveles_actuales['atencion']['fecha'] ?><br>
+                            Profesional: <?= $niveles_actuales['atencion']['asignador'] ?>
+                        </div>
+                    </div>
+
                 </div>
 
                 <div class="form-actions">
-        
                     <button class="btn btn-save" type="submit">
                         <i class="fas fa-upload"></i> Guardar Nuevos Niveles
                     </button>
@@ -597,7 +645,7 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
             <div class="history-card">
                 <h2><i class="fas fa-history"></i> Historial de resultados</h2>
                 <p class="history-intro">
-                    Últimas partidas jugadas por este usuario en los juegos de Memoria, Lógica y Razonamiento.
+                    Últimas partidas jugadas por este usuario en los juegos de Memoria, Lógica, Razonamiento y Atención.
                 </p>
 
                 <?php if (empty($historialResultados)): ?>
@@ -637,9 +685,6 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
         </div>
     </div>
 
-    <div class="bottom-image">
-        <img src="imagenes/footerfoto.png" alt="imagen inferior">
-    </div>
 </div>
 </body>
 </html>

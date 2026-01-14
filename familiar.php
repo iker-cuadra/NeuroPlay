@@ -5,70 +5,72 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 require_once "includes/conexion.php";
 require_once "includes/auth.php"; 
- 
+
 // Solo permite acceso a familiares
 requireRole("familiar"); 
- 
+
 // Evitar volver atrás con el navegador una vez cerrada la sesión
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 header("Expires: 0");
- 
+
 // Asumimos que el nombre del usuario logueado se guarda en $_SESSION["nombre"]
 $nombre = $_SESSION["nombre"] ?? 'Familiar';
 ?>
- 
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Panel del Familiar</title>
- 
+
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
- 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
- 
+
 <style>
+:root{
+    --header-h: 160px;
+}
+
 html, body {
     margin: 0;
     padding: 0;
     height: 100%;
     overflow: hidden;
     font-family: 'Poppins', sans-serif;
-    background: #b3b3b3ff; /* gris claro */
+    background: #887d7dff;
 }
- 
-/* ENCABEZADO SUPERIOR */
-.header {
+
+/* Layout como en el primer archivo */
+.layout{
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* HEADER igual que el del primer archivo */
+.header{
     width: 100%;
-    height: 160px;
+    height: var(--header-h);
     background-image: url('imagenes/Banner.svg');
     background-size: cover;
     background-position: center;
-    color: white;
-    text-align: center;
-    padding-top: 40px;
     position: relative;
+    flex: 0 0 auto;
 }
- 
-/* Etiqueta de “Familiar” */
-.user-role {
+
+/* Etiqueta inferior (igual que el primero) */
+.user-role{
     position: absolute;
     bottom: 10px;
     left: 20px;
-    font-size: 20px;
-    font-weight: 600;
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
 }
 
-.header h1 {
-    margin: 0;
-    font-size: 28px;
-    font-weight: 600;
-    margin-bottom: 5px; /* Pequeño ajuste para el saludo */
-}
- 
-/* BOTÓN CERRAR SESIÓN MODERNO */
+/* BOTÓN CERRAR SESIÓN: INTACTO (tu CSS) */
 .logout-button {
     position: absolute;
     top: 15px;
@@ -89,11 +91,11 @@ html, body {
     z-index: 10;
     transition: all 0.3s ease;
 }
- 
+
 .logout-button i {
     transition: transform 0.4s ease;
 }
- 
+
 .logout-button::before {
     content: "";
     position: absolute;
@@ -105,22 +107,22 @@ html, body {
     transition: all 0.4s ease;
     z-index: -1;
 }
- 
+
 .logout-button:hover::before {
     left: 0;
 }
- 
+
 .logout-button:hover {
     transform: translateY(-3px);
 }
- 
+
 .logout-button:hover i {
     transform: rotate(20deg);
 }
- 
+
 /* SECCIÓN CENTRAL */
 .main-section {
-    height: calc(100vh - 160px - 160px);
+    flex: 1 1 auto;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -128,7 +130,7 @@ html, body {
     flex-wrap: wrap;
     padding: 0;
 }
- 
+
 .card {
     text-align: center;
     width: 260px;
@@ -139,12 +141,12 @@ html, body {
     transition: transform 0.3s, box-shadow 0.3s;
     cursor: pointer;
 }
- 
+
 .card:hover {
     transform: translateY(-8px);
     box-shadow: 0 12px 30px rgba(0,0,0,0.25);
 }
- 
+
 .card img {
     width: 200px;
     height: 200px;
@@ -152,46 +154,33 @@ html, body {
     object-fit: cover;
     margin-bottom: 20px;
 }
- 
+
 .card h2 {
     font-size: 24px;
     font-weight: 600;
 }
- 
-/* IMAGEN INFERIOR */
-.bottom-image {
-    width: 100%;
-    height: 160px;
-}
- 
-.bottom-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
- 
+
 /* RESPONSIVE */
 @media (max-width: 900px) {
     .main-section {
         flex-direction: column;
         gap: 40px;
     }
- 
+
     .card {
         width: 220px;
         padding: 20px;
     }
- 
+
     .card img {
         width: 180px;
         height: 180px;
     }
- 
+
     .card h2 {
         font-size: 22px;
     }
- 
+
     .logout-button {
         padding: 8px 18px;
         font-size: 14px;
@@ -199,30 +188,33 @@ html, body {
 }
 </style>
 </head>
- 
-<body>
- 
-<div class="header">
-    
-    <div class="user-role">Panel del Familiar</div>
-    <a href="logout.php" class="logout-button">
-        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
-    </a>
-</div>
- 
-<div class="main-section">
-    <div class="card" onclick="location.href='seguimiento.php'">
-        <img src="imagenes/progreso.png" alt="Seguimiento de progreso">
-        <h2>Progreso</h2>
-    </div>
- 
-    <div class="card" onclick="location.href='lista_profesionales.php'">
-        <img src="imagenes/profesionales.png" alt="Profesionales">
-        <h2>Profesionales</h2>
-    </div>
-</div>
- 
 
- 
+<body>
+
+<div class="layout">
+
+    <div class="header">
+        <div class="user-role">Panel del Familiar</div>
+
+        <!-- Botón cerrar sesión intacto -->
+        <a href="logout.php" class="logout-button">
+            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+        </a>
+    </div>
+
+    <div class="main-section">
+        <div class="card" onclick="location.href='seguimiento.php'">
+            <img src="imagenes/progreso.png" alt="Seguimiento de progreso">
+            <h2>Progreso</h2>
+        </div>
+
+        <div class="card" onclick="location.href='lista_profesionales.php'">
+            <img src="imagenes/profesionales.png" alt="Profesionales">
+            <h2>Profesionales</h2>
+        </div>
+    </div>
+
+</div>
+
 </body>
 </html>

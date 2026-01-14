@@ -39,29 +39,28 @@ try {
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
+        :root{
+            --header-h: 160px;
+        }
+
         body {
             margin: 0;
             padding: 0;
             font-family: 'Poppins', sans-serif;
-            background: #ffffff;
-            color: #333;
+            background: #887d7dff;
         }
 
-        /* ENCABEZADO SUPERIOR (igual estilo lista_profesionales) */
-        .header {
+        /* HEADER (igual que el del primer archivo) */
+        .header{
             width: 100%;
-            height: 160px;
+            height: var(--header-h);
             background-image: url('imagenes/Banner.svg');
             background-size: cover;
             background-position: center;
-            color: white;
-            text-align: center;
-            padding-top: 40px;
             position: relative;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
-        /* Flecha de volver */
+        /* Flecha de volver (INTACTA: mismas propiedades/hover que tu código) */
         .back-arrow {
             position: absolute;
             top: 15px;
@@ -84,12 +83,14 @@ try {
             transform: translateX(-2px);
         }
 
-        .user-role {
+        /* Etiqueta inferior (igual que el primer archivo) */
+        .user-role{
             position: absolute;
             bottom: 10px;
             left: 20px;
-            font-size: 20px;
-            font-weight: 600;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
         }
 
         /* SECCIÓN DE TARJETAS – igual estilo que lista_profesionales */
@@ -171,14 +172,14 @@ try {
 <body>
 
     <div class="header">
-        <!-- Flecha para volver al panel del profesional -->
+        <!-- Flecha para volver al panel del profesional (INTACTA) -->
         <a href="profesional.php" class="back-arrow" aria-label="Volver al panel del profesional">
             <svg xmlns="http://www.w3.org/2000/svg" height="34" width="34" viewBox="0 0 24 24" fill="white">
                 <path d="M14.7 20.3 6.4 12l8.3-8.3 1.4 1.4L9.2 12l6.9 6.9Z" />
             </svg>
         </a>
 
-        <div class="user-role">Panel del Profesional</div>
+        <div class="user-role">Familiares</div>
     </div>
 
     <div class="main-section">

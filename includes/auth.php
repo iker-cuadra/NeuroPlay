@@ -33,7 +33,7 @@ function requireRole($rolNecesario) {
 
     if (!isset($_SESSION["rol"]) || $_SESSION["rol"] !== $rolNecesario) {
         // Redirigir a la página principal si no hay sesión
-       header("Location: /htdocs/neuroplay/neuro.html");
+       header("Location: C:\\xampp\\htdocs\\neuroplay\\neuroplay_index.php");
         exit;
     }
 }
