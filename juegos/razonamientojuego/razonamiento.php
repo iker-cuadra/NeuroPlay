@@ -5,7 +5,7 @@ require_once "../../includes/auth.php";
 requireRole("usuario");
 $usuario_id = $_SESSION["usuario_id"] ?? 0;
 
-// OBTENER DIFICULTAD ASIGNADA PARA RAZONAMIENTO
+// OBTENER DIFICULTAD ASIGNADA
 $stmt = $conexion->prepare("
     SELECT dificultad_razonamiento
     FROM dificultades_asignadas
@@ -14,7 +14,6 @@ $stmt = $conexion->prepare("
 $stmt->execute([$usuario_id]);
 $dificultad_razonamiento = $stmt->fetchColumn();
 
-// Dificultad por defecto si no hay asignada
 if (!$dificultad_razonamiento) {
     $dificultad_razonamiento = "facil";
 }
@@ -25,20 +24,17 @@ if (!$dificultad_razonamiento) {
 <head>
     <meta charset="UTF-8">
     <title>Juego de Razonamiento</title>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        html,
-        body {
+        html, body {
             margin: 0;
             padding: 0;
             height: 100%;
-            overflow: hidden;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #887d7dff;
-            color: #111827;
+            overflow-y: auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f2f2f2;
         }
 
-        /* HEADER SUPERIOR */
         .header {
             width: 100%;
             height: 160px;
@@ -46,7 +42,6 @@ if (!$dificultad_razonamiento) {
             background-size: cover;
             background-position: center;
             position: relative;
-            color: white;
         }
 
         .user-role {
@@ -55,451 +50,302 @@ if (!$dificultad_razonamiento) {
             left: 20px;
             font-size: 20px;
             font-weight: bold;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+            color: white;
         }
 
-        /* FLECHA DE VOLVER */
         .back-arrow {
             position: absolute;
             top: 15px;
             left: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 38px;
-            height: 38px;
-            cursor: pointer;
-            text-decoration: none;
         }
 
-        .back-arrow svg {
-            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
-        }
-
-        .back-arrow:hover svg {
-            opacity: 0.7;
-            transform: translateX(-2px);
-        }
-
-        /* CONTENEDOR CENTRAL DEL JUEGO */
         .game-container {
-            height: calc(100vh - 160px - 160px);
-            /* header + footer */
+            min-height: calc(100vh - 200px);
             width: 90%;
-            margin: 0 auto;
+            max-width: 800px;
+            margin: 20px auto;
             background: white;
             border-radius: 20px;
-
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .game-header {
-            width: 100%;
-            text-align: center;
-            margin-bottom: 16px;
-        }
-
-        .game-header h2 {
-            margin: 0 0 4px 0;
-            font-size: 24px;
-        }
-
-        .game-header p {
-            margin: 2px 0;
-            font-size: 15px;
-            color: #4b5563;
-        }
-
-        .game-stats {
-            margin-top: 8px;
-            font-size: 14px;
-            color: #111827;
-        }
-
-        .game-stats span {
-            margin: 0 10px;
-        }
-
-        /* ÁREA DEL JUEGO */
-        .reasoning-area {
-            margin-top: 10px;
-            width: 100%;
-            max-width: 600px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
         .sequence-display {
-            width: 100%;
-            text-align: center;
-            font-size: 2rem;
-            padding: 16px 10px;
-            border-radius: 16px;
+            font-size: 2.5rem;
+            padding: 25px;
             background: #111827;
-            color: #e5e7eb;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-            letter-spacing: 4px;
+            color: white;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            letter-spacing: 10px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
         }
 
         .pattern-container {
-            margin-top: 20px;
             display: flex;
-            gap: 16px;
-            justify-content: center;
+            gap: 20px;
             flex-wrap: wrap;
+            justify-content: center;
         }
 
         .pattern-option {
-            width: 90px;
-            height: 90px;
-            border-radius: 18px;
-            background: radial-gradient(circle at 30% 30%, #4b5563, #111827);
-            border: 2px solid #9ca3af;
+            width: 100px;
+            height: 100px;
+            border-radius: 20px;
+            background: #374151;
+            color: white;
+            font-size: 3rem;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.2s ease;
-            user-select: none;
+            transition: all 0.2s ease;
+            border: 4px solid transparent;
         }
 
         .pattern-option:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
-            border-color: #e5e7eb;
+            transform: translateY(-5px);
+            background: #4b5563;
         }
 
-        .pattern-option.correct {
-            background: #16a34a;
-            border-color: #bbf7d0;
+        .pattern-option.correct { 
+            background: #16a34a !important; 
+            border-color: #bef264;
+            transform: scale(1.05);
         }
 
-        .pattern-option.incorrect {
-            background: #b91c1c;
-            border-color: #fecaca;
+        .pattern-option.incorrect { 
+            background: #b91c1c !important; 
+            border-color: #fca5a5;
+            animation: shake 0.4s;
         }
 
-        .pattern-option span {
-            font-size: 3rem;
-            color: #f9fafb;
-        }
-
-        .question-text {
-            text-align: center;
-            font-size: 1.1em;
-            margin: 20px 0 6px 0;
-            color: #4b5563;
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
         }
 
         .logic-message {
-            margin-top: 10px;
-            font-size: 15px;
-            min-height: 20px;
+            margin-top: 25px;
+            font-weight: bold;
             text-align: center;
-            font-weight: 600;
         }
 
-        .logic-message.ok {
-            color: #15803d;
+        .btn-game {
+            padding: 15px 30px;
+            border-radius: 30px;
+            border: none;
+            background: #111827;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px;
+            transition: 0.3s;
         }
 
-        .logic-message.err {
-            color: #b91c1c;
-        }
+        .btn-game:hover { background: #374151; }
 
-        @media (max-width: 768px) {
-            .game-container {
-                width: 95%;
-                padding: 16px;
-            }
-
-            .sequence-display {
-                font-size: 1.6rem;
-                padding: 12px 8px;
-            }
-
-            .pattern-option {
-                width: 80px;
-                height: 80px;
-            }
-
-            .pattern-option span {
-                font-size: 2.5rem;
-            }
-        }
+        #tiempo { color: #1e4db7; font-size: 1.2rem; }
     </style>
 </head>
 
 <body>
 
-    <!-- HEADER -->
-    <div class="header">
-        <a href="../../usuario.php" class="back-arrow">
-            <svg xmlns="http://www.w3.org/2000/svg" height="34" width="34" viewBox="0 0 24 24" fill="white">
-                <path d="M14.7 20.3 6.4 12l8.3-8.3 1.4 1.4L9.2 12l6.9 6.9Z" />
-            </svg>
-        </a>
-        <div class="user-role">Juego: Razonamiento</div>
-    </div>
+<div class="header">
+    <a href="../../usuario.php" class="back-arrow">
+        <svg xmlns="http://www.w3.org/2000/svg" height="34" width="34" viewBox="0 0 24 24" fill="white">
+            <path d="M14.7 20.3 6.4 12l8.3-8.3 1.4 1.4L9.2 12l6.9 6.9Z"/>
+        </svg>
+    </a>
+    <div class="user-role">Juego: Razonamiento</div>
+</div>
 
-    <!-- CONTENEDOR DEL JUEGO -->
-    <div class="game-container">
-        <div class="game-header">
-            <h2>Secuencias Lógicas</h2>
-            <p>Selecciona el símbolo que continúa la secuencia.</p>
-            <p>Dificultad asignada:
-                <strong>
-                    <?php
-                    $label = ucfirst($dificultad_razonamiento);
-                    echo htmlspecialchars($label);
-                    ?>
-                </strong>
-            </p>
-            <div class="game-stats">
-                <span>Tiempo: <strong id="tiempo">00:00</strong></span>
-            </div>
-        </div>
+<div class="game-container">
+    <h2 style="margin-bottom: 5px;">Secuencias Lógicas</h2>
+    <p style="color: #666; margin-bottom: 20px;">Dificultad: <strong><?= ucfirst($dificultad_razonamiento) ?></strong> | Ronda: <strong id="ronda-indicador">1/5</strong></p>
+    <p><i class="far fa-clock"></i> Tiempo: <strong id="tiempo">00:00</strong></p>
 
-        <div id="zona-razonamiento" class="reasoning-area">
-            <!-- Aquí va el juego por JavaScript -->
-        </div>
+    <div id="zona-razonamiento"></div>
+    <div id="razonamiento-mensaje" class="logic-message"></div>
+</div>
 
-        <div id="razonamiento-mensaje" class="logic-message"></div>
-    </div>
+<script>
+let currentDifficulty = "<?= $dificultad_razonamiento ?>";
+if (currentDifficulty === 'media') currentDifficulty = 'medio';
 
+const TOTAL_RONDAS = 5;
+let rondaActual = 0;
+let resultados = [];
+let segundos = 0;
+let timer = null;
 
-    <script>
-        // Dificultad desde PHP
-        let currentDifficulty = "<?= htmlspecialchars($dificultad_razonamiento, ENT_QUOTES) ?>";
-        if (currentDifficulty === 'media') currentDifficulty = 'medio';
+function iniciarTemporizador() {
+    detenerTemporizador();
+    segundos = 0;
+    timer = setInterval(() => {
+        segundos++;
+        document.getElementById("tiempo").textContent =
+            String(Math.floor(segundos / 60)).padStart(2,'0') + ":" +
+            String(segundos % 60).padStart(2,'0');
+    }, 1000);
+}
 
-        // ===== TIEMPO TOTAL (NO SE REINICIA) =====
-        const MAX_SECONDS = 90; // 1 minuto y medio
-        let segundos = 0;
-        let timerInterval = null;
-        let gameOver = false;
-        let resultadoGuardado = false;
+function detenerTemporizador() {
+    if (timer) clearInterval(timer);
+}
 
-        // ===== PUNTUACIÓN TOTAL =====
-        let puntos = 0;
+function enviarDatosFinales() {
+    const totalTiempo = resultados.reduce((acc, r) => acc + r.tiempo_segundos, 0);
+    const aciertos = resultados.filter(r => r.correcta === 1).length;
+    const puntuacionTotal = Math.round((aciertos / TOTAL_RONDAS) * 100);
 
-        function formatearTiempo(s) {
-            const min = String(Math.floor(s / 60)).padStart(2, '0');
-            const seg = String(s % 60).padStart(2, '0');
-            return `${min}:${seg}`;
-        }
+    fetch('../../guardar_resultado.php', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+            tipo_juego: 'razonamiento',
+            dificultad: currentDifficulty,
+            puntuacion: puntuacionTotal,
+            tiempo_segundos: totalTiempo,
+            rondas: resultados 
+        })
+    })
+    .then(r => r.json())
+    .catch(err => console.error("Error al guardar:", err));
+}
 
-        function actualizarTiempoUI() {
-            const t = document.getElementById('tiempo');
-            if (t) t.textContent = `${formatearTiempo(segundos)} / ${formatearTiempo(MAX_SECONDS)}`;
-        }
+function loadReasoningGame(area) {
+    document.getElementById("ronda-indicador").textContent = (rondaActual + 1) + "/" + TOTAL_RONDAS;
+    
+    // Base de datos de patrones extendida
+    const patterns = [
+        {seq:['★','◆','★','◆'], ans:'★'},
+        {seq:['●','■','●','■'], ans:'●'},
+        {seq:['▲','▼','▲','▼'], ans:'▲'},
+        {seq:['■','■','◆','◆'], ans:'■'},
+        {seq:['★','●','★','●'], ans:'★'},
+        {seq:['▲','●','▲','●'], ans:'▲'}
+    ];
+    const p = patterns[Math.floor(Math.random()*patterns.length)];
+    crearInterfaz(area, p);
+}
 
-        function iniciarTemporizadorUnaVez() {
+function crearInterfaz(area, pattern) {
+    area.innerHTML = "";
+
+    const display = document.createElement("div");
+    display.className = "sequence-display";
+    display.textContent = pattern.seq.join(" ") + " ?";
+    area.appendChild(display);
+
+    const options = document.createElement("div");
+    options.className = "pattern-container";
+
+    const symbols = ['★','◆','●','■','▲','▼'];
+    let opts = [pattern.ans];
+    while (opts.length < 3) {
+        let s = symbols[Math.floor(Math.random()*symbols.length)];
+        if (!opts.includes(s)) opts.push(s);
+    }
+    opts.sort(()=>Math.random()-0.5);
+
+    opts.forEach(o=>{
+        const btn = document.createElement("div");
+        btn.className = "pattern-option";
+        btn.textContent = o;
+        
+        btn.onclick = () => {
+            // BLOQUEO DE CLICS PARA EVITAR ERRORES
+            const todosLosBotones = options.querySelectorAll('.pattern-option');
+            todosLosBotones.forEach(b => b.style.pointerEvents = 'none');
+
             detenerTemporizador();
-            segundos = 0;
-            gameOver = false;
-            resultadoGuardado = false;
-            actualizarTiempoUI();
+            const esCorrecto = (o === pattern.ans);
 
-            timerInterval = setInterval(() => {
-                if (gameOver) return;
-
-                segundos++;
-                actualizarTiempoUI();
-
-                if (segundos >= MAX_SECONDS) {
-                    finalizarJuegoPorTiempo();
-                }
-            }, 1000);
-        }
-
-        function detenerTemporizador() {
-            if (timerInterval !== null) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-            }
-        }
-
-        function finalizarJuegoPorTiempo() {
-            if (gameOver) return;
-            gameOver = true;
-            detenerTemporizador();
-
-            const msgDiv = document.getElementById('razonamiento-mensaje');
-            if (msgDiv) {
-                msgDiv.textContent = `⏳ Tiempo agotado. Puntuación final: ${puntos}`;
-                msgDiv.classList.remove('ok');
-                msgDiv.classList.add('err');
-            }
-
-            // Bloquear interacción
-            const area = document.getElementById("zona-razonamiento");
-            if (area) area.style.pointerEvents = "none";
-
-            // Guardar SOLO UNA VEZ (con tu guardar_resultado.php)
-            if (!resultadoGuardado) {
-                resultadoGuardado = true;
-                guardarResultadoRazonamiento(puntos, MAX_SECONDS);
-            }
-        }
-
-        // ===== GUARDAR RESULTADO EN BD (compatible con tu PHP) =====
-        function guardarResultadoRazonamiento(puntuacion, tiempoSegundos) {
-            fetch('../../guardar_resultado.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    tipo_juego: 'razonamiento',   
-                    puntuacion: puntuacion,
-                    tiempo_segundos: tiempoSegundos
-                })
-            })
-                .then(r => r.json())
-                .then(data => console.log('Resultado razonamiento guardado:', data))
-                .catch(err => console.error('Error al guardar resultado de razonamiento', err));
-        }
-
-        // ============================================
-        // JUEGO DE RAZONAMIENTO
-        // ============================================
-
-        function loadReasoningGame(area) {
-            if (gameOver) return;
-
-            if (currentDifficulty === 'facil') {
-                loadReasoningGameFacil(area);
-            } else if (currentDifficulty === 'medio') {
-                loadReasoningGameMedio(area);
+            if (esCorrecto) {
+                btn.classList.add("correct");
             } else {
-                loadReasoningGameDificil(area);
-            }
-        }
-
-        function loadReasoningGameFacil(area) {
-            const patterns = [
-                { sequence: ['★', '◆', '★', '◆'], answer: '★' },
-                { sequence: ['●', '■', '●', '■'], answer: '●' },
-                { sequence: ['▲', '▼', '▲', '▼'], answer: '▲' }
-            ];
-            const pattern = patterns[Math.floor(Math.random() * patterns.length)];
-            createReasoningInterface(area, pattern, ['★', '◆', '●', '■', '▲', '▼']);
-        }
-
-        function loadReasoningGameMedio(area) {
-            const patterns = [
-                { sequence: ['★', '◆', '●', '★', '◆'], answer: '●' },
-                { sequence: ['■', '▲', '▼', '■', '▲'], answer: '▼' },
-                { sequence: ['●', '●', '■', '●', '●'], answer: '■' }
-            ];
-            const pattern = patterns[Math.floor(Math.random() * patterns.length)];
-            createReasoningInterface(area, pattern, ['★', '◆', '●', '■', '▲', '▼']);
-        }
-
-        function loadReasoningGameDificil(area) {
-            const patterns = [
-                { sequence: ['★', '◆', '●', '■', '★', '◆', '●'], answer: '■' },
-                { sequence: ['▲', '▲', '▼', '▼', '▲', '▲'], answer: '▼' },
-                { sequence: ['★', '●', '●', '★', '■', '■', '★'], answer: '▲' }
-            ];
-            const pattern = patterns[Math.floor(Math.random() * patterns.length)];
-            createReasoningInterface(area, pattern, ['★', '◆', '●', '■', '▲', '▼', '♦', '♠']);
-        }
-
-        function createReasoningInterface(area, pattern, availableSymbols) {
-            area.innerHTML = '';
-
-            const msgDiv = document.getElementById('razonamiento-mensaje');
-            if (msgDiv) {
-                msgDiv.textContent = '';
-                msgDiv.className = 'logic-message';
+                btn.classList.add("incorrect");
+                // Mostramos la correcta para que el usuario aprenda
+                todosLosBotones.forEach(b => {
+                    if(b.textContent === pattern.ans) b.classList.add("correct");
+                });
             }
 
-            const display = document.createElement('div');
-            display.className = 'sequence-display';
-            display.textContent = pattern.sequence.join(' ') + '  ?';
-            area.appendChild(display);
-
-            const question = document.createElement('p');
-            question.className = 'question-text';
-            question.textContent = '¿Qué símbolo continúa la secuencia?';
-            area.appendChild(question);
-
-            const options = document.createElement('div');
-            options.className = 'pattern-container';
-
-            // Opciones: 1 correcta + 2 incorrectas
-            const selectedOptions = [pattern.answer];
-            while (selectedOptions.length < 3) {
-                const opt = availableSymbols[Math.floor(Math.random() * availableSymbols.length)];
-                if (!selectedOptions.includes(opt)) selectedOptions.push(opt);
-            }
-            selectedOptions.sort(() => Math.random() - 0.5);
-
-            let bloqueado = false; // evita doble click mientras cambia secuencia
-
-            selectedOptions.forEach(opt => {
-                const btn = document.createElement('div');
-                btn.className = 'pattern-option';
-
-                const span = document.createElement('span');
-                span.textContent = opt;
-                btn.appendChild(span);
-
-                btn.onclick = function () {
-                    if (gameOver || bloqueado) return;
-
-                    bloqueado = true;
-
-                    if (opt === pattern.answer) {
-                        puntos += 100;
-
-                        btn.classList.add('correct');
-                        if (msgDiv) {
-                            msgDiv.textContent = '¡Correcto!';
-                            msgDiv.classList.remove('err');
-                            msgDiv.classList.add('ok');
-                        }
-                    } else {
-                        btn.classList.add('incorrect');
-                        if (msgDiv) {
-                            msgDiv.textContent = 'Incorrecto. Nueva secuencia...';
-                            msgDiv.classList.remove('ok');
-                            msgDiv.classList.add('err');
-                        }
-                    }
-
-                    // Cambia LA SECUENCIA (nuevo patrón) sin reiniciar cronómetro
-                    setTimeout(() => {
-                        loadReasoningGame(area);
-                    }, 350);
-                };
-
-                options.appendChild(btn);
+            // GUARDAR RESULTADO SIEMPRE (ACIERTO O FALLO)
+            resultados.push({
+                ronda: rondaActual + 1,
+                tiempo_segundos: segundos, 
+                correcta: esCorrecto ? 1 : 0
             });
 
-            area.appendChild(options);
-        }
+            rondaActual++;
 
-        document.addEventListener("DOMContentLoaded", function () {
-            const area = document.getElementById("zona-razonamiento");
-            if (area) area.style.pointerEvents = "auto";
-            iniciarTemporizadorUnaVez();
-            loadReasoningGame(area);
-        });
-    </script>
+            // Esperar 1 segundo antes de cambiar de ronda
+            setTimeout(() => {
+                if (rondaActual >= TOTAL_RONDAS) {
+                    enviarDatosFinales();
+                    mostrarResumenFinal();
+                } else {
+                    iniciarTemporizador();
+                    loadReasoningGame(area);
+                }
+            }, 1200);
+        };
+        options.appendChild(btn);
+    });
 
+    area.appendChild(options);
+}
 
+function mostrarResumenFinal() {
+    detenerTemporizador();
+    const area = document.getElementById("zona-razonamiento");
+    const aciertos = resultados.filter(r => r.correcta === 1).length;
+    
+    area.innerHTML = `
+        <div style="text-align:center;">
+            <i class="fas fa-trophy" style="font-size:3rem; color:#facc15; margin-bottom:15px;"></i>
+            <h3>¡Ejercicio completado!</h3>
+            <p style="font-size:1.2rem;">Has acertado <strong>${aciertos}</strong> de <strong>${TOTAL_RONDAS}</strong></p>
+        </div>
+    `;
 
+    let ul = "<div style='width:100%; max-width:300px; margin:20px auto; text-align:left;'>";
+    resultados.forEach(r => {
+        ul += `
+            <div style='display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;'>
+                <span>Ronda ${r.ronda}</span>
+                <span>${r.tiempo_segundos}s</span>
+                <span>${r.correcta ? '<i class="fas fa-check-circle" style="color:green"></i>' : '<i class="fas fa-times-circle" style="color:red"></i>'}</span>
+            </div>`;
+    });
+    ul += "</div>";
+    area.innerHTML += ul;
+
+    document.getElementById("razonamiento-mensaje").innerHTML = `
+        <button class="btn-game" onclick="reiniciarJuego()">Jugar otra vez</button>
+        <button class="btn-game" onclick="window.location.href='../../usuario.php'">Volver al inicio</button>
+    `;
+}
+
+function reiniciarJuego() {
+    rondaActual = 0;
+    resultados = [];
+    document.getElementById("razonamiento-mensaje").innerHTML = "";
+    iniciarTemporizador();
+    loadReasoningGame(document.getElementById("zona-razonamiento"));
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+    iniciarTemporizador();
+    loadReasoningGame(document.getElementById("zona-razonamiento"));
+});
+</script>
 
 </body>
-
 </html>

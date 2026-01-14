@@ -178,8 +178,9 @@ if ($res) {
 // ----------------------------------------------------
 // HISTORIAL DE RESULTADOS (tabla resultados_juego)
 // ----------------------------------------------------
+// Se añade el campo 'id' para poder referenciar las rondas
 $stmt_hist = $conexion->prepare("
-    SELECT tipo_juego,
+    SELECT id, tipo_juego,
            puntuacion,
            tiempo_segundos,
            dificultad,
@@ -191,6 +192,13 @@ $stmt_hist = $conexion->prepare("
 ");
 $stmt_hist->execute([$user_id]);
 $historialResultados = $stmt_hist->fetchAll(PDO::FETCH_ASSOC);
+
+// Función para obtener las rondas de razonamiento
+function obtenerDetalleRondas($conexion, $resultado_id) {
+    $stmt = $conexion->prepare("SELECT ronda, correcta, tiempo_segundos FROM razonamiento_rondas WHERE resultado_id = ? ORDER BY ronda ASC");
+    $stmt->execute([$resultado_id]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 // Función para formatear segundos a mm:ss
 function formatSecondsToMMSS($segundos) {
@@ -556,7 +564,6 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
 
                 <div class="evaluation-grid">
 
-                    <!-- PRIMERO: LÓGICA -->
                     <div class="eval-item">
                         <h3><i class="fas fa-lightbulb"></i> Lógica</h3>
                         <div class="current-level">Nivel <?= htmlspecialchars($niveles_actuales['logica']['nivel']) ?></div>
@@ -575,7 +582,6 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
                         </div>
                     </div>
 
-                    <!-- SEGUNDO: MEMORIA -->
                     <div class="eval-item">
                         <h3><i class="fas fa-brain"></i> Memoria</h3>
                         <div class="current-level">Nivel <?= htmlspecialchars($niveles_actuales['memoria']['nivel']) ?></div>
@@ -594,7 +600,6 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
                         </div>
                     </div>
 
-                    <!-- TERCERO: RAZONAMIENTO -->
                     <div class="eval-item">
                         <h3><i class="fas fa-cogs"></i> Razonamiento</h3>
                         <div class="current-level">Nivel <?= htmlspecialchars($niveles_actuales['razonamiento']['nivel']) ?></div>
@@ -613,7 +618,6 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
                         </div>
                     </div>
 
-                    <!-- CUARTO: ATENCIÓN -->
                     <div class="eval-item">
                         <h3><i class="fas fa-bullseye"></i> Atención</h3>
                         <div class="current-level">Nivel <?= htmlspecialchars($niveles_actuales['atencion']['nivel']) ?></div>
@@ -641,7 +645,6 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
                 </div>
             </form>
 
-            <!-- HISTORIAL DE RESULTADOS -->
             <div class="history-card">
                 <h2><i class="fas fa-history"></i> Historial de resultados</h2>
                 <p class="history-intro">
@@ -663,19 +666,46 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
                         </thead>
                         <tbody>
                         <?php foreach ($historialResultados as $fila): ?>
-                            <tr>
+                            <tr style="cursor: pointer;" onclick="toggleRondas(<?= $fila['id'] ?>)">
                                 <td>
                                     <?= date('d/m/Y H:i', strtotime($fila['fecha_juego'])) ?>
                                 </td>
                                 <td>
                                     <span class="history-tag <?= htmlspecialchars($fila['tipo_juego']) ?>">
                                         <?= ucfirst(htmlspecialchars($fila['tipo_juego'])) ?>
+                                        <?php if($fila['tipo_juego'] === 'razonamiento'): ?> 
+                                            <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 5px; opacity: 0.7;"></i>
+                                        <?php endif; ?>
                                     </span>
                                 </td>
                                 <td><?= htmlspecialchars($fila['dificultad']) ?></td>
-                                <td><?= (int)$fila['puntuacion'] ?></td>
+                                <td><strong><?= (int)$fila['puntuacion'] ?>%</strong></td>
                                 <td><?= formatSecondsToMMSS($fila['tiempo_segundos']) ?> min</td>
                             </tr>
+
+                            <?php if ($fila['tipo_juego'] === 'razonamiento'): 
+                                $rondas = obtenerDetalleRondas($conexion, $fila['id']); ?>
+                                <tr id="rondas-<?= $fila['id'] ?>" style="display: none; background: #fdfdfd;">
+                                    <td colspan="5" style="padding: 0;">
+                                        <div style="padding: 15px; border-left: 5px solid #e65100; margin: 10px; background: #fff; border-radius: 8px; box-shadow: inset 0 0 5px rgba(0,0,0,0.05);">
+                                            <h4 style="margin: 0 0 10px 0; font-size: 13px; color: #e65100; text-transform: uppercase; letter-spacing: 0.5px;">Desglose de las 5 Rondas</h4>
+                                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                                <?php foreach ($rondas as $r): ?>
+                                                    <div style="border: 1px solid #eee; padding: 8px 12px; border-radius: 10px; background: #fcfcfd; display: flex; align-items: center; gap: 8px;">
+                                                        <span style="font-weight: 700; color: #666;">R<?= $r['ronda'] ?></span>
+                                                        <span>
+                                                            <?= $r['correcta'] 
+                                                                ? '<i class="fas fa-check-circle" style="color: #2e7d32;"></i>' 
+                                                                : '<i class="fas fa-times-circle" style="color: #c62828;"></i>' ?>
+                                                        </span>
+                                                        <small style="color: #888; font-family: monospace;"><?= $r['tiempo_segundos'] ?>s</small>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
                         <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -686,5 +716,19 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
     </div>
 
 </div>
+
+<script>
+function toggleRondas(id) {
+    const detalle = document.getElementById('rondas-' + id);
+    if (detalle) {
+        if (detalle.style.display === 'none') {
+            detalle.style.display = 'table-row';
+        } else {
+            detalle.style.display = 'none';
+        }
+    }
+}
+</script>
+
 </body>
 </html>
