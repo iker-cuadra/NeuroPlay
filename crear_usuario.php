@@ -106,14 +106,37 @@ $previewDefault = "uploads/" . fotoDefaultPorRol($rol_seleccionado);
             --header-h: 160px;
         }
 
-        html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: 'Poppins', sans-serif;
-            background: #887d7dff;
-            overflow-x: hidden;
-        }
+        /* 1. Modifica el body para que sea transparente y ocupe todo el ancho */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    font-family: 'Poppins', sans-serif;
+    background: transparent; /* Antes estaba en #887d7dff */
+    overflow-x: hidden;
+}
+
+/* 2. Añade el bloque de la animación del fondo */
+.canvas-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: -1;
+    background: #e5e5e5;
+    background-image:
+        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
+        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%),
+        radial-gradient(at 0% 100%, hsla(321,0%,100%,1) 0, transparent 50%),
+        radial-gradient(at 100% 100%, hsla(0,0%,80%,1) 0, transparent 50%);
+    background-size: 200% 200%;
+    animation: meshMove 12s infinite alternate ease-in-out;
+}
+@keyframes meshMove {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
+}
 
         .layout{
             min-height: 100vh;
@@ -165,13 +188,15 @@ $previewDefault = "uploads/" . fotoDefaultPorRol($rol_seleccionado);
         }
 
         .container {
-            background: white;
-            padding: 30px 40px;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 900px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-        }
+    background: rgba(255, 255, 255, 0.85); /* Blanco con transparencia */
+    backdrop-filter: blur(10px);           /* Desenfoque de fondo */
+    -webkit-backdrop-filter: blur(10px);
+    padding: 30px 40px;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 900px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
 
         .form-flex {
             display: flex;
@@ -277,7 +302,7 @@ $previewDefault = "uploads/" . fotoDefaultPorRol($rol_seleccionado);
     </style>
 </head>
 <body>
-
+<div class="canvas-bg"></div> 
 <div class="layout">
 
     <!-- HEADER igual que el del primer archivo -->
