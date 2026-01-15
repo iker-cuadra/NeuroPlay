@@ -145,10 +145,10 @@
     width: 260px;
     padding: 30px;
     border-radius: 20px;
-    background: rgba(0, 0, 0, 0.35); /* MÁS OSCURO */
+    background: rgba(195, 195, 195, 0.35); /* MÁS OSCURO */
     backdrop-filter: blur(15px) saturate(180%);
     -webkit-backdrop-filter: blur(15px) saturate(180%);
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(12, 12, 12, 0.2);
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
     transition: transform 0.3s, box-shadow 0.3s;
     cursor: pointer;
@@ -208,13 +208,13 @@
 
         <div class="main-section">
             <div class="card card-label" onclick="location.href='gestionar_users.php'">
-                <img src="imagenes/usuarios.png" alt="Usuarios">
+                <img src="imagenes/users.svg" alt="Usuarios">
                 <h2>Usuarios</h2>
                 <p class="card-subtitle">Gestionar</p>
             </div>
 
             <div class="card card-label" onclick="location.href='lista_familiares.php'">
-                <img src="imagenes/familiares.png" alt="Familiares">
+                <img src="imagenes/family.svg" alt="Familiares">
                 <h2>Familiares</h2>
                 <p class="card-subtitle">Chatear</p>
             </div>

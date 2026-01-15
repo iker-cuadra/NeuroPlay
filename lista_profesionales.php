@@ -1,20 +1,16 @@
 <?php
-// Asegúrate de incluir tu conexión y autenticación
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 require_once "includes/conexion.php";
 require_once "includes/auth.php";
 
-// Solo permite acceso a familiares
 requireRole("familiar");
 
-// Evitar volver atrás con el navegador una vez cerrada la sesión
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 header("Expires: 0");
 
-// Obtener profesionales
 try {
     $stmt = $conexion->prepare("
         SELECT id, nombre, email, foto, rol
@@ -46,11 +42,34 @@ try {
             margin: 0;
             padding: 0;
             height: 100%;
+            width: 100%;
+            overflow-x: hidden;
             font-family: 'Poppins', sans-serif;
-            background: #887d7dff;
         }
 
-        /* HEADER igual que el del primer archivo */
+        /* --- FONDO MESH (Optimizado para no dar lag) --- */
+        .canvas-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1; 
+            background: #e5e5e5;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(321,0%,100%,1) 0, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(0,0%,80%,1) 0, transparent 50%);
+            background-size: 150% 150%;
+            animation: meshMove 12s infinite alternate ease-in-out;
+            transform: translateZ(0); /* Aceleración por hardware */
+        }
+
+        @keyframes meshMove {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+
         .header{
             width: 100%;
             height: var(--header-h);
@@ -60,7 +79,6 @@ try {
             position: relative;
         }
 
-        /* Flecha volver (igual que el primer archivo) */
         .back-arrow{
             position: absolute;
             top: 15px;
@@ -72,10 +90,7 @@ try {
             justify-content: center;
             text-decoration: none;
         }
-        .back-arrow svg{ transition: opacity 0.2s ease-in-out; }
-        .back-arrow:hover svg{ opacity: 0.75; }
 
-        /* Etiqueta inferior (igual que el primer archivo) */
         .user-role{
             position: absolute;
             bottom: 10px;
@@ -85,7 +100,6 @@ try {
             font-size: 18px;
         }
 
-        /* SECCIÓN DE TARJETAS */
         .main-section {
             max-width: 1200px;
             margin: 40px auto;
@@ -93,25 +107,28 @@ try {
             justify-content: center;
             gap: 30px;
             flex-wrap: wrap;
-            padding: 0 20px;
+            padding: 0 20px 40px;
         }
 
+        /* --- ESTÉTICA ORIGINAL RECUPERADA --- */
         .profesional-card {
             text-align: center;
             width: 260px;
             padding: 30px;
             border-radius: 20px;
-            background: #fff;
+            background: #ffffff; /* Blanco original */
             border: 1px solid #eee;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
+            /* Optimización técnica interna */
+            will-change: transform; 
+            contain: layout;
         }
 
         .profesional-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            border-color: #ddd;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
         }
 
         .profesional-card img {
@@ -123,16 +140,26 @@ try {
             border: 3px solid #7a7676;
         }
 
+        /* --- SOLUCIÓN TEXTO LARGO --- */
         .profesional-card h2 {
             font-size: 1.2rem;
             margin: 0 0 10px;
             color: #2c3e50;
+            /* Truncado */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            display: block;
         }
 
         .profesional-card p {
             font-size: 0.9rem;
             color: #777;
             margin-bottom: 20px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .chat-indicator {
@@ -144,61 +171,36 @@ try {
             justify-content: center;
             gap: 8px;
         }
-
-        .no-data {
-            text-align: center;
-            width: 100%;
-            margin-top: 50px;
-            color: #999;
-            font-size: 1.1rem;
-        }
     </style>
 </head>
 
 <body>
+    <div class="canvas-bg"></div>
 
     <div class="header">
-        <!-- Flecha para volver al panel del familiar -->
-        <a href="familiar.php" class="back-arrow" aria-label="Volver al panel del familiar">
+        <a href="familiar.php" class="back-arrow">
             <svg xmlns="http://www.w3.org/2000/svg" height="34" width="34" viewBox="0 0 24 24" fill="white">
                 <path d="M14.7 20.3 6.4 12l8.3-8.3 1.4 1.4L9.2 12l6.9 6.9Z" />
             </svg>
         </a>
-
         <div class="user-role">Profesionales</div>
     </div>
 
     <div class="main-section">
         <?php if (count($profesionales) > 0): ?>
             <?php foreach ($profesionales as $profesional):
-
-                $ruta_foto = 'uploads/default.png';
-                if ($profesional['rol'] === 'profesional' && $profesional['foto'] === 'default.png') {
-                    $ruta_foto = 'imagenes/admin.jpg';
-                } elseif (!empty($profesional['foto']) && $profesional['foto'] !== 'default.png') {
-                    $ruta_foto = 'uploads/' . htmlspecialchars($profesional['foto']);
-                }
+                $ruta_foto = ($profesional['foto'] === 'default.png') ? 'imagenes/admin.jpg' : 'uploads/' . htmlspecialchars($profesional['foto']);
                 ?>
-                <div class="profesional-card"
-                    onclick="location.href='chat.php?destinatario_id=<?= htmlspecialchars($profesional['id']) ?>'">
-                    <img src="<?= $ruta_foto ?>" alt="Perfil de <?= htmlspecialchars($profesional['nombre']) ?>">
-
+                <div class="profesional-card" onclick="location.href='chat.php?destinatario_id=<?= $profesional['id'] ?>'">
+                    <img src="<?= $ruta_foto ?>" alt="Perfil">
                     <h2><?= htmlspecialchars($profesional['nombre']) ?></h2>
                     <p><?= htmlspecialchars($profesional['email']) ?></p>
-
                     <div class="chat-indicator">
                         <i class="fas fa-comment-dots"></i> Iniciar Conversación
                     </div>
                 </div>
             <?php endforeach; ?>
-        <?php else: ?>
-            <div class="no-data">
-                <i class="fas fa-user-slash" style="font-size: 3rem; display: block; margin-bottom: 10px;"></i>
-                No se encontraron profesionales registrados.
-            </div>
         <?php endif; ?>
     </div>
-
 </body>
-
 </html>
