@@ -44,7 +44,7 @@ $nombre = $_SESSION["nombre"];
             position: relative;
             flex: 0 0 auto;
         }
-
+        
         /* Etiqueta inferior (igual que profesional.php) */
         .user-role {
             position: absolute;
