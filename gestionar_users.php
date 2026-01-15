@@ -357,14 +357,17 @@ html, body {
     margin: 0;
     padding: 0;
     height: 100%;
-    width: 100%;
     overflow: hidden;
 }
-.canvas-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
+
+body{
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    background: #887d7dff;
+}
+
+.layout{
     height: 100vh;
     z-index: -1;
     background: #e5e5e5;
@@ -1048,58 +1051,74 @@ td:nth-child(1), td:nth-child(5){ text-align:center; }
                             </tr>
                         </thead>
 
-                        <tbody>
-                        <?php foreach ($usuarios as $u):
-                            $foto = $u["foto"] ?? "default.png";
-                            if ($foto === "") $foto = "default.png";
+                        <form method="POST" enctype="multipart/form-data">
+                            <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION["csrf"]) ?>">
+                            <input type="hidden" name="update_id" value="<?= (int)$editar_user["id"] ?>">
 
-                            $ruta_foto = "uploads/" . $foto;
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Nombre</label>
+                                    <input type="text" name="nombre" value="<?= htmlspecialchars($editar_user["nombre"]) ?>" required>
+                                </div>
 
-                            $cache_row = "";
-                            if (file_exists($ruta_foto)) {
-                                $cache_row = "?v=" . filemtime($ruta_foto);
-                            }
-                        ?>
-                            <tr>
-                                <td>
-                                    <img class="user-photo"
-                                        src="<?= htmlspecialchars($ruta_foto) . $cache_row ?>"
-                                        alt="Foto de <?= htmlspecialchars($u["nombre"]) ?>">
-                                </td>
-                                <td><?= htmlspecialchars($u["nombre"]) ?></td>
-                                <td><?= htmlspecialchars($u["email"]) ?></td>
-                                <td>
-                                    <span class="role-badge <?= htmlspecialchars($u["rol"]) ?>">
-                                        <?= htmlspecialchars($u["rol"]) ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="action-row">
-                                        <?php if ($u['rol'] === 'usuario'): ?>
-                                            <a class="action-btn btn-evaluar"
-                                            href="evaluar_usuario.php<?= htmlspecialchars(qs_keep(["user_id" => (int)$u["id"]])) ?>"
-                                            title="Ver Evaluación">
-                                                <i class="fas fa-cog"></i> Evaluar
-                                            </a>
-                                        <?php endif; ?>
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" name="email" value="<?= htmlspecialchars($editar_user["email"]) ?>" required>
+                                </div>
 
-                                        <a class="action-btn btn-editar"
-                                        href="gestionar_users.php<?= htmlspecialchars(qs_keep(["editar_id" => (int)$u["id"]])) ?>">
-                                            <i class="fas fa-pen"></i> Editar
-                                        </a>
+                                <div class="form-group">
+                                    <label>Rol</label>
+                                    <select name="rol" required>
+                                        <option value="usuario" <?= $editar_user["rol"]==="usuario"?"selected":"" ?>>Usuario</option>
+                                        <option value="familiar" <?= $editar_user["rol"]==="familiar"?"selected":"" ?>>Familiar</option>
+                                        <option value="profesional" <?= $editar_user["rol"]==="profesional"?"selected":"" ?>>Profesional</option>
+                                    </select>
+                                </div>
 
-                                        <a class="action-btn btn-eliminar"
-                                        href="gestionar_users.php<?= htmlspecialchars(qs_keep(["eliminar_id" => (int)$u["id"]])) ?>"
-                                        onclick="return confirm('¿Seguro que deseas eliminar a <?= htmlspecialchars($u['nombre']) ?>? Esta acción eliminará permanentemente todos sus datos, incluyendo el historial de chat.');">
-                                            <i class="fas fa-trash-alt"></i> Eliminar
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                        </tbody>
+                                <?php if ($editar_user["rol"] === "usuario"): ?>
+                                <div class="form-group">
+                                    <label>Asignar/Cambiar Familiar</label>
+                                    <select name="familiar_id">
+                                        <option value="">Sin familiar asignado</option>
+                                        <?php
+                                        // Buscamos todos los usuarios que tengan el rol "familiar"
+                                        $stmt_f = $conexion->query("SELECT id, nombre FROM usuarios WHERE rol = 'familiar' ORDER BY nombre ASC");
+                                        $familiares = $stmt_f->fetchAll(PDO::FETCH_ASSOC);
+                                        foreach($familiares as $fam): ?>
+                                            <option value="<?= $fam['id'] ?>" <?= (isset($editar_user['familiar_id']) && $editar_user['familiar_id'] == $fam['id']) ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($fam['nombre']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <?php else: ?>
+                                <div class="form-group">
+                                    <label>Nueva contraseña (opcional)</label>
+                                    <input type="password" name="password" placeholder="Dejar vacío para no cambiarla">
+                                </div>
+                                <?php endif; ?>
+                                
+                                <?php if ($editar_user["rol"] === "usuario"): ?>
+                                <div class="form-group">
+                                    <label>Nueva contraseña (opcional)</label>
+                                    <input type="password" name="password" placeholder="Dejar vacío para no cambiarla">
+                                </div>
+                                <?php endif; ?>
 
-                    </table>
+                                <div class="form-group" style="grid-column: 1 / -1;">
+                                    <label>Nueva foto (opcional)</label>
+                                    <input type="file" name="foto" accept="image/jpg, image/jpeg, image/png, image/webp">
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <a class="btn-cancel" href="gestionar_users.php<?= htmlspecialchars(qs_keep()) ?>">Cancelar</a>
+                                <button class="btn btn-save" type="submit">
+                                    <i class="fas fa-save"></i> Guardar cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             <?php endif; ?>
 

@@ -28,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["save_evaluation"])) {
     $memoria      = trim($_POST["memoria"] ?? "Fácil");
     $logica       = trim($_POST["logica"] ?? "Fácil");
     $razonamiento = trim($_POST["razonamiento"] ?? "Fácil");
-    $atencion     = trim($_POST["atencion"] ?? "Fácil"); // NUEVO
+    $atencion     = trim($_POST["atencion"] ?? "Fácil"); 
 
     try {
         if ($user_id_post > 0 && $profesional_id > 0) {
@@ -39,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["save_evaluation"])) {
                 SET dificultad_memoria       = ?,
                     dificultad_logica        = ?,
                     dificultad_razonamiento  = ?,
-                    dificultad_atencion      = ?,   -- NUEVO
+                    dificultad_atencion      = ?,
                     asignado_por             = ?,
                     fecha_actualizacion      = ?
                 WHERE usuario_id = ?
@@ -92,14 +92,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["save_evaluation"])) {
 }
 
 // -------------------------
-// OBTENER ID DE USUARIO Y DATOS DE PERFIL
+// OBTENER ID DE USUARIO Y DATOS DE PERFIL (MODIFICADO CON JOIN PARA EL FAMILIAR)
 // -------------------------
 $user_id = (int)($_GET['user_id'] ?? 0);
 $usuario = null;
 
 if ($user_id > 0) {
     try {
-        $stmt = $conexion->prepare("SELECT id, nombre, email, rol, foto FROM usuarios WHERE id = ?");
+        // Realizamos un LEFT JOIN con la misma tabla para obtener el nombre del familiar
+        $stmt = $conexion->prepare("
+            SELECT u1.id, u1.nombre, u1.email, u1.rol, u1.foto, u2.nombre AS nombre_familiar 
+            FROM usuarios u1 
+            LEFT JOIN usuarios u2 ON u1.familiar_id = u2.id 
+            WHERE u1.id = ?
+        ");
         $stmt->execute([$user_id]);
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
@@ -157,7 +163,7 @@ $stmt_eval = $conexion->prepare("
     SELECT dificultad_memoria,
            dificultad_logica,
            dificultad_razonamiento,
-           dificultad_atencion,  -- NUEVO
+           dificultad_atencion,
            fecha_actualizacion,
            asignado_por,
            (SELECT nombre FROM usuarios WHERE id = asignado_por) AS asignador_nombre
@@ -174,18 +180,17 @@ $niveles_opciones = [
     'Difícil'     => 'Difícil'
 ];
 
-// Configuración de niveles por defecto (incluimos Atención)
+// Configuración de niveles por defecto
 $niveles_actuales = [
     'memoria'      => ['nivel' => 'Fácil', 'asignador' => 'N/A', 'fecha' => 'N/A'],
     'logica'       => ['nivel' => 'Fácil', 'asignador' => 'N/A', 'fecha' => 'N/A'],
     'razonamiento' => ['nivel' => 'Fácil', 'asignador' => 'N/A', 'fecha' => 'N/A'],
-    'atencion'     => ['nivel' => 'Fácil', 'asignador' => 'N/A', 'fecha' => 'N/A'], // NUEVO
+    'atencion'     => ['nivel' => 'Fácil', 'asignador' => 'N/A', 'fecha' => 'N/A'],
 ];
 $ultima_actualizacion = 'N/A';
 $ultimo_profesional   = 'N/A';
 
 if ($res) {
-    // Mapear las columnas a la estructura de niveles_actuales
     $niveles_actuales['memoria']['nivel']      = htmlspecialchars($res['dificultad_memoria']      ?: 'Fácil');
     $niveles_actuales['logica']['nivel']       = htmlspecialchars($res['dificultad_logica']       ?: 'Fácil');
     $niveles_actuales['razonamiento']['nivel'] = htmlspecialchars($res['dificultad_razonamiento'] ?: 'Fácil');
@@ -207,7 +212,6 @@ if ($res) {
 // ----------------------------------------------------
 // HISTORIAL DE RESULTADOS (tabla resultados_juego)
 // ----------------------------------------------------
-// Se añade el campo 'id' para poder referenciar las rondas
 $stmt_hist = $conexion->prepare("
     SELECT id, tipo_juego,
            puntuacion,
@@ -267,10 +271,9 @@ $_SESSION["flash_error"]   = "";
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; height: auto; }
-body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); background: #887d7dff; }
+body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--text); }
 
 .layout { min-height: 100vh; display: flex; flex-direction: column; }
-/* HEADER banner */
 .header{
     width: 100%;
     height: var(--header-h);
@@ -281,7 +284,6 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
     flex: 0 0 auto;
 }
 
-/* Flecha volver */
 .back-arrow{
     position: absolute;
     top: 15px;
@@ -361,8 +363,18 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
     font-size: 14px;
     color: var(--muted);
 }
-.profile-info .role-badge {
+
+/* Nuevo estilo para la etiqueta del familiar */
+.familiar-tag {
+    display: block;
     margin-top: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #ad1457;
+}
+
+.role-badge {
+    margin-top: 8px;
     display: inline-block;
     padding: 4px 8px;
     border-radius: 8px;
@@ -373,6 +385,7 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
 .role-badge.usuario{ background:#e0f7fa; color:#00796b; }
 .role-badge.familiar{ background:#fce4ec; color:#ad1457; }
 .role-badge.profesional{ background:#e8f5e9; color:#2e7d32; }
+
 .evaluation-form {
     background: white;
     padding: 15px;
@@ -380,7 +393,6 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
     box-shadow: 0 6px 16px rgba(0,0,0,0.06);
 }
 
-/* 4 columnas en escritorio */
 .evaluation-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -389,17 +401,8 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
     margin-bottom: 20px;
 }
 
-/* Responsive: 2 columnas en tablets, 1 en móvil */
-@media (max-width: 900px) {
-    .evaluation-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-@media (max-width: 600px) {
-    .evaluation-grid {
-        grid-template-columns: 1fr;
-    }
-}
+@media (max-width: 900px) { .evaluation-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .evaluation-grid { grid-template-columns: 1fr; } }
 
 .eval-item {
     padding: 15px;
@@ -413,28 +416,7 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
     font-weight: 700;
     color: #4a4a4a;
     display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.eval-item label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--muted);
-    margin-bottom: 5px;
-}
-.eval-item select {
-    width: 100%;
-    padding: 10px 12px;
-    border-radius: 12px;
-    border: 1px solid #dde2ea;
-    background: #fff;
-    font-size: 14px;
-}
-.eval-item select:focus {
-    outline: none;
-    border-color: #b9c0cc;
-    box-shadow: 0 0 0 3px rgba(74,74,74,0.08);
+    align-items: center; gap: 8px;
 }
 .current-level {
     font-size: 24px;
@@ -451,23 +433,11 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
     border-top: 1px dashed #eee;
 }
 .update-info {
-    text-align: right;
-    font-size: 13px;
-    color: #4a4a4a;
-    padding-bottom: 10px;
+    text-align: right; font-size: 13px; color: #4a4a4a; padding-bottom: 10px;
 }
-.update-info strong {
-    color: #2e7d32;
-    font-weight: 700;
-}
+.update-info strong { color: #2e7d32; font-weight: 700; }
 .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-    flex-wrap: wrap;
+    display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; flex-wrap: wrap;
 }
 .btn {
     display: inline-flex; align-items: center; justify-content: center;
@@ -476,75 +446,21 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
     cursor: pointer; transition: transform 0.2s ease, background 0.2s ease;
     white-space: nowrap; font-size: 14px;
 }
-.btn-secondary {
-    background: #7a7676;
-    color: white;
-}
-.btn-secondary:hover { background: #6a6666; transform: translateY(-1px); }
-.btn-save {
-    background: #1e4db7;
-    color: white;
-}
+.btn-save { background: #1e4db7; color: white; }
 .btn-save:hover { background: #1a42a0; transform: translateY(-1px); }
 
 /* HISTORIAL */
 .history-card {
-    margin-top: 24px;
-    padding: 16px 18px;
-    background: #fcfcfd;
-    border-radius: 18px;
-    border: 1px solid #eef0f3;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.04);
+    margin-top: 24px; padding: 16px 18px; background: #fcfcfd; border-radius: 18px; border: 1px solid #eef0f3; box-shadow: 0 6px 16px rgba(0,0,0,0.04);
 }
-.history-card h2 {
-    margin: 0 0 8px 0;
-    font-size: 19px;
-    font-weight: 800;
-}
-.history-intro {
-    margin: 0 0 12px 0;
-    font-size: 14px;
-    color: var(--muted);
-}
-.no-history {
-    font-size: 14px;
-    color: var(--muted);
-}
-.history-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-}
-.history-table thead th {
-    text-align: left;
-    padding: 8px 6px;
-    border-bottom: 1px solid #e3e6ec;
-    color: #777;
-    font-weight: 600;
-}
-.history-table tbody td {
-    padding: 8px 6px;
-    border-bottom: 1px solid #f1f2f6;
-}
-.history-table tbody tr:last-child td {
-    border-bottom: none;
-}
-.history-tag {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-}
+.history-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.history-table thead th { text-align: left; padding: 8px 6px; border-bottom: 1px solid #e3e6ec; color: #777; font-weight: 600; }
+.history-table tbody td { padding: 8px 6px; border-bottom: 1px solid #f1f2f6; }
+.history-tag { display: inline-block; padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: 600; }
 .history-tag.memoria { background:#e0f7fa; color:#006064; }
 .history-tag.logica { background:#e8f5e9; color:#2e7d32; }
 .history-tag.razonamiento { background:#fff3e0; color:#e65100; }
 .history-tag.atencion { background:#ede7f6; color:#4527a0; }
-
-@media (max-width: 768px) {
-    .form-actions { flex-direction: column; align-items: stretch; }
-    .form-actions .btn { width: 100%; justify-content: center; }
-}
 </style>
 </head>
 
@@ -575,12 +491,27 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
                 <img src="<?= $ruta_foto ?>" alt="Foto de <?= htmlspecialchars($usuario["nombre"]) ?>">
                 <div class="profile-info">
                     <h2><?= htmlspecialchars($usuario["nombre"]) ?> (ID: <?= (int)$usuario["id"] ?>)</h2>
+<<<<<<< HEAD
 
                     <?php if (!empty($familiaresVinculadosTexto)): ?>
                         <p>Familiar vinculado: <?= $familiaresVinculadosTexto ?></p>
                     <?php endif; ?>
 
                     <p>Email: <?= htmlspecialchars($usuario["email"]) ?></p>
+=======
+                    <p><i class="fas fa-envelope"></i> <?= htmlspecialchars($usuario["email"]) ?></p>
+                    
+                    <?php if (!empty($usuario['nombre_familiar'])): ?>
+                        <span class="familiar-tag">
+                            <i class="fas fa-users"></i> Familiar de: <strong><?= htmlspecialchars($usuario['nombre_familiar']) ?></strong>
+                        </span>
+                    <?php else: ?>
+                        <span class="familiar-tag" style="color: #bbb;">
+                            <i class="fas fa-user-slash"></i> Sin familiar vinculado
+                        </span>
+                    <?php endif; ?>
+
+>>>>>>> 788d780ea8a88975575804d13028641bfb034886
                     <span class="role-badge <?= htmlspecialchars($usuario["rol"]) ?>">
                         <?= htmlspecialchars($usuario["rol"]) ?>
                     </span>
@@ -597,79 +528,31 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
                 <input type="hidden" name="save_evaluation" value="1">
 
                 <div class="evaluation-grid">
-
+                    <?php 
+                    $conf = [
+                        'logica' => ['icon' => 'lightbulb', 'label' => 'Lógica'],
+                        'memoria' => ['icon' => 'brain', 'label' => 'Memoria'],
+                        'razonamiento' => ['icon' => 'cogs', 'label' => 'Razonamiento'],
+                        'atencion' => ['icon' => 'bullseye', 'label' => 'Atención']
+                    ];
+                    foreach ($conf as $key => $info): ?>
                     <div class="eval-item">
-                        <h3><i class="fas fa-lightbulb"></i> Lógica</h3>
-                        <div class="current-level">Nivel <?= htmlspecialchars($niveles_actuales['logica']['nivel']) ?></div>
-
-                        <label for="logica">Asignar Nuevo Nivel:</label>
-                        <select name="logica" id="logica">
+                        <h3><i class="fas fa-<?= $info['icon'] ?>"></i> <?= $info['label'] ?></h3>
+                        <div class="current-level">Nivel <?= htmlspecialchars($niveles_actuales[$key]['nivel']) ?></div>
+                        <label for="<?= $key ?>">Asignar Nuevo Nivel:</label>
+                        <select name="<?= $key ?>" id="<?= $key ?>" style="width:100%; padding:10px; border-radius:12px; border:1px solid #dde2ea;">
                             <?php foreach ($niveles_opciones as $valor => $etiqueta): ?>
-                                <option value="<?= $valor ?>" <?= $niveles_actuales['logica']['nivel'] == $valor ? 'selected' : '' ?>>
+                                <option value="<?= $valor ?>" <?= $niveles_actuales[$key]['nivel'] == $valor ? 'selected' : '' ?>>
                                     <?= $etiqueta ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                         <div class="last-update-info">
-                            Última Modificación: <?= $niveles_actuales['logica']['fecha'] ?><br>
-                            Profesional: <?= $niveles_actuales['logica']['asignador'] ?>
+                            Última Modificación: <?= $niveles_actuales[$key]['fecha'] ?><br>
+                            Profesional: <?= $niveles_actuales[$key]['asignador'] ?>
                         </div>
                     </div>
-
-                    <div class="eval-item">
-                        <h3><i class="fas fa-brain"></i> Memoria</h3>
-                        <div class="current-level">Nivel <?= htmlspecialchars($niveles_actuales['memoria']['nivel']) ?></div>
-
-                        <label for="memoria">Asignar Nuevo Nivel:</label>
-                        <select name="memoria" id="memoria">
-                            <?php foreach ($niveles_opciones as $valor => $etiqueta): ?>
-                                <option value="<?= $valor ?>" <?= $niveles_actuales['memoria']['nivel'] == $valor ? 'selected' : '' ?>>
-                                    <?= $etiqueta ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <div class="last-update-info">
-                            Última Modificación: <?= $niveles_actuales['memoria']['fecha'] ?><br>
-                            Profesional: <?= $niveles_actuales['memoria']['asignador'] ?>
-                        </div>
-                    </div>
-
-                    <div class="eval-item">
-                        <h3><i class="fas fa-cogs"></i> Razonamiento</h3>
-                        <div class="current-level">Nivel <?= htmlspecialchars($niveles_actuales['razonamiento']['nivel']) ?></div>
-
-                        <label for="razonamiento">Asignar Nuevo Nivel:</label>
-                        <select name="razonamiento" id="razonamiento">
-                            <?php foreach ($niveles_opciones as $valor => $etiqueta): ?>
-                                <option value="<?= $valor ?>" <?= $niveles_actuales['razonamiento']['nivel'] == $valor ? 'selected' : '' ?>>
-                                    <?= $etiqueta ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <div class="last-update-info">
-                            Última Modificación: <?= $niveles_actuales['razonamiento']['fecha'] ?><br>
-                            Profesional: <?= $niveles_actuales['razonamiento']['asignador'] ?>
-                        </div>
-                    </div>
-
-                    <div class="eval-item">
-                        <h3><i class="fas fa-bullseye"></i> Atención</h3>
-                        <div class="current-level">Nivel <?= htmlspecialchars($niveles_actuales['atencion']['nivel']) ?></div>
-
-                        <label for="atencion">Asignar Nuevo Nivel:</label>
-                        <select name="atencion" id="atencion">
-                            <?php foreach ($niveles_opciones as $valor => $etiqueta): ?>
-                                <option value="<?= $valor ?>" <?= $niveles_actuales['atencion']['nivel'] == $valor ? 'selected' : '' ?>>
-                                    <?= $etiqueta ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <div class="last-update-info">
-                            Última Modificación: <?= $niveles_actuales['atencion']['fecha'] ?><br>
-                            Profesional: <?= $niveles_actuales['atencion']['asignador'] ?>
-                        </div>
-                    </div>
-
+                    <?php endforeach; ?>
                 </div>
 
                 <div class="form-actions">
@@ -681,12 +564,10 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
 
             <div class="history-card">
                 <h2><i class="fas fa-history"></i> Historial de resultados</h2>
-                <p class="history-intro">
-                    Últimas partidas jugadas por este usuario en los juegos de Memoria, Lógica, Razonamiento y Atención.
-                </p>
+                <p style="font-size:14px; color:var(--muted);">Últimas partidas jugadas por este usuario.</p>
 
                 <?php if (empty($historialResultados)): ?>
-                    <p class="no-history">Este usuario aún no tiene partidas registradas.</p>
+                    <p>Este usuario aún no tiene partidas registradas.</p>
                 <?php else: ?>
                     <table class="history-table">
                         <thead>
@@ -701,14 +582,12 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
                         <tbody>
                         <?php foreach ($historialResultados as $fila): ?>
                             <tr style="cursor: pointer;" onclick="toggleRondas(<?= $fila['id'] ?>)">
-                                <td>
-                                    <?= date('d/m/Y H:i', strtotime($fila['fecha_juego'])) ?>
-                                </td>
+                                <td><?= date('d/m/Y H:i', strtotime($fila['fecha_juego'])) ?></td>
                                 <td>
                                     <span class="history-tag <?= htmlspecialchars($fila['tipo_juego']) ?>">
                                         <?= ucfirst(htmlspecialchars($fila['tipo_juego'])) ?>
                                         <?php if($fila['tipo_juego'] === 'razonamiento'): ?> 
-                                            <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 5px; opacity: 0.7;"></i>
+                                            <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 5px;"></i>
                                         <?php endif; ?>
                                     </span>
                                 </td>
@@ -721,18 +600,14 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
                                 $rondas = obtenerDetalleRondas($conexion, $fila['id']); ?>
                                 <tr id="rondas-<?= $fila['id'] ?>" style="display: none; background: #fdfdfd;">
                                     <td colspan="5" style="padding: 0;">
-                                        <div style="padding: 15px; border-left: 5px solid #e65100; margin: 10px; background: #fff; border-radius: 8px; box-shadow: inset 0 0 5px rgba(0,0,0,0.05);">
-                                            <h4 style="margin: 0 0 10px 0; font-size: 13px; color: #e65100; text-transform: uppercase; letter-spacing: 0.5px;">Desglose de las 5 Rondas</h4>
+                                        <div style="padding: 15px; border-left: 5px solid #e65100; margin: 10px; background: #fff; border-radius: 8px;">
+                                            <h4 style="margin: 0 0 10px 0; font-size: 13px; color: #e65100;">Desglose de las 5 Rondas</h4>
                                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                                 <?php foreach ($rondas as $r): ?>
-                                                    <div style="border: 1px solid #eee; padding: 8px 12px; border-radius: 10px; background: #fcfcfd; display: flex; align-items: center; gap: 8px;">
-                                                        <span style="font-weight: 700; color: #666;">R<?= $r['ronda'] ?></span>
-                                                        <span>
-                                                            <?= $r['correcta'] 
-                                                                ? '<i class="fas fa-check-circle" style="color: #2e7d32;"></i>' 
-                                                                : '<i class="fas fa-times-circle" style="color: #c62828;"></i>' ?>
-                                                        </span>
-                                                        <small style="color: #888; font-family: monospace;"><?= $r['tiempo_segundos'] ?>s</small>
+                                                    <div style="border: 1px solid #eee; padding: 8px 12px; border-radius: 10px; display: flex; align-items: center; gap: 8px;">
+                                                        <span style="font-weight: 700;">R<?= $r['ronda'] ?></span>
+                                                        <span><?= $r['correcta'] ? '<i class="fas fa-check-circle" style="color: #2e7d32;"></i>' : '<i class="fas fa-times-circle" style="color: #c62828;"></i>' ?></span>
+                                                        <small><?= $r['tiempo_segundos'] ?>s</small>
                                                     </div>
                                                 <?php endforeach; ?>
                                             </div>
@@ -745,24 +620,17 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
                     </table>
                 <?php endif; ?>
             </div>
-
         </div>
     </div>
-
 </div>
 
 <script>
 function toggleRondas(id) {
     const detalle = document.getElementById('rondas-' + id);
     if (detalle) {
-        if (detalle.style.display === 'none') {
-            detalle.style.display = 'table-row';
-        } else {
-            detalle.style.display = 'none';
-        }
+        detalle.style.display = (detalle.style.display === 'none') ? 'table-row' : 'none';
     }
 }
 </script>
-
 </body>
 </html>

@@ -203,7 +203,7 @@ html, body {
     </div>
 
     <div class="main-section">
-        <div class="card" onclick="location.href='seguimiento.php'">
+        <div class="card" onclick="location.href='ver_progreso_familiar.php'">
             <img src="imagenes/progreso.png" alt="Seguimiento de progreso">
             <h2>Progreso</h2>
         </div>
