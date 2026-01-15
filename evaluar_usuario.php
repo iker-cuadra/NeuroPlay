@@ -119,35 +119,6 @@ if (!$usuario) {
     exit;
 }
 
-// ----------------------------------------------------
-// OBTENER FAMILIAR(ES) VINCULADO(S) (si el rol es usuario)
-// ----------------------------------------------------
-$familiaresVinculadosTexto = "";
-
-if ($usuario['rol'] === 'usuario') {
-    try {
-        $stmtFam = $conexion->prepare("
-            SELECT f.nombre, f.email
-            FROM relaciones_usuario_familiar r
-            INNER JOIN usuarios f ON r.familiar_id = f.id
-            WHERE r.usuario_id = ?
-        ");
-        $stmtFam->execute([$user_id]);
-        $familiares = $stmtFam->fetchAll(PDO::FETCH_ASSOC);
-
-        if ($familiares) {
-            $parts = [];
-            foreach ($familiares as $fam) {
-                $parts[] = htmlspecialchars($fam['nombre']) . ' (' . htmlspecialchars($fam['email']) . ')';
-            }
-            $familiaresVinculadosTexto = implode(', ', $parts);
-        }
-    } catch (PDOException $e) {
-        // Si falla esta consulta no rompemos la página; simplemente no se muestra el texto
-        $familiaresVinculadosTexto = "";
-    }
-}
-
 // Lógica para determinar la ruta de la foto
 $ruta_foto = 'uploads/default.png';
 if ($usuario['rol'] === 'profesional' && $usuario['foto'] === 'default.png') {
@@ -491,12 +462,27 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
                 <img src="<?= $ruta_foto ?>" alt="Foto de <?= htmlspecialchars($usuario["nombre"]) ?>">
                 <div class="profile-info">
                     <h2><?= htmlspecialchars($usuario["nombre"]) ?> (ID: <?= (int)$usuario["id"] ?>)</h2>
+<<<<<<< HEAD
 
                     <?php if (!empty($familiaresVinculadosTexto)): ?>
                         <p>Familiar vinculado: <?= $familiaresVinculadosTexto ?></p>
                     <?php endif; ?>
 
                     <p>Email: <?= htmlspecialchars($usuario["email"]) ?></p>
+=======
+                    <p><i class="fas fa-envelope"></i> <?= htmlspecialchars($usuario["email"]) ?></p>
+                    
+                    <?php if (!empty($usuario['nombre_familiar'])): ?>
+                        <span class="familiar-tag">
+                            <i class="fas fa-users"></i> Familiar de: <strong><?= htmlspecialchars($usuario['nombre_familiar']) ?></strong>
+                        </span>
+                    <?php else: ?>
+                        <span class="familiar-tag" style="color: #bbb;">
+                            <i class="fas fa-user-slash"></i> Sin familiar vinculado
+                        </span>
+                    <?php endif; ?>
+
+>>>>>>> 0022d66609e313f55300e5abdf7e4064cd85bc94
                     <span class="role-badge <?= htmlspecialchars($usuario["rol"]) ?>">
                         <?= htmlspecialchars($usuario["rol"]) ?>
                     </span>
