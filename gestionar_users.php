@@ -252,7 +252,7 @@ $_SESSION["flash_error"] = "";
 <style>
 :root{
     --header-h: 160px;
-    --bg: #f0f2f5;
+    --bg: transparent;
     --card: #ffffff;
     --shadow: 0 12px 30px rgba(0,0,0,0.10);
     --radius: 20px;
@@ -262,26 +262,44 @@ $_SESSION["flash_error"] = "";
     --btn-hover: #5a5a5a;
 }
 
-*{ box-sizing: border-box; }
+*{ box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body{
-    margin: 0;
-    padding: 0;
     height: 100%;
     overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+    background-color: transparent; /* <-- aquí */
 }
 
-body{
-    font-family: 'Poppins', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    background: #887d7dff;
+
+/* --- FONDO MESH ANIMADO --- */
+.canvas-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -1;
+    background: #e5e5e5;
+    background-image:
+        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
+        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%),
+        radial-gradient(at 0% 100%, hsla(321,0%,100%,1) 0, transparent 50%),
+        radial-gradient(at 100% 100%, hsla(0,0%,80%,1) 0, transparent 50%);
+    background-size: 200% 200%;
+    animation: meshMove 8s infinite alternate ease-in-out; 
+}
+
+@keyframes meshMove {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
 }
 
 .layout{
     height: 100vh;
     display: flex;
     flex-direction: column;
+    position: relative;
+    z-index: 1;
 }
 
 .header{
@@ -718,6 +736,8 @@ td:nth-child(1), td:nth-child(5){ text-align:center; }
 </head>
 
 <body>
+<div class="canvas-bg"></div>
+
 <div class="layout">
 
     <div class="header">
