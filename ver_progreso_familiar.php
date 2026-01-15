@@ -19,25 +19,9 @@ $usuario = null;
 try {
     // [OJO] Aquí asumo que en la tabla 'usuarios' tienes una columna 'familiar_id' 
     // que indica quién es el familiar de ese usuario mayor.
-    // Si tu relación está en otra tabla, cambia esta consulta.
     $stmt = $conexion->prepare("SELECT id, nombre, email, rol, foto FROM usuarios WHERE familiar_id = ? LIMIT 1");
     $stmt->execute([$familiar_id]);
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    // Si no encuentra por 'familiar_id', intenta buscar si el usuario actual tiene un 'usuario_asociado_id'
-    // (Descomenta y usa esto si tu base de datos funciona al revés)
-    /*
-    if (!$usuario) {
-        $stmtSelf = $conexion->prepare("SELECT usuario_asociado_id FROM usuarios WHERE id = ?");
-        $stmtSelf->execute([$familiar_id]);
-        $link = $stmtSelf->fetch(PDO::FETCH_ASSOC);
-        if ($link && $link['usuario_asociado_id']) {
-            $stmt = $conexion->prepare("SELECT id, nombre, email, rol, foto FROM usuarios WHERE id = ?");
-            $stmt->execute([$link['usuario_asociado_id']]);
-            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-        }
-    }
-    */
 
 } catch (PDOException $e) {
     die("Error de base de datos: " . $e->getMessage());
@@ -103,7 +87,7 @@ if ($res) {
 }
 
 // ----------------------------------------------------
-// 4. HISTORIAL DE RESULTADOS
+// 4. HISTORIAL DE RESULTADOS Y PREPARACIÓN DE GRÁFICAS
 // ----------------------------------------------------
 $stmt_hist = $conexion->prepare("
     SELECT id, tipo_juego,
@@ -114,10 +98,36 @@ $stmt_hist = $conexion->prepare("
     FROM resultados_juego
     WHERE usuario_id = ?
     ORDER BY fecha_juego DESC
-    LIMIT 20 
-"); // He aumentado el limit a 20 para que el familiar vea más historial
+    LIMIT 50 
+"); 
 $stmt_hist->execute([$user_id]);
 $historialResultados = $stmt_hist->fetchAll(PDO::FETCH_ASSOC);
+
+// --- LÓGICA PARA GRÁFICAS ---
+// Preparamos arrays vacíos para Chart.js
+$datosGraficas = [
+    'memoria'      => ['labels' => [], 'data' => []],
+    'logica'       => ['labels' => [], 'data' => []],
+    'razonamiento' => ['labels' => [], 'data' => []],
+    'atencion'     => ['labels' => [], 'data' => []]
+];
+
+// Recorremos el historial AL REVÉS (de antiguo a nuevo) para que la gráfica se dibuje de izq a der
+$historialCronologico = array_reverse($historialResultados);
+
+foreach ($historialCronologico as $juego) {
+    $tipo = $juego['tipo_juego'];
+    // Solo si el tipo es válido
+    if (isset($datosGraficas[$tipo])) {
+        // Formato fecha corto: 15/01
+        $fecha = date('d/m', strtotime($juego['fecha_juego']));
+        $datosGraficas[$tipo]['labels'][] = $fecha;
+        $datosGraficas[$tipo]['data'][] = (int)$juego['puntuacion'];
+    }
+}
+// Convertimos a JSON para usarlo en JavaScript
+$jsonGraficas = json_encode($datosGraficas);
+
 
 // Función para obtener las rondas de razonamiento
 function obtenerDetalleRondas($conexion, $resultado_id) {
@@ -314,6 +324,46 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
     text-align: center;
 }
 
+/* --- ESTILOS PARA LAS GRÁFICAS (NUEVO) --- */
+.charts-section {
+    margin-top: 30px;
+    margin-bottom: 20px;
+}
+.charts-section h2 {
+    margin: 0 0 15px 0;
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--text);
+}
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+.chart-card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 16px;
+    border: 1px solid #eef0f3;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.04);
+}
+.chart-card h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    text-align: center;
+}
+.canvas-container {
+    position: relative;
+    height: 200px;
+    width: 100%;
+}
+@media (max-width: 768px) {
+    .charts-grid { grid-template-columns: 1fr; }
+}
+
 /* HISTORIAL */
 .history-card {
     margin-top: 24px;
@@ -410,6 +460,35 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
                 </div>
             </div>
 
+            <div class="charts-section">
+                <h2><i class="fas fa-chart-area"></i> Evolución por Categoría</h2>
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h4>Memoria</h4>
+                        <div class="canvas-container">
+                            <canvas id="chartMemoria"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h4>Lógica</h4>
+                        <div class="canvas-container">
+                            <canvas id="chartLogica"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h4>Razonamiento</h4>
+                        <div class="canvas-container">
+                            <canvas id="chartRazonamiento"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h4>Atención</h4>
+                        <div class="canvas-container">
+                            <canvas id="chartAtencion"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="history-card">
                 <h2><i class="fas fa-history"></i> Historial de partidas</h2>
                 <p class="history-intro">
@@ -481,6 +560,69 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
     </div>
 
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Recuperamos los datos de PHP
+    const datos = <?= $jsonGraficas ?>;
+
+    // Configuración común para que todas se vean iguales
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100, // La puntuación suele ser sobre 100
+                grid: { color: '#f0f0f0' }
+            },
+            x: {
+                grid: { display: false }
+            }
+        },
+        plugins: {
+            legend: { display: false }
+        }
+    };
+
+    // Función para crear gráfica
+    function createChart(canvasId, label, color, bg, dataObj) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        
+        // Si no hay datos, no dibujamos nada
+        if(!dataObj || dataObj.data.length === 0) {
+            return; 
+        }
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dataObj.labels,
+                datasets: [{
+                    label: 'Puntuación',
+                    data: dataObj.data,
+                    borderColor: color,
+                    backgroundColor: bg,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: color,
+                    pointRadius: 4,
+                    tension: 0.3, // Curvatura suave
+                    fill: true
+                }]
+            },
+            options: commonOptions
+        });
+    }
+
+    // Renderizar las 4 gráficas
+    createChart('chartMemoria', 'Memoria', '#00acc1', 'rgba(0, 172, 193, 0.1)', datos.memoria);
+    createChart('chartLogica', 'Lógica', '#43a047', 'rgba(67, 160, 71, 0.1)', datos.logica);
+    createChart('chartRazonamiento', 'Razonamiento', '#fb8c00', 'rgba(251, 140, 0, 0.1)', datos.razonamiento);
+    createChart('chartAtencion', 'Atención', '#5e35b1', 'rgba(94, 53, 177, 0.1)', datos.atencion);
+
+</script>
 
 <script>
 function toggleRondas(id) {
