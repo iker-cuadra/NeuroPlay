@@ -342,7 +342,7 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--t
 <body>
 <div class="layout">
     <div class="header">
-        <a href="index_familiar.php" class="back-arrow" aria-label="Volver">
+        <a href="familiar.php" class="back-arrow" aria-label="Volver">
             <svg xmlns="http://www.w3.org/2000/svg" height="34" width="34" viewBox="0 0 24 24" fill="white">
                 <path d="M14.7 20.3 6.4 12l8.3-8.3 1.4 1.4L9.2 12l6.9 6.9Z"/>
             </svg>
