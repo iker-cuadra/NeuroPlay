@@ -491,27 +491,12 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
                 <img src="<?= $ruta_foto ?>" alt="Foto de <?= htmlspecialchars($usuario["nombre"]) ?>">
                 <div class="profile-info">
                     <h2><?= htmlspecialchars($usuario["nombre"]) ?> (ID: <?= (int)$usuario["id"] ?>)</h2>
-<<<<<<< HEAD
 
                     <?php if (!empty($familiaresVinculadosTexto)): ?>
                         <p>Familiar vinculado: <?= $familiaresVinculadosTexto ?></p>
                     <?php endif; ?>
 
                     <p>Email: <?= htmlspecialchars($usuario["email"]) ?></p>
-=======
-                    <p><i class="fas fa-envelope"></i> <?= htmlspecialchars($usuario["email"]) ?></p>
-                    
-                    <?php if (!empty($usuario['nombre_familiar'])): ?>
-                        <span class="familiar-tag">
-                            <i class="fas fa-users"></i> Familiar de: <strong><?= htmlspecialchars($usuario['nombre_familiar']) ?></strong>
-                        </span>
-                    <?php else: ?>
-                        <span class="familiar-tag" style="color: #bbb;">
-                            <i class="fas fa-user-slash"></i> Sin familiar vinculado
-                        </span>
-                    <?php endif; ?>
-
->>>>>>> 788d780ea8a88975575804d13028641bfb034886
                     <span class="role-badge <?= htmlspecialchars($usuario["rol"]) ?>">
                         <?= htmlspecialchars($usuario["rol"]) ?>
                     </span>
