@@ -22,60 +22,76 @@ body, html {
 /* Header y botón */
 header {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 45px;      /* UN POCO MÁS ABAJO */
+    right: 45px;   /* UN PELÍN MÁS A LA DERECHA */
     z-index: 10;
 }
  
-/* Botón moderno con gradiente animado */
+/* BOTÓN TRANSPARENTE PREMIUM */
 .btn-top {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 10px;
-    padding: 12px 25px;
-    font-size: 18px;
-    border-radius: 50px;
+    padding: 12px 20px;
+    border-radius: 16px;
     cursor: pointer;
-    color: #fff;
-    border: none;
+    font-family: 'Poppins', sans-serif;
     font-weight: 600;
+    font-size: 18px;
+    color: #ffffff;
+    background: rgba(255,255,255,0.02);
+    border: 1.5px solid rgba(255,255,255,0.7);
+    text-decoration: none;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    transition: 
+        transform .25s cubic-bezier(.2,.8,.2,1), 
+        box-shadow .25s cubic-bezier(.2,.8,.2,1), 
+        background .25s ease, 
+        border-color .25s ease;
     position: relative;
     overflow: hidden;
-    z-index: 1;
-    background: #7a7676;
-    transition: all 0.3s ease;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
- 
-.btn-top::before {
+
+/* Efecto luz sutil */
+.btn-top::after {
     content: "";
     position: absolute;
-    top: 0;
-    left: -100%;
-    width: 300%;
-    height: 100%;
-    background: linear-gradient(90deg, #7a7676, #968c8c, #c9beb6);
-    transition: all 0.4s ease;
-    z-index: -1;
+    inset: 0;
+    background: linear-gradient(
+        120deg,
+        transparent 20%,
+        rgba(255,255,255,0.25),
+        transparent 80%
+    );
+    opacity: 0;
+    transform: translateX(-60%);
+    transition: opacity .35s ease, transform .35s ease;
 }
- 
-.btn-top:hover::before {
-    left: 0;
-}
- 
+
+/* Hover PRO */
 .btn-top:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    background: rgba(255,255,255,0.08);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+    border-color: #ffffff;
 }
- 
+
+.btn-top:hover::after {
+    opacity: 1;
+    transform: translateX(60%);
+}
+
+/* Click */
+.btn-top:active {
+    transform: scale(0.97);
+}
+
+/* Icono */
 .btn-top i {
-    transition: transform 0.4s ease;
+    font-size: 16px;
 }
- 
-.btn-top:hover i {
-    transform: rotate(20deg);
-}
- 
+
 .inicio {
     position: relative;
     height: 100%;
@@ -84,24 +100,18 @@ header {
     align-items: center;
     padding: 0 20px;
     box-sizing: border-box;
- 
-    /* Imagen de fondo */
     background: url('img/fondo.svg') no-repeat center center;
     background-size: cover;
 }
  
- 
-/* Capa oscura para contraste */
+/* Capa oscura */
 .capa-oscura {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background: rgba(0, 0, 0, 0.5);
 }
  
-/* Contenido centrado */
+/* Contenido */
 .contenido {
     position: relative;
     text-align: center;
@@ -123,45 +133,30 @@ header {
     text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.5);
 }
  
-/* RESPONSIVO MEJORADO */
+/* RESPONSIVO */
 @media (max-width: 1024px) {
-    .contenido h1 {
-        font-size: 70px;
-    }
-    .contenido p {
-        font-size: 28px;
-    }
+    .contenido h1 { font-size: 70px; }
+    .contenido p { font-size: 28px; }
 }
  
 @media (max-width: 768px) {
-    .inicio {
-        padding: 0 15px;
-    }
-    .contenido h1 {
-        font-size: 50px;
-    }
-    .contenido p {
-        font-size: 22px;
-    }
+    .contenido h1 { font-size: 50px; }
+    .contenido p { font-size: 22px; }
     .btn-top {
         font-size: 16px;
-        padding: 10px 20px;
+        padding: 10px 16px;
     }
 }
  
 @media (max-width: 480px) {
-    .contenido h1 {
-        font-size: 36px;
-    }
-    .contenido p {
-        font-size: 18px;
-    }
+    .contenido h1 { font-size: 36px; }
+    .contenido p { font-size: 18px; }
     header {
-        top: 15px;
-        right: 15px;
+        top: 35px;
+        right: 35px;
     }
     .btn-top {
-        padding: 8px 18px;
+        padding: 8px 14px;
         font-size: 14px;
     }
 }

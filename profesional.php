@@ -1,19 +1,3 @@
-<?php
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-require_once "includes/conexion.php";
-require_once "includes/auth.php";
-
-requireRole("profesional");
-
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Pragma: no-cache");
-header("Expires: 0");
-
-$nombre_profesional = $_SESSION['nombre'] ?? 'Profesional';
-?>
-
 <!DOCTYPE html>
 <html lang="es">
 
@@ -30,18 +14,16 @@ $nombre_profesional = $_SESSION['nombre'] ?? 'Profesional';
             --header-h: 160px;
         }
 
-        html,
-        body {
+        html, body {
             margin: 0;
             padding: 0;
             height: 100%;
             width: 100%;
             overflow: hidden;
             font-family: 'Poppins', sans-serif;
-            /* Eliminado el fondo negro que bloqueaba la vista */
         }
 
-        /* --- FONDO MESH ANIMADO --- */
+        /* --- FONDO MESH ANIMADO 8s --- */
         .canvas-bg {
             position: fixed;
             top: 0; 
@@ -57,7 +39,7 @@ $nombre_profesional = $_SESSION['nombre'] ?? 'Profesional';
                 radial-gradient(at 0% 100%, hsla(321,0%,100%,1) 0, transparent 50%),
                 radial-gradient(at 100% 100%, hsla(0,0%,80%,1) 0, transparent 50%);
             background-size: 200% 200%;
-            animation: meshMove 12s infinite alternate ease-in-out;
+            animation: meshMove 8s infinite alternate ease-in-out; /* 8s */
         }
 
         @keyframes meshMove {
@@ -91,42 +73,62 @@ $nombre_profesional = $_SESSION['nombre'] ?? 'Profesional';
             font-size: 18px;
         }
 
+        /* --- BOTÓN PREMIUM --- */
         .logout-button {
             position: absolute;
-            top: 15px;
+            top: 20px;
             right: 20px;
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px 22px;
+            padding: 12px 20px;
             font-size: 15px;
             font-weight: 600;
-            border-radius: 50px;
-            background: #7a7676;
+            border-radius: 16px; /* MISMO RADIO QUE EL OTRO BOTÓN */
+            background: rgba(255,255,255,0.05);
             color: #fff;
-            border: none;
+            border: 1.5px solid rgba(255,255,255,0.7);
             cursor: pointer;
             text-decoration: none;
             z-index: 10;
             overflow: hidden;
-            transition: all 0.3s ease;
+            transition: 
+                transform 0.25s cubic-bezier(.2,.8,.2,1),
+                box-shadow 0.25s cubic-bezier(.2,.8,.2,1),
+                background 0.3s ease,
+                border-color 0.3s ease;
         }
 
-        .logout-button i { transition: transform 0.4s ease; }
-
-        .logout-button::before {
+        .logout-button::after {
             content: "";
             position: absolute;
-            top: 0; left: -100%;
-            width: 300%; height: 100%;
-            background: linear-gradient(90deg, #7a7676, #968c8c, #c9beb6);
-            transition: all 0.4s ease;
-            z-index: -1;
+            inset: 0;
+            background: linear-gradient(
+                120deg,
+                transparent 20%,
+                rgba(255,255,255,0.25),
+                transparent 80%
+            );
+            opacity: 0;
+            transform: translateX(-60%);
+            transition: opacity 0.35s ease, transform 0.35s ease;
         }
 
-        .logout-button:hover::before { left: 0; }
-        .logout-button:hover { transform: translateY(-3px); }
-        .logout-button:hover i { transform: rotate(20deg); }
+        .logout-button:hover {
+            background: rgba(255,255,255,0.12);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.35);
+            border-color: #fff;
+        }
+
+        .logout-button:hover::after {
+            opacity: 1;
+            transform: translateX(60%);
+        }
+
+        .logout-button i {
+            transition: transform 0.4s ease;
+        }
 
         .main-section {
             flex: 1 1 auto;
@@ -139,32 +141,37 @@ $nombre_profesional = $_SESSION['nombre'] ?? 'Profesional';
         }
 
         .card {
-            text-align: center;
-            width: 260px;
-            padding: 30px;
-            border-radius: 20px;
-            background: #ffffff;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
-            transition: transform 0.3s, box-shadow 0.3s;
-            cursor: pointer;
-            margin: 0;
-        }
+    text-align: center;
+    width: 260px;
+    padding: 30px;
+    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.35); /* MÁS OSCURO */
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+    margin: 0;
+    color: #fff;
+}
+
 
         .card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
         }
 
         .card img {
             width: 200px;
             height: 200px;
-            border-radius: 20px;
+            border-radius: 16px;
             object-fit: cover;
             margin-bottom: 20px;
         }
 
         .card h2 { font-size: 24px; font-weight: 600; margin: 0; }
-        .card-subtitle { margin-top: 4px; font-size: 14px; color: #6b7280; font-weight: 500; }
+        .card-subtitle { margin-top: 4px; font-size: 14px; color: rgba(255,255,255,0.7); font-weight: 500; }
 
         @media (max-width: 900px) {
             .main-section { flex-direction: column; gap: 40px; }
@@ -183,6 +190,7 @@ $nombre_profesional = $_SESSION['nombre'] ?? 'Profesional';
         }
 
         .card-label:hover::after { width: 60px; }
+
     </style>
 </head>
 
