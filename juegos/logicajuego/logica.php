@@ -4,7 +4,7 @@ require_once "../../includes/auth.php";
 
 requireRole("usuario");
 
-// OBTENER DIFICULTAD ASIGNADA PARA LÓGICA (Fácil / Intermedio / Difícil)
+// OBTENER DIFICULTAD ASIGNADA PARA LÓGICA (Fácil / Medio / Difícil)
 $usuario_id = $_SESSION["usuario_id"];
 
 $stmt = $conexion->prepare("
@@ -17,7 +17,7 @@ $dificultad_logica = $stmt->fetchColumn();
 
 // Dificultad por defecto si no hay asignada
 if (!$dificultad_logica) {
-    $dificultad_logica = "Intermedio";
+    $dificultad_logica = "Medio";
 }
 ?>
 <!DOCTYPE html>
@@ -322,7 +322,7 @@ if (!$dificultad_logica) {
 </div>
 
 <script>
-    // Dificultad desde PHP (Fácil / Intermedio / Difícil)
+    // Dificultad desde PHP (Fácil / medio / Difícil)
     const dificultadLogicaBD = "<?= htmlspecialchars($dificultad_logica, ENT_QUOTES) ?>";
 
     // Normalizamos a 'facil' / 'medio' / 'dificil'

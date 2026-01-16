@@ -16,7 +16,7 @@ $dificultad_razonamiento = $stmt->fetchColumn();
 
 // Si no hay dificultad asignada, dejamos un valor por defecto
 if (!$dificultad_razonamiento) {
-    $dificultad_razonamiento = "Intermedio";
+    $dificultad_razonamiento = "Medio";
 }
 ?>
 <!DOCTYPE html>

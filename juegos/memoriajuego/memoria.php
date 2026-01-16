@@ -6,7 +6,7 @@ require_once "../../includes/auth.php";
 requireRole("usuario");
 $usuario_id = $_SESSION["usuario_id"];
 
-// OBTENER DIFICULTAD ASIGNADA PARA MEMORIA (Fácil / Intermedio / Difícil)
+// OBTENER DIFICULTAD ASIGNADA PARA MEMORIA (Fácil / Medio / Difícil)
 $stmt = $conexion->prepare("
     SELECT dificultad_memoria
     FROM dificultades_asignadas
@@ -17,7 +17,7 @@ $dificultad_memoria = $stmt->fetchColumn();
 
 // Dificultad por defecto si no hay asignada
 if (!$dificultad_memoria) {
-    $dificultad_memoria = "Intermedio";
+    $dificultad_memoria = "Medio";
 }
 ?>
 <!DOCTYPE html>
@@ -322,7 +322,7 @@ if (!$dificultad_memoria) {
 </div>
 
 <script>
-    // Dificultad desde PHP (Fácil / Intermedio / Difícil)
+    // Dificultad desde PHP (Fácil / Medio / Difícil)
     const dificultadMemoriaBD = "<?= htmlspecialchars($dificultad_memoria, ENT_QUOTES) ?>";
 
     // Normalizamos a 'facil' / 'medio' / 'dificil' para la lógica interna
@@ -447,7 +447,7 @@ if (!$dificultad_memoria) {
         createMemoryGrid(area, cards, 4);
     }
 
-    // MEMORIA - INTERMEDIO (6 pares, 12 cartas)
+    // MEMORIA - Medio (6 pares, 12 cartas)
     function loadMemoryGameMedio(area) {
         const pairs = 6;
         const colors = [
