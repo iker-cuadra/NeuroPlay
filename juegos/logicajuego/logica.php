@@ -383,6 +383,14 @@ if (!$dificultad_logica) {
                     <button id="btn-volver" class="btn-game">Volver al panel</button>
                 </div>
             </div>
+
+            <!-- OVERLAY INICIAL (antes de empezar) -->
+            <div id="start-overlay" class="game-overlay" style="display:flex; z-index: 6;">
+                <div class="overlay-content">
+                    <p>¿Listo para jugar?</p>
+                    <button id="btn-start" class="btn-game">Empezar</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -552,7 +560,7 @@ if (!$dificultad_logica) {
             });
 
             area.appendChild(grid);
-            startTimer();
+            startTimer(); // IMPORTANTE: el cronómetro arranca al crear el tablero (al pulsar Empezar)
         }
 
         function checkSudoku(grid, solution) {
@@ -588,7 +596,22 @@ if (!$dificultad_logica) {
 
         document.addEventListener("DOMContentLoaded", function () {
             const area = document.getElementById("zona-logica");
-            loadLogicGame(area);
+
+            // Bloquear interacción hasta Empezar
+            const zona = document.getElementById('zona-logica');
+            if (zona) zona.style.pointerEvents = "none";
+
+            // NO arrancamos aquí. Solo preparamos botones.
+            const startOverlay = document.getElementById('start-overlay');
+            const btnStart = document.getElementById('btn-start');
+
+            if (btnStart) {
+                btnStart.addEventListener('click', function () {
+                    if (startOverlay) startOverlay.style.display = 'none';
+                    if (zona) zona.style.pointerEvents = "auto";
+                    loadLogicGame(area); // aquí se crea el tablero y arranca el cronómetro
+                });
+            }
 
             const btnRestart = document.getElementById('btn-restart');
             const btnVolver = document.getElementById('btn-volver');
