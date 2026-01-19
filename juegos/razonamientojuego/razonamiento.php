@@ -33,6 +33,7 @@ if (!$dificultad_razonamiento) {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #887d7dff;
             overflow: hidden; /* sin scroll */
+            font-size: 18px;
         }
 
         /* ENVOLTORIO A PANTALLA COMPLETA */
@@ -46,15 +47,21 @@ if (!$dificultad_razonamiento) {
             box-sizing: border-box;
         }
 
-        /* CONTENEDOR DEL JUEGO */
+        /* CONTENEDOR DEL JUEGO (TARJETA PREMIUM) */
         .game-container {
             position: relative;
             width: min(900px, 100%);
             height: 100%;
             max-height: 100%;
-            background: #ffffff;
-            border-radius: 22px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+
+            background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
+            border-radius: 26px;
+            border: 1px solid rgba(0,0,0,0.08);
+            box-shadow:
+                0 18px 40px rgba(0,0,0,0.18),
+                0 2px 10px rgba(0,0,0,0.08);
+            overflow: hidden;
+
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -62,19 +69,38 @@ if (!$dificultad_razonamiento) {
             box-sizing: border-box;
         }
 
-        /* FLECHA VOLVER (NEGRA) */
+        /* Barra/acento superior sutil */
+        .game-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: linear-gradient(90deg, #4a4a4a 0%, #2f3742 50%, #4a4a4a 100%);
+            opacity: 0.95;
+            z-index: 1;
+        }
+
+        /* FLECHA VOLVER (COMO BOTÓN) */
         .back-arrow {
             position: absolute;
-            top: 12px;
-            left: 12px;
+            top: 16px;
+            left: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 38px;
-            height: 38px;
+            width: 44px;
+            height: 44px;
             cursor: pointer;
             text-decoration: none;
             z-index: 3;
+
+            background: rgba(255,255,255,0.9);
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 14px;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+            backdrop-filter: blur(6px);
         }
 
         .back-arrow svg {
@@ -82,49 +108,58 @@ if (!$dificultad_razonamiento) {
         }
 
         .back-arrow:hover svg {
-            opacity: 0.7;
+            opacity: 0.8;
             transform: translateX(-2px);
         }
 
         /* PASTILLA SUPERIOR */
         .game-title-pill {
-            margin-top: 2px;
-            margin-bottom: 4px;
-            padding: 4px 14px;
+            margin-top: 4px;
+            margin-bottom: 6px;
+            padding: 6px 18px;
             border-radius: 999px;
-            background: #f3f4f6;
-            font-size: 13px;
+            background: #4a4a4a;
+            font-size: 34px;
             font-weight: bold;
-            color: #555;
+            color: #ffffff;
+            letter-spacing: 0.4px;
+            box-shadow: 0 10px 18px rgba(0,0,0,0.18);
+            position: relative;
+            z-index: 2;
         }
 
         .game-header {
-            margin-top: 26px; /* espacio para la flecha */
-            margin-bottom: 8px;
+            margin-top: 30px; /* espacio para la flecha */
+            margin-bottom: 10px;
             text-align: center;
             flex: 0 0 auto;
+            position: relative;
+            z-index: 2;
         }
 
         .game-header h2 {
             margin: 0 0 6px 0;
-            font-size: 32px;
-            color: #222;
+            font-size: 36px;
+            color: #1f2937;
+            letter-spacing: 0.2px;
         }
 
         .game-header p {
             margin: 4px 0;
-            font-size: 15px;
-            color: #555;
+            font-size: 19px;
+            color: #4b5563;
+            line-height: 1.25;
         }
 
         .game-header p strong {
-            color: #111;
+            color: #111827;
         }
 
         .timer {
-            font-weight: bold;
-            font-size: 17px;
-            margin-top: 2px;
+            font-weight: 800;
+            font-size: 22px;
+            margin-top: 4px;
+            color: #111827;
         }
 
         /* CUERPO DEL JUEGO */
@@ -134,8 +169,10 @@ if (!$dificultad_razonamiento) {
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 4px 0;
+            padding: 6px 0;
             box-sizing: border-box;
+            position: relative;
+            z-index: 2;
         }
 
         .reasoning-area {
@@ -147,19 +184,22 @@ if (!$dificultad_razonamiento) {
         }
 
         .sequence-display {
-            font-size: 2.5rem;
-            padding: 20px;
+            font-size: 2.6rem;
+            padding: 20px 22px;
             background: #111827;
             color: white;
-            border-radius: 18px;
-            margin-bottom: 18px;
+            border-radius: 20px;
+            margin-bottom: 16px;
             letter-spacing: 10px;
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+            box-shadow:
+                inset 0 2px 10px rgba(0,0,0,0.5),
+                0 14px 26px rgba(0,0,0,0.16);
             text-align: center;
+            border: 1px solid rgba(255,255,255,0.10);
         }
 
         .sequence-question {
-            margin: 0 0 18px 0;
+            margin: 0 0 16px 0;
             font-size: 1.05rem;
             color: #4b5563;
             text-align: center;
@@ -167,15 +207,15 @@ if (!$dificultad_razonamiento) {
 
         .pattern-container {
             display: flex;
-            gap: 20px;
+            gap: 18px;
             flex-wrap: wrap;
             justify-content: center;
         }
 
         .pattern-option {
-            width: 100px;
-            height: 100px;
-            border-radius: 20px;
+            width: 104px;
+            height: 104px;
+            border-radius: 22px;
             background: #374151;
             color: white;
             font-size: 3rem;
@@ -183,24 +223,28 @@ if (!$dificultad_razonamiento) {
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s ease;
-            border: 4px solid transparent;
+
+            border: 1px solid rgba(0,0,0,0.10);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.14);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
         }
 
         .pattern-option:hover {
-            transform: translateY(-5px);
+            transform: translateY(-4px);
             background: #4b5563;
+            box-shadow: 0 16px 26px rgba(0,0,0,0.18);
         }
 
         .pattern-option.correct {
             background: #16a34a !important;
-            border-color: #bef264;
-            transform: scale(1.05);
+            border: 3px solid rgba(190,242,100,0.95);
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 18px 30px rgba(0,0,0,0.20);
         }
 
         .pattern-option.incorrect {
             background: #b91c1c !important;
-            border-color: #fca5a5;
+            border: 3px solid rgba(252,165,165,0.95);
             animation: shake 0.4s;
         }
 
@@ -212,35 +256,40 @@ if (!$dificultad_razonamiento) {
 
         .logic-message {
             margin-top: 10px;
-            font-weight: bold;
+            font-weight: 700;
             text-align: center;
-            font-size: 0.95rem;
+            font-size: 1rem;
             min-height: 18px;
             color: #374151;
             flex: 0 0 auto;
+            position: relative;
+            z-index: 2;
         }
 
         /* OVERLAY FINAL */
         .game-overlay {
             position: absolute;
             inset: 0;
-            background: rgba(0,0,0,0.45);
+            background: rgba(0,0,0,0.50);
             border-radius: inherit;
-            display: none; /* se muestra al final */
+            display: none;
             align-items: center;
             justify-content: center;
             z-index: 5;
         }
 
         .overlay-content {
-            background: rgba(17,24,39,0.96);
-            padding: 20px 24px;
-            border-radius: 18px;
-            color: #fff;
-            max-width: 440px;
-            width: 90%;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+            color: #fff;
+            background: rgba(17,24,39,0.55);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 22px;
+            padding: 18px 18px;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+            backdrop-filter: blur(10px);
+
+            max-width: 520px;
+            width: 90%;
             max-height: 90%;
             overflow-y: auto;
         }
@@ -248,60 +297,51 @@ if (!$dificultad_razonamiento) {
         .overlay-content h3 {
             margin-top: 8px;
             margin-bottom: 6px;
-            font-size: 1.4rem;
+            font-size: 1.5rem;
+            font-weight: 800;
         }
 
         .overlay-content p {
             margin: 4px 0;
+            color: rgba(255,255,255,0.92);
         }
 
         .result-list {
             margin: 14px auto 10px auto;
             width: 100%;
-            max-width: 320px;
+            max-width: 340px;
             text-align: left;
-            font-size: 0.95rem;
+            font-size: 1rem;
         }
 
         .result-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 6px 0;
-            border-bottom: 1px solid rgba(156,163,175,0.4);
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(156,163,175,0.35);
         }
 
         .result-row:last-child {
             border-bottom: none;
         }
 
-        .result-round {
-            font-weight: 600;
-        }
+        .result-round { font-weight: 700; }
+        .result-time  { font-family: monospace; }
 
-        .result-time {
-            font-family: monospace;
-        }
+        .overlay-buttons { margin-top: 14px; }
 
-        .result-icon i {
-            font-size: 1rem;
-        }
-
-        .overlay-buttons {
-            margin-top: 14px;
-        }
-
-        /* BOTONES (mismo estilo que otras páginas) */
+        /* BOTONES */
         .btn-game {
             background: #4a4a4a;
             color: #fff;
             border: none;
             border-radius: 20px;
             padding: 10px 22px;
-            font-size: 15px;
+            font-size: 18px;
             cursor: pointer;
-            font-weight: 600;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+            font-weight: 700;
+            box-shadow: 0 10px 18px rgba(0,0,0,0.22);
             transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
             margin: 0 6px;
         }
@@ -309,7 +349,7 @@ if (!$dificultad_razonamiento) {
         .btn-game:hover {
             background: #333;
             transform: translateY(-2px);
-            box-shadow: 0 5px 14px rgba(0,0,0,0.30);
+            box-shadow: 0 14px 26px rgba(0,0,0,0.28);
         }
 
         @media (max-width: 768px) {
@@ -317,24 +357,23 @@ if (!$dificultad_razonamiento) {
                 padding: 16px 14px 12px 14px;
             }
             .sequence-display {
-                font-size: 2.1rem;
+                font-size: 2.2rem;
                 padding: 18px;
                 letter-spacing: 7px;
             }
             .pattern-option {
-                width: 90px;
-                height: 90px;
-                font-size: 2.5rem;
+                width: 92px;
+                height: 92px;
+                font-size: 2.6rem;
             }
+            .game-title-pill { font-size: 30px; }
+            .game-header h2 { font-size: 32px; }
         }
 
         @media (max-height: 680px) {
-            .sequence-display {
-                margin-bottom: 12px;
-            }
-            .sequence-question {
-                margin-bottom: 12px;
-            }
+            .sequence-display { margin-bottom: 12px; }
+            .sequence-question { margin-bottom: 12px; }
+            .game-title-pill { font-size: 28px; padding: 6px 16px; }
         }
     </style>
 </head>
@@ -351,7 +390,7 @@ if (!$dificultad_razonamiento) {
         </a>
 
         <!-- Pastilla superior -->
-        <div class="game-title-pill">Juego: Razonamiento</div>
+        <div class="game-title-pill">Razonamiento</div>
 
         <!-- Cabecera -->
         <div class="game-header">
@@ -373,7 +412,7 @@ if (!$dificultad_razonamiento) {
             <div id="zona-razonamiento" class="reasoning-area"></div>
         </div>
 
-        <!-- Mensaje (si quisieras usarlo en el futuro) -->
+        <!-- Mensaje -->
         <div id="razonamiento-mensaje" class="logic-message"></div>
 
         <!-- OVERLAY FINAL -->
@@ -420,7 +459,7 @@ if (!$dificultad_razonamiento) {
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({
                 tipo_juego: 'razonamiento',
-                dificultad: dificultadRazonamientoBD, // guardamos lo que viene de BD
+                dificultad: dificultadRazonamientoBD,
                 puntuacion: puntuacionTotal,
                 tiempo_segundos: totalTiempo,
                 rondas: resultados
@@ -443,7 +482,6 @@ if (!$dificultad_razonamiento) {
     function loadReasoningGame(area) {
         document.getElementById("ronda-indicador").textContent = (rondaActual + 1) + "/" + TOTAL_RONDAS;
 
-        // Base de patrones (puedes ampliarla si quieres más variedad)
         const patterns = [
             {seq:['★','◆','★','◆'], ans:'★'},
             {seq:['●','■','●','■'], ans:'●'},
@@ -486,7 +524,6 @@ if (!$dificultad_razonamiento) {
             btn.textContent = o;
 
             btn.onclick = () => {
-                // Bloqueo de clics mientras resolvemos
                 const todosLosBotones = options.querySelectorAll('.pattern-option');
                 todosLosBotones.forEach(b => b.style.pointerEvents = 'none');
 
@@ -497,13 +534,11 @@ if (!$dificultad_razonamiento) {
                     btn.classList.add("correct");
                 } else {
                     btn.classList.add("incorrect");
-                    // Marcar la correcta para feedback
                     todosLosBotones.forEach(b => {
                         if (b.textContent === pattern.ans) b.classList.add("correct");
                     });
                 }
 
-                // Guardar resultado de la ronda (acierto o fallo)
                 resultados.push({
                     ronda: rondaActual + 1,
                     tiempo_segundos: segundos,
