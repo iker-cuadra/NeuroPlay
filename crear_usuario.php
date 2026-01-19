@@ -25,12 +25,19 @@ function fotoDefaultPorRol(string $rol): string {
 $stmtFam = $conexion->query("SELECT id, nombre FROM usuarios WHERE rol = 'familiar' ORDER BY nombre ASC");
 $familiares = $stmtFam->fetchAll();
 
+// NUEVO: Obtener lista de usuarios para asociar cuando se crea un familiar
+$stmtUsu = $conexion->query("SELECT id, nombre FROM usuarios WHERE rol = 'usuario' ORDER BY nombre ASC");
+$usuarios = $stmtUsu->fetchAll();
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $nombre = trim($_POST['nombre'] ?? "");
     $email = trim($_POST['email'] ?? "");
     $password = $_POST['password'] ?? "";
     $rol_seleccionado = $_POST['rol'] ?? "usuario";
     $familiar_id = ($rol_seleccionado === "usuario" && !empty($_POST['familiar_id'])) ? $_POST['familiar_id'] : null;
+
+    // NUEVO: si se crea un FAMILIAR, permitir seleccionar un USUARIO a asociar
+    $usuario_asociado_id = ($rol_seleccionado === "familiar" && !empty($_POST['usuario_asociado_id'])) ? (int)$_POST['usuario_asociado_id'] : null;
 
     $fotoNombre = fotoDefaultPorRol($rol_seleccionado);
 
@@ -67,6 +74,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         VALUES (?, ?, ?, ?, ?, ?)
                     ");
                     $stmt->execute([$nombre,$email,$hash,$rol_seleccionado,$fotoNombre,$familiar_id]);
+
+                    // NUEVO: si acabamos de crear un familiar y se seleccionó un usuario, asociarlo
+                    if ($rol_seleccionado === "familiar" && !empty($usuario_asociado_id)) {
+                        $nuevo_familiar_id = (int)$conexion->lastInsertId();
+
+                        $stmtUp = $conexion->prepare("
+                            UPDATE usuarios
+                            SET familiar_id = ?
+                            WHERE id = ?
+                        ");
+                        $stmtUp->execute([$nuevo_familiar_id, $usuario_asociado_id]);
+                    }
+
                     $success = "Usuario creado correctamente.";
                     $nombre = $email = "";
                     $rol_seleccionado = "usuario";
@@ -187,9 +207,9 @@ button[type="submit"]:hover{
 .success{ background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; }
 
 /* PREVIEW FOTO MEJORADA */
-#preview-container{ 
-    width:110px; height:110px; border-radius:50%; 
-    overflow:hidden; background:#fff; margin:15px auto; 
+#preview-container{
+    width:110px; height:110px; border-radius:50%;
+    overflow:hidden; background:#fff; margin:15px auto;
     border:3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     transition: transform 0.3s ease;
 }
@@ -207,6 +227,17 @@ button[type="submit"]:hover{
     max-height:150px; opacity:1; padding:12px;
 }
 
+/* NUEVO: SELECTOR USUARIO (para cuando rol = familiar) */
+#usuario-selection{
+    max-height:0; overflow:hidden; opacity:0;
+    transition:max-height 0.5s ease, opacity 0.5s ease, padding 0.5s ease;
+    background: rgba(255,255,255,0.9);
+    border-radius:12px; padding:0 12px; margin-bottom:20px; border:1px solid #ddd;
+}
+#usuario-selection.active{
+    max-height:150px; opacity:1; padding:12px;
+}
+
 /* MODERN FILE UPLOAD MEJORADO */
 .file-upload-wrapper{
     position: relative; display:flex; flex-direction: column; align-items:center; gap:8px; margin-top:5px;
@@ -219,10 +250,10 @@ button[type="submit"]:hover{
     background: #f8f9fa;
     border: 1px dashed #adb5bd;
     color:#495057; padding:10px 20px;
-    border-radius:10px; cursor:pointer; font-weight:600; 
+    border-radius:10px; cursor:pointer; font-weight:600;
     transition: all 0.3s ease; width: 100%;
 }
-#select-file-btn:hover{ 
+#select-file-btn:hover{
     background: #e9ecef;
     border-color: #6c757d;
 }
@@ -244,7 +275,7 @@ button[type="submit"]:hover{
 
     <div class="page-content">
         <div class="container">
-            <h2 style="text-align:center; margin-top:0; font-weight:700; color:#333;">Nuevo Perfil de Usuario</h2>
+            <h2 style="text-align:center; margin-top:0; font-weight:700; color:#333;">Nuevo perfil de usuario</h2>
 
             <?php if ($error): ?><div class="alert error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
             <?php if ($success): ?><div class="alert success"><?= htmlspecialchars($success) ?></div><?php endif; ?>
@@ -252,20 +283,20 @@ button[type="submit"]:hover{
             <form method="POST" enctype="multipart/form-data" class="form-flex">
                 <div class="form-column">
                     <div class="form-group">
-                        <label><i class="fas fa-user"></i> Nombre Completo</label>
+                        <label><i class="fas fa-user"></i> Nombre </label>
                         <input type="text" name="nombre" value="<?= htmlspecialchars($nombre) ?>" placeholder="Ej. Juan Pérez" required>
                     </div>
                     <div class="form-group">
-                        <label><i class="fas fa-envelope"></i> Correo Electrónico</label>
+                        <label><i class="fas fa-envelope"></i> Email</label>
                         <input type="email" name="email" value="<?= htmlspecialchars($email) ?>" placeholder="usuario@correo.com" required>
                     </div>
                     <div class="form-group">
-                        <label><i class="fas fa-lock"></i> Contraseña Provisional</label>
+                        <label><i class="fas fa-lock"></i> Contraseña </label>
                         <input type="password" name="password" placeholder="********" required>
                     </div>
 
                     <div class="form-group" id="familiar-selection">
-                        <label><i class="fas fa-users"></i> Asociar a Familiar</label>
+                        <label><i class="fas fa-users"></i> Asociar a familiar</label>
                         <select name="familiar_id">
                             <option value="">-- Sin familiar asociado --</option>
                             <?php foreach($familiares as $f): ?>
@@ -273,11 +304,22 @@ button[type="submit"]:hover{
                             <?php endforeach; ?>
                         </select>
                     </div>
+
+                    <!-- NUEVO: bloque para asociar a usuario cuando rol = familiar -->
+                    <div class="form-group" id="usuario-selection">
+                        <label><i class="fas fa-user-check"></i> Asociar a usuario</label>
+                        <select name="usuario_asociado_id">
+                            <option value="">-- Sin usuario asociado --</option>
+                            <?php foreach($usuarios as $u): ?>
+                                <option value="<?= (int)$u['id'] ?>"><?= htmlspecialchars($u['nombre']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="form-column">
                     <div class="form-group">
-                        <label><i class="fas fa-user-tag"></i> Rol Asignado</label>
+                        <label><i class="fas fa-user-tag"></i> Rol asignado</label>
                         <div class="segmented-control">
                             <input type="radio" id="u" name="rol" value="usuario" <?= $rol_seleccionado=="usuario"?"checked":"" ?>>
                             <label for="u" class="control-option">Usuario</label>
@@ -289,18 +331,18 @@ button[type="submit"]:hover{
                     </div>
 
                     <div class="form-group">
-                        <label><i class="fas fa-camera"></i> Fotografía de Perfil</label>
+                        <label><i class="fas fa-camera"></i> Foto de perfil</label>
                         <div id="preview-container">
                             <img id="img-preview" src="<?= htmlspecialchars($previewDefault) ?>" alt="Vista previa">
                         </div>
                         <div class="file-upload-wrapper">
-                            <button type="button" id="select-file-btn"><i class="fas fa-image"></i> Cambiar Imagen</button>
+                            <button type="button" id="select-file-btn"><i class="fas fa-image"></i> Cambiar imagen</button>
                             <span id="file-name">Imagen por defecto</span>
                             <input type="file" name="foto" id="foto-input" accept="image/*">
                         </div>
                     </div>
 
-                    <button type="submit"><i class="fas fa-check-circle"></i> Guardar Usuario</button>
+                    <button type="submit"><i class="fas fa-check-circle"></i> Guardar usuario</button>
                 </div>
             </form>
         </div>
@@ -311,6 +353,7 @@ button[type="submit"]:hover{
 const fotoInput = document.getElementById('foto-input');
 const imgPreview = document.getElementById('img-preview');
 const familiarDiv = document.getElementById('familiar-selection');
+const usuarioDiv = document.getElementById('usuario-selection'); // NUEVO
 const selectFileBtn = document.getElementById('select-file-btn');
 const fileNameSpan = document.getElementById('file-name');
 
@@ -324,6 +367,13 @@ function toggleFamiliarSelect(){
     const rol = document.querySelector('input[name="rol"]:checked').value;
     if(rol==='usuario') familiarDiv.classList.add('active');
     else familiarDiv.classList.remove('active');
+}
+
+// NUEVO: mostrar/ocultar selector de usuario cuando rol = familiar
+function toggleUsuarioSelect(){
+    const rol = document.querySelector('input[name="rol"]:checked').value;
+    if(rol==='familiar') usuarioDiv.classList.add('active');
+    else usuarioDiv.classList.remove('active');
 }
 
 function setPreviewDefaultSiNoHayArchivo(){
@@ -350,11 +400,13 @@ document.querySelectorAll('input[name="rol"]').forEach(radio=>{
     radio.addEventListener('change',()=>{
         setPreviewDefaultSiNoHayArchivo();
         toggleFamiliarSelect();
+        toggleUsuarioSelect(); // NUEVO
     });
 });
 
 // Inicializar
 toggleFamiliarSelect();
+toggleUsuarioSelect(); // NUEVO
 setPreviewDefaultSiNoHayArchivo();
 </script>
 </body>
