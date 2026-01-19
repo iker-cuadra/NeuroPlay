@@ -25,7 +25,7 @@ function fotoDefaultPorRol(string $rol): string {
 $stmtFam = $conexion->query("SELECT id, nombre FROM usuarios WHERE rol = 'familiar' ORDER BY nombre ASC");
 $familiares = $stmtFam->fetchAll();
 
-// NUEVO: Obtener lista de usuarios para asociar cuando se crea un familiar
+// Obtener lista de usuarios para asociar cuando se crea un familiar
 $stmtUsu = $conexion->query("SELECT id, nombre FROM usuarios WHERE rol = 'usuario' ORDER BY nombre ASC");
 $usuarios = $stmtUsu->fetchAll();
 
@@ -36,7 +36,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $rol_seleccionado = $_POST['rol'] ?? "usuario";
     $familiar_id = ($rol_seleccionado === "usuario" && !empty($_POST['familiar_id'])) ? $_POST['familiar_id'] : null;
 
-    // NUEVO: si se crea un FAMILIAR, permitir seleccionar un USUARIO a asociar
     $usuario_asociado_id = ($rol_seleccionado === "familiar" && !empty($_POST['usuario_asociado_id'])) ? (int)$_POST['usuario_asociado_id'] : null;
 
     $fotoNombre = fotoDefaultPorRol($rol_seleccionado);
@@ -75,10 +74,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     ");
                     $stmt->execute([$nombre,$email,$hash,$rol_seleccionado,$fotoNombre,$familiar_id]);
 
-                    // NUEVO: si acabamos de crear un familiar y se seleccionó un usuario, asociarlo
                     if ($rol_seleccionado === "familiar" && !empty($usuario_asociado_id)) {
                         $nuevo_familiar_id = (int)$conexion->lastInsertId();
-
                         $stmtUp = $conexion->prepare("
                             UPDATE usuarios
                             SET familiar_id = ?
@@ -107,17 +104,19 @@ $previewDefault = "uploads/".fotoDefaultPorRol($rol_seleccionado);
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Crear Usuario - NeuroPlay</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <style>
 :root{ --header-h:160px; }
 
-/* FONDO ANIMADO MESH */
+/* MODIFICADO: Permitir scroll en el body */
 html, body{
-    margin:0; padding:0; height:100%;
+    margin:0; padding:0; min-height:100%;
     font-family: 'Poppins', sans-serif;
-    overflow-x:hidden; overflow-y:hidden;
+    overflow-x:hidden; 
+    overflow-y: auto; /* Habilitar scroll vertical */
 }
 
 .canvas-bg{
@@ -134,6 +133,7 @@ html, body{
 }
 @keyframes meshMove{0%{background-position:0% 0%;}100%{background-position:100% 100%;}}
 
+/* MODIFICADO: Cambiado de height:100vh a min-height */
 .layout{ min-height:100vh; display:flex; flex-direction:column; position:relative; z-index:1; }
 
 .header{
@@ -151,7 +151,8 @@ html, body{
 }
 
 .page-content{
-    flex:1 1 auto; display:flex; justify-content:center; align-items:center; padding:20px;
+    flex:1 1 auto; display:flex; justify-content:center; align-items:flex-start; /* Alineado arriba para que el scroll empiece bien */
+    padding:40px 20px;
 }
 
 .container{
@@ -160,6 +161,7 @@ html, body{
     padding:30px 40px; border-radius:20px;
     width:100%; max-width:900px;
     box-shadow:0 10px 40px rgba(0,0,0,0.12);
+    margin-bottom: 20px; /* Margen extra para dispositivos móviles */
 }
 
 .form-flex{ display:flex; flex-wrap:wrap; gap:40px; }
@@ -168,10 +170,9 @@ html, body{
 label{ font-weight:500; display:block; margin-bottom:8px; color:#444; }
 input, select{ width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; font-size:14px; box-sizing:border-box; font-family:inherit; }
 
-/* BOTÓN TRANSPARENTE MEJORADO */
 button[type="submit"]{
     width:100%; padding:15px;
-    background: rgba(0, 0, 0, 0.05); /* Fondo casi transparente */
+    background: rgba(0, 0, 0, 0.05);
     color: #333;
     font-weight: 700;
     border: 2px solid rgba(0, 0, 0, 0.2);
@@ -195,18 +196,15 @@ button[type="submit"]:hover{
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
-/* SEGMENTED CONTROL */
 .segmented-control{ display:flex; background:#f0f0f0; border-radius:12px; padding:4px; gap:4px; }
 .segmented-control input{ display:none; }
 .control-option{ flex:1; text-align:center; padding:10px; border-radius:10px; cursor:pointer; font-size:13px; transition:0.2s; color:#666; }
 .segmented-control input:checked + .control-option{ background:white; color:#000; font-weight:600; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
 
-/* ALERTAS */
 .alert{ padding:12px; border-radius:10px; margin-bottom:20px; font-size:14px; text-align:center; }
 .error{ background:#ffe3e3; color:#b71c1c; border:1px solid #ffcdd2; }
 .success{ background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; }
 
-/* PREVIEW FOTO MEJORADA */
 #preview-container{
     width:110px; height:110px; border-radius:50%;
     overflow:hidden; background:#fff; margin:15px auto;
@@ -216,29 +214,17 @@ button[type="submit"]:hover{
 #preview-container:hover { transform: scale(1.05); }
 #preview-container img{ width:100%; height:100%; object-fit:cover; }
 
-/* SELECTOR FAMILIAR ANIMADO */
-#familiar-selection{
+#familiar-selection, #usuario-selection {
     max-height:0; overflow:hidden; opacity:0;
-    transition:max-height 0.5s ease, opacity 0.5s ease, padding 0.5s ease;
-    background: rgba(255,255,255,0.9);
-    border-radius:12px; padding:0 12px; margin-bottom:20px; border:1px solid #ddd;
+    transition:all 0.4s ease;
+    background: rgba(0,0,0,0.02);
+    border-radius:12px; margin-bottom: 0;
 }
-#familiar-selection.active{
-    max-height:150px; opacity:1; padding:12px;
+#familiar-selection.active, #usuario-selection.active{
+    max-height:150px; opacity:1; padding:15px; margin-bottom: 20px;
+    border: 1px solid #ddd;
 }
 
-/* NUEVO: SELECTOR USUARIO (para cuando rol = familiar) */
-#usuario-selection{
-    max-height:0; overflow:hidden; opacity:0;
-    transition:max-height 0.5s ease, opacity 0.5s ease, padding 0.5s ease;
-    background: rgba(255,255,255,0.9);
-    border-radius:12px; padding:0 12px; margin-bottom:20px; border:1px solid #ddd;
-}
-#usuario-selection.active{
-    max-height:150px; opacity:1; padding:12px;
-}
-
-/* MODERN FILE UPLOAD MEJORADO */
 .file-upload-wrapper{
     position: relative; display:flex; flex-direction: column; align-items:center; gap:8px; margin-top:5px;
 }
@@ -247,17 +233,19 @@ button[type="submit"]:hover{
     opacity:0; cursor:pointer;
 }
 #select-file-btn{
-    background: #f8f9fa;
-    border: 1px dashed #adb5bd;
+    background: #f8f9fa; border: 1px dashed #adb5bd;
     color:#495057; padding:10px 20px;
     border-radius:10px; cursor:pointer; font-weight:600;
     transition: all 0.3s ease; width: 100%;
 }
-#select-file-btn:hover{
-    background: #e9ecef;
-    border-color: #6c757d;
-}
+#select-file-btn:hover{ background: #e9ecef; border-color: #6c757d; }
 #file-name{ font-size:12px; color:#888; font-style: italic; }
+
+/* Responsive */
+@media (max-width: 600px) {
+    .container { padding: 20px; }
+    .form-flex { gap: 20px; }
+}
 </style>
 </head>
 <body>
@@ -295,7 +283,7 @@ button[type="submit"]:hover{
                         <input type="password" name="password" placeholder="********" required>
                     </div>
 
-                    <div class="form-group" id="familiar-selection">
+                    <div id="familiar-selection" class="form-group">
                         <label><i class="fas fa-users"></i> Asociar a familiar</label>
                         <select name="familiar_id">
                             <option value="">-- Sin familiar asociado --</option>
@@ -305,8 +293,7 @@ button[type="submit"]:hover{
                         </select>
                     </div>
 
-                    <!-- NUEVO: bloque para asociar a usuario cuando rol = familiar -->
-                    <div class="form-group" id="usuario-selection">
+                    <div id="usuario-selection" class="form-group">
                         <label><i class="fas fa-user-check"></i> Asociar a usuario</label>
                         <select name="usuario_asociado_id">
                             <option value="">-- Sin usuario asociado --</option>
@@ -353,7 +340,7 @@ button[type="submit"]:hover{
 const fotoInput = document.getElementById('foto-input');
 const imgPreview = document.getElementById('img-preview');
 const familiarDiv = document.getElementById('familiar-selection');
-const usuarioDiv = document.getElementById('usuario-selection'); // NUEVO
+const usuarioDiv = document.getElementById('usuario-selection');
 const selectFileBtn = document.getElementById('select-file-btn');
 const fileNameSpan = document.getElementById('file-name');
 
@@ -363,24 +350,16 @@ const defaults = {
     profesional: 'uploads/default.png'
 };
 
-function toggleFamiliarSelect(){
+function updateRoleVisuals(){
     const rol = document.querySelector('input[name="rol"]:checked').value;
-    if(rol==='usuario') familiarDiv.classList.add('active');
-    else familiarDiv.classList.remove('active');
-}
-
-// NUEVO: mostrar/ocultar selector de usuario cuando rol = familiar
-function toggleUsuarioSelect(){
-    const rol = document.querySelector('input[name="rol"]:checked').value;
-    if(rol==='familiar') usuarioDiv.classList.add('active');
-    else usuarioDiv.classList.remove('active');
-}
-
-function setPreviewDefaultSiNoHayArchivo(){
-    if(!fotoInput.files || fotoInput.files.length===0){
-        const rol = document.querySelector('input[name="rol"]:checked')?.value || 'usuario';
-        imgPreview.src = defaults[rol] || defaults.usuario;
-        fileNameSpan.textContent = "Imagen por defecto";
+    
+    // Toggle Selects
+    familiarDiv.classList.toggle('active', rol === 'usuario');
+    usuarioDiv.classList.toggle('active', rol === 'familiar');
+    
+    // Actualizar imagen por defecto si no hay archivo seleccionado
+    if(!fotoInput.files || fotoInput.files.length === 0){
+        imgPreview.src = defaults[rol];
     }
 }
 
@@ -391,23 +370,15 @@ fotoInput.addEventListener('change', function(){
     if(file){
         imgPreview.src = URL.createObjectURL(file);
         fileNameSpan.textContent = file.name;
-    } else {
-        setPreviewDefaultSiNoHayArchivo();
     }
 });
 
 document.querySelectorAll('input[name="rol"]').forEach(radio=>{
-    radio.addEventListener('change',()=>{
-        setPreviewDefaultSiNoHayArchivo();
-        toggleFamiliarSelect();
-        toggleUsuarioSelect(); // NUEVO
-    });
+    radio.addEventListener('change', updateRoleVisuals);
 });
 
 // Inicializar
-toggleFamiliarSelect();
-toggleUsuarioSelect(); // NUEVO
-setPreviewDefaultSiNoHayArchivo();
+updateRoleVisuals();
 </script>
 </body>
 </html>

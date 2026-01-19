@@ -153,7 +153,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_id"])) {
 // -------------------------
 // LÓGICA DE PAGINACIÓN
 // -------------------------
-$por_pagina = 11;
+$por_pagina = 4;
 $pagina_actual = isset($_GET['p']) ? (int)$_GET['p'] : 1;
 if ($pagina_actual < 1) $pagina_actual = 1;
 $offset = ($pagina_actual - 1) * $por_pagina;
