@@ -145,7 +145,7 @@
     width: 260px;
     padding: 30px;
     border-radius: 20px;
-    background: rgba(195, 195, 195, 0.35); /* MÁS OSCURO */
+    background: rgba(49, 49, 49, 0.35); /* MÁS OSCURO */
     backdrop-filter: blur(15px) saturate(180%);
     -webkit-backdrop-filter: blur(15px) saturate(180%);
     border: 1px solid rgba(12, 12, 12, 0.2);
