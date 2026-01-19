@@ -433,7 +433,7 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
                         <a class="<?= $filtro_rol==="todos"?"active":"" ?>" href="gestionar_users.php<?= qs_keep(["filtro_rol"=>"todos", "p"=>1]) ?>"><i class="fas fa-layer-group"></i> Todos</a>
                         <a class="<?= $filtro_rol==="usuario"?"active":"" ?>" href="gestionar_users.php<?= qs_keep(["filtro_rol"=>"usuario", "p"=>1]) ?>"><i class="fas fa-user"></i> Usuarios</a>
                         <a class="<?= $filtro_rol==="familiar"?"active":"" ?>" href="gestionar_users.php<?= qs_keep(["filtro_rol"=>"familiar", "p"=>1]) ?>"><i class="fas fa-users"></i> Familiares</a>
-                        <a class="<?= $filtro_rol==="profesional"?"active":"" ?>" href="gestionar_users.php<?= qs_keep(["filtro_rol"=>"profesional", "p"=>1]) ?>"><i class="fas fa-user-tie"></i> Pros</a>
+                        <a class="<?= $filtro_rol==="profesional"?"active":"" ?>" href="gestionar_users.php<?= qs_keep(["filtro_rol"=>"profesional", "p"=>1]) ?>"><i class="fas fa-user-tie"></i> Profesionales</a>
                     </div>
                     <a class="btn btn-primary" href="crear_usuario.php"><i class="fas fa-plus"></i> Crear usuario</a>
                 </div>
