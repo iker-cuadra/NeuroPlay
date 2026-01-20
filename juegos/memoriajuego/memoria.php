@@ -374,6 +374,17 @@ if (!$dificultad_memoria) {
                 <button id="btn-volver" class="btn-game">Volver al panel</button>
             </div>
         </div>
+
+        <!-- OVERLAY INICIAL (antes de empezar) -->
+        <div id="start-overlay" class="game-overlay" style="display:flex; z-index: 6;">
+            <div class="overlay-content">
+                <p>¿Listo para jugar?</p>
+                <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+                    <button id="btn-start" class="btn-game">Empezar</button>
+                    <button id="btn-start-back" class="btn-game">Volver</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -597,12 +608,31 @@ if (!$dificultad_memoria) {
         startTimer();
     }
 
-    // Iniciar juego al cargar la página
+    // Iniciar juego al cargar la página (AHORA NO: solo tras pulsar Empezar)
     document.addEventListener("DOMContentLoaded", function () {
         const area = document.getElementById("zona-memoria");
         motivacionDiv = document.getElementById("motivacion");
 
-        loadMemoryGame(area);
+        // Bloquear interacción hasta Empezar
+        if (area) area.style.pointerEvents = "none";
+
+        const startOverlay = document.getElementById("start-overlay");
+        const btnStart = document.getElementById("btn-start");
+        const btnStartBack = document.getElementById("btn-start-back");
+
+        if (btnStart) {
+            btnStart.addEventListener("click", function () {
+                if (startOverlay) startOverlay.style.display = "none";
+                if (area) area.style.pointerEvents = "auto";
+                loadMemoryGame(area); // aquí se crea el tablero y arranca el cronómetro
+            });
+        }
+
+        if (btnStartBack) {
+            btnStartBack.addEventListener("click", function () {
+                window.location.href = "../../usuario.php";
+            });
+        }
 
         const btnRestart = document.getElementById("btn-restart");
         const btnVolver  = document.getElementById("btn-volver");

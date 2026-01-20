@@ -1,5 +1,5 @@
 <?php
-// CONFIGURACIÓN DE CONEXIÓN A LA BASE DE DATOS
+
 
 $host   = '127.0.0.1';
 $port   = 3306;   // <<--- CAMBIA AQUÍ TU PUERTO REAL

@@ -39,6 +39,30 @@ if (!$dificultad_logica) {
             font-size: 18px;
         }
 
+        /* --- FONDO MESH ANIMADO 8s --- */
+        .canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background: #e5e5e5;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(321,0%,100%,1) 0, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(0,0%,80%,1) 0, transparent 50%);
+            background-size: 200% 200%;
+            animation: meshMove 8s infinite alternate ease-in-out;
+        }
+
+        @keyframes meshMove {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+
         /* ENVOLTORIO A PANTALLA COMPLETA */
         .game-wrapper {
             height: 100vh;
@@ -57,7 +81,6 @@ if (!$dificultad_logica) {
             height: 100%;
             max-height: 100%;
 
-            /* Estética mejorada */
             background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
             border-radius: 26px;
             border: 1px solid rgba(0, 0, 0, 0.08);
@@ -241,7 +264,7 @@ if (!$dificultad_logica) {
             z-index: 2;
         }
 
-        /* OVERLAY FINAL DE PARTIDA */
+        /* OVERLAYS */
         .game-overlay {
             position: absolute;
             inset: 0;
@@ -270,7 +293,7 @@ if (!$dificultad_logica) {
             font-weight: 800;
         }
 
-        /* BOTONES (MISMO ESTILO QUE OTRAS PÁGINAS) */
+        /* BOTONES */
         .btn-game {
             background: #4a4a4a;
             color: #fff;
@@ -293,59 +316,32 @@ if (!$dificultad_logica) {
 
         /* Ajustes para alturas más bajas */
         @media (max-height: 760px) {
-            .sudoku-grid {
-                max-width: 350px;
-                gap: 8px;
-            }
-
-            .sudoku-cell {
-                height: clamp(65px, 13vh, 100px);
-                font-size: 32px;
-            }
-
-            .game-header h2 {
-                font-size: 34px;
-            }
-
-            .game-title-pill {
-                font-size: 30px;
-            }
+            .sudoku-grid { max-width: 350px; gap: 8px; }
+            .sudoku-cell { height: clamp(65px, 13vh, 100px); font-size: 32px; }
+            .game-header h2 { font-size: 34px; }
+            .game-title-pill { font-size: 30px; }
         }
 
         @media (max-height: 680px) {
-            .sudoku-grid {
-                max-width: 330px;
-                gap: 8px;
-            }
-
-            .sudoku-cell {
-                height: clamp(60px, 12vh, 90px);
-                font-size: 30px;
-            }
-
-            .game-header h2 {
-                font-size: 32px;
-            }
-
-            .game-title-pill {
-                font-size: 28px;
-                padding: 6px 16px;
-            }
+            .sudoku-grid { max-width: 330px; gap: 8px; }
+            .sudoku-cell { height: clamp(60px, 12vh, 90px); font-size: 30px; }
+            .game-header h2 { font-size: 32px; }
+            .game-title-pill { font-size: 28px; padding: 6px 16px; }
         }
 
         @media (max-width: 768px) {
-            .game-container {
-                padding: 16px 14px 12px 14px;
-            }
+            .game-container { padding: 16px 14px 12px 14px; }
         }
     </style>
 </head>
 
 <body>
 
+    <div class="canvas-bg"></div>
+
     <div class="game-wrapper">
         <div class="game-container">
-            <!-- Flecha volver (negra) -->
+            <!-- Flecha volver -->
             <a href="../../usuario.php" class="back-arrow">
                 <svg xmlns="http://www.w3.org/2000/svg" height="26" width="26" viewBox="0 0 24 24" fill="#000000">
                     <path d="M14.7 20.3 6.4 12l8.3-8.3 1.4 1.4L9.2 12l6.9 6.9Z" />
@@ -353,9 +349,7 @@ if (!$dificultad_logica) {
             </a>
 
             <!-- Pastilla superior -->
-            <div class="game-title-pill">
-                Lógica
-            </div>
+            <div class="game-title-pill">Lógica</div>
 
             <!-- Cabecera -->
             <div class="game-header">
@@ -379,8 +373,8 @@ if (!$dificultad_logica) {
             <div id="game-overlay" class="game-overlay">
                 <div class="overlay-content">
                     <p>¡Sudoku completado!</p>
-                    <button id="btn-restart" class="btn-game">Jugar otra vez</button>
-                    <button id="btn-volver" class="btn-game">Volver al panel</button>
+                    <button id="btn-restart" class="btn-game" type="button">Jugar otra vez</button>
+                    <button id="btn-volver" class="btn-game" type="button">Volver al panel</button>
                 </div>
             </div>
 
@@ -389,16 +383,17 @@ if (!$dificultad_logica) {
                 <div class="overlay-content">
                     <p>¿Listo para jugar?</p>
                     <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-                        <button id="btn-start" class="btn-game">Empezar</button>
-                        <button id="btn-start-back" class="btn-game">Volver</button>
+                        <button id="btn-start" class="btn-game" type="button">Empezar</button>
+                        <button id="btn-start-back" class="btn-game" type="button">Volver</button>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 
     <script>
-        // Dificultad desde PHP (Fácil / medio / Difícil)
+        // Dificultad desde PHP (Fácil / Medio / Difícil)
         const dificultadLogicaBD = "<?= htmlspecialchars($dificultad_logica, ENT_QUOTES) ?>";
 
         // Normalizamos a 'facil' / 'medio' / 'dificil'
@@ -441,45 +436,30 @@ if (!$dificultad_logica) {
 
         // ---- Guardar resultado en la BD ----
         function guardarResultadoLogica(puntos, segundos) {
-            console.log('Enviando resultado lógica...', puntos, segundos, dificultadLogicaBD);
-
             fetch('../../guardar_resultado.php', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     tipo_juego: 'logica',
                     puntuacion: puntos,
                     tiempo_segundos: segundos,
                     dificultad: dificultadLogicaBD
                 })
-            })
-                .then(r => r.json())
-                .then(data => {
-                    console.log('Respuesta guardar_resultado (logica):', data);
-                })
-                .catch(err => {
-                    console.error('Error en fetch logica:', err);
-                });
+            }).catch(() => {});
         }
 
         function showOverlay() {
             const overlay = document.getElementById('game-overlay');
-            if (overlay) {
-                overlay.style.display = 'flex';
-            }
+            if (overlay) overlay.style.display = 'flex';
         }
 
         function hideOverlay() {
             const overlay = document.getElementById('game-overlay');
-            if (overlay) {
-                overlay.style.display = 'none';
-            }
+            if (overlay) overlay.style.display = 'none';
         }
 
         function loadLogicGame(area) {
-            area.innerHTML = ""; // limpiar cada vez
+            area.innerHTML = "";
             resetTimer();
             hideOverlay();
 
@@ -492,28 +472,24 @@ if (!$dificultad_logica) {
             }
         }
 
-        // LÓGICA - FÁCIL (6 celdas vacías)
         function loadLogicGameFacil(area) {
             const solution = generateSudoku4x4();
             const puzzle = createPuzzleFromSolution(solution, 6);
             createSudokuGrid(area, puzzle, solution);
         }
 
-        // LÓGICA - MEDIO (8 celdas vacías)
         function loadLogicGameMedio(area) {
             const solution = generateSudoku4x4();
             const puzzle = createPuzzleFromSolution(solution, 8);
             createSudokuGrid(area, puzzle, solution);
         }
 
-        // LÓGICA - DIFÍCIL (10 celdas vacías)
         function loadLogicGameDificil(area) {
             const solution = generateSudoku4x4();
             const puzzle = createPuzzleFromSolution(solution, 10);
             createSudokuGrid(area, puzzle, solution);
         }
 
-        // Solución base fija 4x4
         function generateSudoku4x4() {
             return [
                 1, 2, 3, 4,
@@ -526,8 +502,6 @@ if (!$dificultad_logica) {
         function createPuzzleFromSolution(solution, emptyCells) {
             const puzzle = [...solution];
             const indices = [];
-
-            // Índices aleatorios únicos a vaciar
             while (indices.length < emptyCells) {
                 const index = Math.floor(Math.random() * 16);
                 if (!indices.includes(index)) {
@@ -563,7 +537,7 @@ if (!$dificultad_logica) {
             });
 
             area.appendChild(grid);
-            startTimer(); // IMPORTANTE: el cronómetro arranca al crear el tablero (al pulsar Empezar)
+            startTimer(); // arranca SOLO cuando se crea el tablero (tras pulsar Empezar)
         }
 
         function checkSudoku(grid, solution) {
@@ -573,9 +547,7 @@ if (!$dificultad_logica) {
 
             cells.forEach((cell, index) => {
                 if (cell.value !== "") filled++;
-                if (cell.value == solution[index]) {
-                    correct++;
-                }
+                if (cell.value == solution[index]) correct++;
             });
 
             const msg = document.getElementById('logic-message');
@@ -584,10 +556,11 @@ if (!$dificultad_logica) {
                 clearInterval(timerInterval);
                 gameScore = 100;
                 const segundosTotales = elapsedSeconds;
+
                 guardarResultadoLogica(gameScore, segundosTotales);
 
-                msg.textContent = "¡Muy bien! Has completado el sudoku correctamente. Tiempo: "
-                    + document.getElementById('timer').textContent;
+                msg.textContent = "¡Muy bien! Has completado el sudoku correctamente. Tiempo: " +
+                    document.getElementById('timer').textContent;
 
                 showOverlay();
             } else if (filled === 16) {
@@ -604,7 +577,6 @@ if (!$dificultad_logica) {
             const zona = document.getElementById('zona-logica');
             if (zona) zona.style.pointerEvents = "none";
 
-            // NO arrancamos aquí. Solo preparamos botones.
             const startOverlay = document.getElementById('start-overlay');
             const btnStart = document.getElementById('btn-start');
             const btnStartBack = document.getElementById('btn-start-back');
@@ -613,7 +585,7 @@ if (!$dificultad_logica) {
                 btnStart.addEventListener('click', function () {
                     if (startOverlay) startOverlay.style.display = 'none';
                     if (zona) zona.style.pointerEvents = "auto";
-                    loadLogicGame(area); // aquí se crea el tablero y arranca el cronómetro
+                    loadLogicGame(area);
                 });
             }
 

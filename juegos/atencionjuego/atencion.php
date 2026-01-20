@@ -48,8 +48,32 @@ if (!$dificultad_atencion) {
             height: 100%;
             overflow: hidden;
             font-family: Arial, Helvetica, sans-serif;
-            background: #887d7dff;
+            background: transparent;
             font-size: 18px;
+        }
+
+        /* --- FONDO MESH ANIMADO 8s --- */
+        .canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background: #e5e5e5;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(321,0%,100%,1) 0, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(0,0%,80%,1) 0, transparent 50%);
+            background-size: 200% 200%;
+            animation: meshMove 8s infinite alternate ease-in-out;
+        }
+
+        @keyframes meshMove {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
         }
 
         /* ENVOLTORIO A PANTALLA COMPLETA */
@@ -257,13 +281,8 @@ if (!$dificultad_atencion) {
             filter: brightness(1.03);
         }
 
-        .symbol-card.wrong {
-            background: #b91c1c;
-        }
-
-        .symbol-card.correct {
-            background: #16a34a;
-        }
+        .symbol-card.wrong { background: #b91c1c; }
+        .symbol-card.correct { background: #16a34a; }
 
         .motivacion {
             margin-top: 10px;
@@ -277,7 +296,7 @@ if (!$dificultad_atencion) {
             z-index: 2;
         }
 
-        /* OVERLAY FINAL (GLASS) */
+        /* OVERLAY (se usa para final e inicio) */
         .game-overlay {
             position: absolute;
             inset: 0;
@@ -318,9 +337,7 @@ if (!$dificultad_atencion) {
             font-size: 1.05rem;
         }
 
-        .overlay-buttons {
-            margin-top: 14px;
-        }
+        .overlay-buttons { margin-top: 14px; }
 
         /* BOTONES */
         .btn-game {
@@ -342,42 +359,12 @@ if (!$dificultad_atencion) {
             transform: translateY(-2px);
             box-shadow: 0 14px 26px rgba(0,0,0,0.28);
         }
-
-        @media (max-width: 768px) {
-            .game-container {
-                padding: 16px 14px 12px 14px;
-            }
-
-            .game-header h2 {
-                font-size: 30px;
-            }
-
-            .symbol-card {
-                width: 74px;
-                height: 74px;
-                font-size: 34px;
-            }
-
-            .status-bar {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .game-title-pill {
-                font-size: 30px;
-            }
-        }
-
-        @media (max-height: 680px) {
-            .game-title-pill {
-                font-size: 28px;
-                padding: 6px 16px;
-            }
-        }
     </style>
 </head>
 
 <body>
+
+    <div class="canvas-bg"></div>
 
     <div class="game-wrapper">
         <div class="game-container">
@@ -414,9 +401,7 @@ if (!$dificultad_atencion) {
 
             <!-- Cuerpo del juego -->
             <div class="game-body">
-                <div id="zona-atencion">
-                    <!-- El tablero se genera por JavaScript -->
-                </div>
+                <div id="zona-atencion"></div>
             </div>
 
             <!-- Mensaje motivacional -->
@@ -425,6 +410,17 @@ if (!$dificultad_atencion) {
             <!-- OVERLAY FINAL -->
             <div id="game-overlay" class="game-overlay">
                 <div id="overlay-content" class="overlay-content"></div>
+            </div>
+
+            <!-- OVERLAY INICIAL (antes de empezar) -->
+            <div id="start-overlay" class="game-overlay" style="display:flex; z-index: 6;">
+                <div class="overlay-content">
+                    <p>¿Listo para jugar?</p>
+                    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+                        <button id="btn-start" class="btn-game">Empezar</button>
+                        <button id="btn-start-back" class="btn-game">Volver</button>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -448,13 +444,13 @@ if (!$dificultad_atencion) {
         // ============================
         //  VARIABLES GLOBALES
         // ============================
-        let attentionTimeLeft = 90;   // segundos totales
-        let attentionTimerInt = null; // intervalo del cronómetro
-        let roundTimeoutId = null; // timeout para cambiar figuras cada 10s
+        let attentionTimeLeft = 90;
+        let attentionTimerInt = null;
+        let roundTimeoutId = null;
         let gameScore = 0;
         let gameEnded = false;
 
-        const TOTAL_TIME = 90;         // 1:30 minutos
+        const TOTAL_TIME = 90;
 
         // ============================
         //  UTILIDADES DE UI
@@ -468,8 +464,7 @@ if (!$dificultad_atencion) {
             if (timeEl) {
                 const m = Math.floor(attentionTimeLeft / 60);
                 const s = attentionTimeLeft % 60;
-                timeEl.textContent =
-                    String(m).padStart(2, '0') + ":" + String(s).padStart(2, '0');
+                timeEl.textContent = String(m).padStart(2, '0') + ":" + String(s).padStart(2, '0');
             }
         }
 
@@ -481,8 +476,7 @@ if (!$dificultad_atencion) {
                 "¡Excelente! Has completado el ejercicio de atención.",
                 "¡Lo estás haciendo de maravilla!"
             ];
-            const i = Math.floor(Math.random() * mensajes.length);
-            return mensajes[i];
+            return mensajes[Math.floor(Math.random() * mensajes.length)];
         }
 
         function showOverlay() {
@@ -496,14 +490,12 @@ if (!$dificultad_atencion) {
         }
 
         // ============================
-        //  GUARDAR RESULTADO EN PHP
+        //  GUARDAR RESULTADO
         // ============================
         function saveAttentionResult(score, seconds, dificultad) {
             fetch('../../guardar_resultado.php', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     tipo_juego: 'atencion',
                     puntuacion: score,
@@ -511,13 +503,8 @@ if (!$dificultad_atencion) {
                     dificultad: dificultad
                 })
             })
-                .then(res => res.json())
-                .then(data => {
-                    console.log('Resultado atención guardado:', data);
-                })
-                .catch(err => {
-                    console.error('Error al guardar resultado de atención:', err);
-                });
+            .then(res => res.json())
+            .catch(err => console.error('Error al guardar resultado de atención:', err));
         }
 
         // ============================
@@ -534,29 +521,22 @@ if (!$dificultad_atencion) {
             attentionTimeLeft = TOTAL_TIME;
             gameScore = 0;
 
-            // Limpiar temporizadores anteriores
             if (attentionTimerInt) clearInterval(attentionTimerInt);
             if (roundTimeoutId) clearTimeout(roundTimeoutId);
             attentionTimerInt = null;
             roundTimeoutId = null;
 
             updateScoreboard();
-            if (area) {
-                area.style.pointerEvents = "auto";
-            }
+            if (area) area.style.pointerEvents = "auto";
 
-            // Arrancar primera ronda
             startAttentionRound(area);
 
-            // Arrancar cronómetro general
             attentionTimerInt = setInterval(() => {
                 attentionTimeLeft--;
                 if (attentionTimeLeft < 0) attentionTimeLeft = 0;
                 updateScoreboard();
 
-                if (attentionTimeLeft <= 0) {
-                    endAttentionGame();
-                }
+                if (attentionTimeLeft <= 0) endAttentionGame();
             }, 1000);
         }
 
@@ -572,52 +552,36 @@ if (!$dificultad_atencion) {
             const area = document.getElementById('zona-atencion');
             const motivacionDiv = document.getElementById('motivacion');
 
-            if (area) {
-                area.style.pointerEvents = "none";
-            }
+            if (area) area.style.pointerEvents = "none";
 
-            // Mensaje motivacional bajo el juego
             if (motivacionDiv) {
-                motivacionDiv.textContent =
-                    getMotivationalMessage() + " Puntuación final: " + gameScore + " puntos.";
+                motivacionDiv.textContent = getMotivationalMessage() + " Puntuación final: " + gameScore + " puntos.";
             }
 
-            // Guardar resultado (tiempo total 90s)
             saveAttentionResult(gameScore, TOTAL_TIME, dificultadTexto);
 
-            // Overlay con resumen + botones
             const overlayContent = document.getElementById("overlay-content");
             if (overlayContent) {
                 overlayContent.innerHTML = `
-                <i class="fas fa-eye" style="font-size:3rem; color:#facc15; margin-bottom:6px;"></i>
-                <h3>¡Tiempo terminado!</h3>
-                <p>Puntuación final: <strong>${gameScore}</strong> puntos.</p>
-                <p>Tiempo de juego: <strong>01:30</strong></p>
+                    <i class="fas fa-eye" style="font-size:3rem; color:#facc15; margin-bottom:6px;"></i>
+                    <h3>¡Tiempo terminado!</h3>
+                    <p>Puntuación final: <strong>${gameScore}</strong> puntos.</p>
+                    <p>Tiempo de juego: <strong>01:30</strong></p>
 
-                <div class="overlay-buttons">
-                    <button id="btn-restart" class="btn-game">Jugar otra vez</button>
-                    <button id="btn-volver" class="btn-game">Volver al panel</button>
-                </div>
-            `;
+                    <div class="overlay-buttons">
+                        <button id="btn-restart" class="btn-game">Jugar otra vez</button>
+                        <button id="btn-volver" class="btn-game">Volver al panel</button>
+                    </div>
+                `;
             }
 
             showOverlay();
 
-            // Listeners de los botones del overlay
             const btnRestart = document.getElementById("btn-restart");
             const btnVolver = document.getElementById("btn-volver");
 
-            if (btnRestart) {
-                btnRestart.onclick = () => {
-                    startNewAttentionGame();
-                };
-            }
-
-            if (btnVolver) {
-                btnVolver.onclick = () => {
-                    window.location.href = "../../usuario.php";
-                };
-            }
+            if (btnRestart) btnRestart.onclick = () => startNewAttentionGame();
+            if (btnVolver) btnVolver.onclick = () => window.location.href = "../../usuario.php";
         }
 
         // ============================
@@ -626,7 +590,6 @@ if (!$dificultad_atencion) {
         function startAttentionRound(area) {
             if (gameEnded || !area) return;
 
-            // Determinar parámetros según dificultad
             let symbolCount;
             let symbolPairs;
 
@@ -646,7 +609,7 @@ if (!$dificultad_atencion) {
                     { base: '●', different: '◎' },
                     { base: '▲', different: '△' }
                 ];
-            } else { // difícil
+            } else {
                 symbolCount = 12;
                 symbolPairs = [
                     { base: '⬤', different: '◯' },
@@ -656,7 +619,6 @@ if (!$dificultad_atencion) {
                 ];
             }
 
-            // Limpiar área y crear instrucciones + grid
             area.innerHTML = "";
 
             const instructions = document.createElement('p');
@@ -666,18 +628,14 @@ if (!$dificultad_atencion) {
 
             const grid = document.createElement('div');
             grid.className = "symbol-grid";
-            grid.style.gridTemplateColumns =
-                `repeat(${Math.ceil(Math.sqrt(symbolCount))}, 92px)`;
+            grid.style.gridTemplateColumns = `repeat(${Math.ceil(Math.sqrt(symbolCount))}, 92px)`;
             area.appendChild(grid);
 
             generateAttentionExercise(grid, symbolCount, symbolPairs);
 
-            // Programar cambio automático de figuras cada 10 segundos
             if (roundTimeoutId) clearTimeout(roundTimeoutId);
             roundTimeoutId = setTimeout(() => {
-                if (!gameEnded && attentionTimeLeft > 0) {
-                    startAttentionRound(area);
-                }
+                if (!gameEnded && attentionTimeLeft > 0) startAttentionRound(area);
             }, 10000);
         }
 
@@ -685,7 +643,6 @@ if (!$dificultad_atencion) {
             container.innerHTML = "";
 
             const pair = symbolPairs[Math.floor(Math.random() * symbolPairs.length)];
-
             const symbols = new Array(symbolCount).fill(pair.base);
             const differentIndex = Math.floor(Math.random() * symbolCount);
             symbols[differentIndex] = pair.different;
@@ -705,18 +662,14 @@ if (!$dificultad_atencion) {
 
                         const area = document.getElementById('zona-atencion');
                         setTimeout(() => {
-                            if (!gameEnded && attentionTimeLeft > 0) {
-                                startAttentionRound(area);
-                            }
+                            if (!gameEnded && attentionTimeLeft > 0) startAttentionRound(area);
                         }, 250);
                     } else {
                         gameScore = Math.max(0, gameScore - 5);
                         card.classList.add("wrong");
                         updateScoreboard();
 
-                        setTimeout(() => {
-                            card.classList.remove("wrong");
-                        }, 400);
+                        setTimeout(() => card.classList.remove("wrong"), 400);
                     }
                 });
 
@@ -728,13 +681,29 @@ if (!$dificultad_atencion) {
         //  INICIALIZACIÓN
         // ============================
         document.addEventListener("DOMContentLoaded", function () {
-            startNewAttentionGame();
-        });
+            const startOverlay = document.getElementById("start-overlay");
+            const btnStart = document.getElementById("btn-start");
+            const btnStartBack = document.getElementById("btn-start-back");
+            const zona = document.getElementById("zona-atencion");
 
-        function cleanupAttentionGame() {
-            if (attentionTimerInt) clearInterval(attentionTimerInt);
-            if (roundTimeoutId) clearTimeout(roundTimeoutId);
-        }
+            // Bloquear interacción hasta empezar
+            if (zona) zona.style.pointerEvents = "none";
+
+            // No iniciar juego aquí; solo cuando pulses Empezar
+            if (btnStart) {
+                btnStart.addEventListener("click", function () {
+                    if (startOverlay) startOverlay.style.display = "none";
+                    if (zona) zona.style.pointerEvents = "auto";
+                    startNewAttentionGame();
+                });
+            }
+
+            if (btnStartBack) {
+                btnStartBack.addEventListener("click", function () {
+                    window.location.href = "../../usuario.php";
+                });
+            }
+        });
     </script>
 
 </body>
