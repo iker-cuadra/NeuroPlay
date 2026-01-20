@@ -31,9 +31,33 @@ if (!$dificultad_razonamiento) {
             padding: 0;
             height: 100%;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #887d7dff;
+            background: transparent;
             overflow: hidden; /* sin scroll */
             font-size: 18px;
+        }
+
+        /* --- FONDO MESH ANIMADO 8s --- */
+        .canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background: #e5e5e5;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(321,0%,100%,1) 0, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(0,0%,80%,1) 0, transparent 50%);
+            background-size: 200% 200%;
+            animation: meshMove 8s infinite alternate ease-in-out; /* 8s */
+        }
+
+        @keyframes meshMove {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
         }
 
         /* ENVOLTORIO A PANTALLA COMPLETA */
@@ -379,6 +403,8 @@ if (!$dificultad_razonamiento) {
 </head>
 <body>
 
+<div class="canvas-bg"></div>
+
 <div class="game-wrapper">
     <div class="game-container">
 
@@ -418,6 +444,17 @@ if (!$dificultad_razonamiento) {
         <!-- OVERLAY FINAL -->
         <div id="game-overlay" class="game-overlay">
             <div id="overlay-content" class="overlay-content"></div>
+        </div>
+
+        <!-- OVERLAY INICIAL (antes de empezar) -->
+        <div id="start-overlay" class="game-overlay" style="display:flex; z-index: 6;">
+            <div class="overlay-content">
+                <p>¿Listo para jugar?</p>
+                <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+                    <button id="btn-start" class="btn-game">Empezar</button>
+                    <button id="btn-start-back" class="btn-game">Volver</button>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -626,13 +663,34 @@ if (!$dificultad_razonamiento) {
         resultados = [];
         document.getElementById("razonamiento-mensaje").innerHTML = "";
         document.getElementById("ronda-indicador").textContent = "1/" + TOTAL_RONDAS;
+
         iniciarTemporizador();
         loadReasoningGame(document.getElementById("zona-razonamiento"));
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-        iniciarTemporizador();
-        loadReasoningGame(document.getElementById("zona-razonamiento"));
+        const startOverlay = document.getElementById("start-overlay");
+        const btnStart = document.getElementById("btn-start");
+        const btnStartBack = document.getElementById("btn-start-back");
+        const zona = document.getElementById("zona-razonamiento");
+
+        // Bloquear clicks hasta empezar
+        if (zona) zona.style.pointerEvents = "none";
+
+        if (btnStart) {
+            btnStart.addEventListener("click", () => {
+                if (startOverlay) startOverlay.style.display = "none";
+                if (zona) zona.style.pointerEvents = "auto";
+                iniciarTemporizador();
+                loadReasoningGame(zona);
+            });
+        }
+
+        if (btnStartBack) {
+            btnStartBack.addEventListener("click", () => {
+                window.location.href = "../../usuario.php";
+            });
+        }
     });
 </script>
 
