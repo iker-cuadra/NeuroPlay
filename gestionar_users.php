@@ -686,21 +686,45 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
                         </tr>
                         <?php endforeach; ?>
                         <script>
-document.querySelectorAll('.filter-link').forEach(btn => {
-    btn.addEventListener('click', e => {
-        e.preventDefault();
+document.addEventListener('DOMContentLoaded', () => {
+    const contenedorTabla = document.getElementById('tabla-usuarios');
+    const contenedorPaginacion = document.querySelector('.pagination-container');
 
-        const rol = btn.dataset.rol;
+    function cargarUsuarios(rol = 'todos', pagina = 1) {
+        // Actualizar botones de filtro visualmente
+        document.querySelectorAll('.filter-link').forEach(link => {
+            link.classList.toggle('active', link.dataset.rol === rol);
+        });
 
-        // Estado activo visual
-        document.querySelectorAll('.filter-link').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        // Petición AJAX
+        fetch(`ajax/usuarios_filtrados.php?filtro_rol=${rol}&p=${pagina}`)
+            .then(res => res.json())
+            .then(data => {
+                contenedorTabla.innerHTML = data.tabla;
+                if (contenedorPaginacion) {
+                    contenedorPaginacion.innerHTML = data.paginacion;
+                }
+            })
+            .catch(err => console.error("Error al cargar:", err));
+    }
 
-        fetch(`ajax/usuarios_filtrados.php?filtro_rol=${rol}`)
-            .then(res => res.text())
-            .then(html => {
-                document.getElementById('tabla-usuarios').innerHTML = html;
-            });
+    // Evento clics en Filtros
+    document.querySelectorAll('.filter-link').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.preventDefault();
+            cargarUsuarios(btn.dataset.rol, 1); // Reset a pág 1 al filtrar
+        });
+    });
+
+    // Evento clics en Paginación (Delegado)
+    document.addEventListener('click', e => {
+        const pLink = e.target.closest('.page-ajax');
+        if (pLink) {
+            e.preventDefault();
+            const rolActivo = document.querySelector('.filter-link.active').dataset.rol;
+            const numPagina = pLink.dataset.page;
+            cargarUsuarios(rolActivo, numPagina);
+        }
     });
 });
 </script>
@@ -710,24 +734,24 @@ document.querySelectorAll('.filter-link').forEach(btn => {
             </div>
 
             <?php if ($total_paginas > 1): ?>
-            <div class="pagination-container">
-                <?php if ($pagina_actual <= 1): ?>
-                    <span class="page-link disabled"><i class="fas fa-chevron-left"></i></span>
-                <?php else: ?>
-                    <a href="<?= qs_keep(['p' => $pagina_actual - 1]) ?>" class="page-link"><i class="fas fa-chevron-left"></i></a>
-                <?php endif; ?>
+<div class="pagination-container">
+    <?php if ($pagina_actual <= 1): ?>
+        <span class="page-link disabled"><i class="fas fa-chevron-left"></i></span>
+    <?php else: ?>
+        <a href="#" class="page-link page-ajax" data-page="<?= $pagina_actual - 1 ?>"><i class="fas fa-chevron-left"></i></a>
+    <?php endif; ?>
 
-                <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
-                    <a href="<?= qs_keep(['p' => $i]) ?>" class="page-link <?= ($i == $pagina_actual) ? 'active' : '' ?>"><?= $i ?></a>
-                <?php endfor; ?>
+    <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
+        <a href="#" class="page-link page-ajax <?= ($i == $pagina_actual) ? 'active' : '' ?>" data-page="<?= $i ?>"><?= $i ?></a>
+    <?php endfor; ?>
 
-                <?php if ($pagina_actual >= $total_paginas): ?>
-                    <span class="page-link disabled"><i class="fas fa-chevron-right"></i></span>
-                <?php else: ?>
-                    <a href="<?= qs_keep(['p' => $pagina_actual + 1]) ?>" class="page-link"><i class="fas fa-chevron-right"></i></a>
-                <?php endif; ?>
-            </div>
-            <?php endif; ?>
+    <?php if ($pagina_actual >= $total_paginas): ?>
+        <span class="page-link disabled"><i class="fas fa-chevron-right"></i></span>
+    <?php else: ?>
+        <a href="#" class="page-link page-ajax" data-page="<?= $pagina_actual + 1 ?>"><i class="fas fa-chevron-right"></i></a>
+    <?php endif; ?>
+</div>
+<?php endif; ?>
         </div>
     </div>
 </div>
