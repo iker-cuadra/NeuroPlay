@@ -153,7 +153,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_id"])) {
 // -------------------------
 // LÓGICA DE PAGINACIÓN
 // -------------------------
-$por_pagina = 4;
+$por_pagina = 6;
 $pagina_actual = isset($_GET['p']) ? (int)$_GET['p'] : 1;
 if ($pagina_actual < 1) $pagina_actual = 1;
 $offset = ($pagina_actual - 1) * $por_pagina;
@@ -170,12 +170,40 @@ $total_paginas = ceil($total_usuarios / $por_pagina);
 // -------------------------
 // USER A EDITAR (GET)
 // -------------------------
+// -------------------------
+// USER A EDITAR (GET)
+// -------------------------
 $editar_user = null;
+$vinculo_info = null; // Nueva variable para la vinculación
+
 if (isset($_GET["editar_id"])) {
     $editar_id = (int)$_GET["editar_id"];
     $stmt = $conexion->prepare("SELECT id, nombre, email, rol, foto, familiar_id FROM usuarios WHERE id = ?");
     $stmt->execute([$editar_id]);
     $editar_user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($editar_user) {
+        $vinculo_info = null;
+        $familiares_disponibles = [];
+
+        // Si el editado es un USUARIO, buscamos su familiar y cargamos la lista de otros familiares
+        if ($editar_user['rol'] === 'usuario') {
+            // 1. Info del familiar actual
+            $stmt_v = $conexion->prepare("SELECT nombre, rol FROM usuarios WHERE id = ?");
+            $stmt_v->execute([$editar_user['familiar_id']]);
+            $vinculo_info = $stmt_v->fetch(PDO::FETCH_ASSOC);
+
+            // 2. Lista de TODOS los familiares disponibles para el select
+            $stmt_f = $conexion->query("SELECT id, nombre FROM usuarios WHERE rol = 'familiar' ORDER BY nombre ASC");
+            $familiares_disponibles = $stmt_f->fetchAll(PDO::FETCH_ASSOC);
+
+        } elseif ($editar_user['rol'] === 'familiar') {
+            // Si es familiar, vemos a qué usuario tiene asignado
+            $stmt_v = $conexion->prepare("SELECT nombre, rol FROM usuarios WHERE familiar_id = ?");
+            $stmt_v->execute([$editar_user['id']]);
+            $vinculo_info = $stmt_v->fetch(PDO::FETCH_ASSOC);
+        }
+    }
 }
 
 // -------------------------
@@ -286,7 +314,7 @@ html, body{
     flex: 1 1 auto;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center; /* ACTUALIZADO: Centra el formulario verticalmente cuando es corto */
     padding: 14px 16px;
     overflow: hidden;
     min-height: 0;
@@ -302,6 +330,7 @@ html, body{
     gap: 12px;
     height: 100%;
     overflow: hidden;
+    transition: all 0.4s ease; /* Suaviza el cambio entre tabla y edición */
 }
 .panel-header{
     display: flex;
@@ -410,10 +439,109 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
 .form-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .form-group label{ display: block; font-size: 12px; font-weight: 700; color: #444; margin-bottom: 6px; }
 .form-group input, .form-group select{ width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid #dde2ea; font-size: 14px; transition: border 0.2s; }
+/* Botón Cancelar */
+.btn-secondary { 
+    background: #f1f5f9; 
+    color: #475569; 
+    border: 1px solid #e2e8f0; 
+}
+.btn-secondary:hover { 
+    background: #e2e8f0; 
+    color: #1e293b; 
+    transform: translateY(-3px); 
+}
+
+/* Recuadro de Vinculación */
+/* --- Mejora del recuadro de vinculación --- */
+.vinculo-box {
+    margin-top: 20px;
+    padding: 18px;
+    background: #f0f7ff; /* Azul muy suave */
+    border-radius: 16px;
+    border: 2px solid #e0eafc;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.vinculo-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #2563eb;
+}
+
+.vinculo-select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    background-color: white;
+    cursor: pointer;
+}
+
+.vinculo-info-text {
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.4;
+}
+.vinculo-tag {
+    font-size: 11px;
+    text-transform: uppercase;
+    background: #64748b;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+}
+
+/* --- ACTUALIZACIÓN PARA EL MODO EDICIÓN COMPACTO --- */
+
+.editing-active {
+    height: auto !important; /* ACTUALIZADO: Ya no fuerza el 100% de alto */
+    max-width: 850px;       /* ACTUALIZADO: Ancho más contenido para edición */
+    margin: 0 auto;
+}
+
+.editing-active .panel-header, 
+.editing-active .table-wrap, 
+.editing-active .pagination-container {
+    display: none !important;
+}
+
+.editing-active .edit-card {
+    height: auto;           /* ACTUALIZADO: Se ajusta al contenido */
+    margin-bottom: 0;
+    flex: none;
+    border: none;
+    background: white;
+}
+
+.editing-active .edit-right {
+    display: flex;
+    flex-direction: column;
+}
+
+.editing-active form {
+    flex: none;             /* ACTUALIZADO: No fuerza el estiramiento */
+    display: block;
+}
+
+/* Reducimos un poco los espacios internos en edición para que se vea más ordenado */
+.editing-active .form-grid {
+    gap: 15px;
+    margin-bottom: 20px;
+}
 </style>
 </head>
 
-<body>
+<bodty>
 <div class="canvas-bg"></div>
 <div class="layout">
     <div class="header">
@@ -424,16 +552,25 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
     </div>
 
     <div class="page-content">
-        <div class="panel">
-            <div class="panel-header">
+            <div class="panel <?= $editar_user ? 'editing-active' : '' ?>">
+                <div class="panel-header">
                 <h1>Panel de Gestión de Usuarios</h1>
                 <div class="actions">
                     <div class="filter-buttons">
                         <span style="font-weight:900; padding:0 8px;">Ver:</span>
-                        <a class="<?= $filtro_rol==="todos"?"active":"" ?>" href="gestionar_users.php<?= qs_keep(["filtro_rol"=>"todos", "p"=>1]) ?>"><i class="fas fa-layer-group"></i> Todos</a>
-                        <a class="<?= $filtro_rol==="usuario"?"active":"" ?>" href="gestionar_users.php<?= qs_keep(["filtro_rol"=>"usuario", "p"=>1]) ?>"><i class="fas fa-user"></i> Usuarios</a>
-                        <a class="<?= $filtro_rol==="familiar"?"active":"" ?>" href="gestionar_users.php<?= qs_keep(["filtro_rol"=>"familiar", "p"=>1]) ?>"><i class="fas fa-users"></i> Familiares</a>
-                        <a class="<?= $filtro_rol==="profesional"?"active":"" ?>" href="gestionar_users.php<?= qs_keep(["filtro_rol"=>"profesional", "p"=>1]) ?>"><i class="fas fa-user-tie"></i> Profesionales</a>
+                        <a href="#" class="filter-link active" data-rol="todos">
+    <i class="fas fa-layer-group"></i> Todos
+</a>
+<a href="#" class="filter-link" data-rol="usuario">
+    <i class="fas fa-user"></i> Usuarios
+</a>
+<a href="#" class="filter-link" data-rol="familiar">
+    <i class="fas fa-users"></i> Familiares
+</a>
+<a href="#" class="filter-link" data-rol="profesional">
+    <i class="fas fa-user-tie"></i> Profesionales
+</a>
+
                     </div>
                     <a class="btn btn-primary" href="crear_usuario.php"><i class="fas fa-plus"></i> Crear usuario</a>
                 </div>
@@ -442,38 +579,82 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
             <?php if ($flash_success): ?><div class="flash success"><?= htmlspecialchars($flash_success) ?></div><?php endif; ?>
             <?php if ($flash_error): ?><div class="flash error"><?= htmlspecialchars($flash_error) ?></div><?php endif; ?>
 
-            <?php if ($editar_user): ?>
-                <div class="edit-card">
-                    <div class="edit-left">
-                        <img class="edit-photo" src="uploads/<?= $editar_user['foto'] ?: 'default.png' ?>">
-                        <div style="font-size:13px; color:var(--muted)"><strong>Rol:</strong> <?= $editar_user["rol"] ?></div>
+           <?php if ($editar_user): ?>
+    <div class="edit-card">
+        <div class="edit-left">
+            <img class="edit-photo" src="uploads/<?= $editar_user['foto'] ?: 'default.png' ?>" style="width: 110px; height: 110px; border-radius: 20px;">
+            <div style="font-size:13px; color:var(--muted); margin-bottom: 5px;">ID Usuario: <strong>#<?= $editar_user["id"] ?></strong></div>
+            
+            <?php if ($editar_user['rol'] === 'usuario'): ?>
+                <div class="vinculo-box">
+                    <div class="vinculo-header">
+                        <i class="fas fa-link"></i> Familiar Asignado
                     </div>
-                    <div class="edit-right">
-                        <a class="close-edit" href="gestionar_users.php<?= qs_keep() ?>">✕</a>
-                        <h2 style="font-size:16px; margin-bottom:10px;">Editar: <?= htmlspecialchars($editar_user["nombre"]) ?></h2>
-                        <form method="POST" enctype="multipart/form-data">
-                            <input type="hidden" name="csrf" value="<?= $_SESSION["csrf"] ?>">
-                            <input type="hidden" name="update_id" value="<?= $editar_user["id"] ?>">
-                            <div class="form-grid">
-                                <div class="form-group"><label>Nombre</label><input type="text" name="nombre" value="<?= htmlspecialchars($editar_user["nombre"]) ?>" required></div>
-                                <div class="form-group"><label>Email</label><input type="email" name="email" value="<?= htmlspecialchars($editar_user["email"]) ?>" required></div>
-                                <div class="form-group">
-                                    <label>Rol</label>
-                                    <select name="rol">
-                                        <option value="usuario" <?= $editar_user["rol"]=="usuario"?"selected":"" ?>>Usuario</option>
-                                        <option value="familiar" <?= $editar_user["rol"]=="familiar"?"selected":"" ?>>Familiar</option>
-                                        <option value="profesional" <?= $editar_user["rol"]=="profesional"?"selected":"" ?>>Profesional</option>
-                                    </select>
-                                </div>
-                                <div class="form-group"><label>Contraseña (opcional)</label><input type="password" name="password"></div>
-                            </div>
-                            <div style="margin-top:10px; text-align:right;">
-                                <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Guardar</button>
-                            </div>
-                        </form>
+                    
+                    <select name="familiar_id" form="form-editar" class="vinculo-select">
+                        <option value="">-- Sin familiar asignado --</option>
+                        <?php foreach ($familiares_disponibles as $f): ?>
+                            <option value="<?= $f['id'] ?>" <?= ($editar_user['familiar_id'] == $f['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($f['nombre']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    
+                    <div class="vinculo-info-text">
+                        Este familiar recibirá las notificaciones y reportes de este usuario.
                     </div>
                 </div>
             <?php endif; ?>
+        </div>
+
+        <div class="edit-right" style="padding: 10px 25px;">
+            <h2 style="font-size:20px; margin-bottom:20px; color: #1d1d1f; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px;">
+                <i class="fas fa-user-edit" style="margin-right:8px; color: #4a4a4a;"></i>Editar perfil
+            </h2>
+            
+            <form method="POST" enctype="multipart/form-data" id="form-editar">
+                <input type="hidden" name="csrf" value="<?= $_SESSION["csrf"] ?>">
+                <input type="hidden" name="update_id" value="<?= $editar_user["id"] ?>">
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nombre completo</label>
+                        <input type="text" name="nombre" value="<?= htmlspecialchars($editar_user["nombre"]) ?>" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email de contacto</label>
+                        <input type="email" name="email" value="<?= htmlspecialchars($editar_user["email"]) ?>" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Rol</label>
+                        <select name="rol">
+                            <option value="usuario" <?= $editar_user["rol"]=="usuario"?"selected":"" ?>>Usuario</option>
+                            <option value="familiar" <?= $editar_user["rol"]=="familiar"?"selected":"" ?>>Familiar</option>
+                            <option value="profesional" <?= $editar_user["rol"]=="profesional"?"selected":"" ?>>Profesional</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña (opcional)</label>
+                        <input type="password" name="password" placeholder="Dejar vacío para no cambiar">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Imagen de perfil</label>
+                        <input type="file" name="foto" style="background: #f8fafc; border: 1px dashed #cbd5e1;">
+                    </div>
+                </div>
+
+                <div style="margin-top:30px; display:flex; justify-content:flex-end; gap:12px;">
+                    <a href="gestionar_users.php<?= qs_keep() ?>" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button class="btn btn-primary" type="submit" style="min-width: 160px;">
+                        <i class="fas fa-save"></i> Actualizar Usuario
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+<?php endif; ?>
 
             <div class="table-wrap">
                 <table>
@@ -486,7 +667,7 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
                             <th style="width:260px; text-align:center;">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
+<tbody id="tabla-usuarios">
                         <?php foreach ($usuarios as $u): ?>
                         <tr>
                             <td style="text-align:center;"><img class="user-photo" src="uploads/<?= $u['foto'] ?: 'default.png' ?>"></td>
@@ -504,6 +685,26 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
                             </td>
                         </tr>
                         <?php endforeach; ?>
+                        <script>
+document.querySelectorAll('.filter-link').forEach(btn => {
+    btn.addEventListener('click', e => {
+        e.preventDefault();
+
+        const rol = btn.dataset.rol;
+
+        // Estado activo visual
+        document.querySelectorAll('.filter-link').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        fetch(`ajax/usuarios_filtrados.php?filtro_rol=${rol}`)
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('tabla-usuarios').innerHTML = html;
+            });
+    });
+});
+</script>
+
                     </tbody>
                 </table>
             </div>
