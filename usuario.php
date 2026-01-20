@@ -31,7 +31,31 @@ $nombre = $_SESSION["nombre"];
             overflow: hidden;
             /* Evita scroll */
             font-family: Arial, Helvetica, sans-serif;
-            background: #887d7dff;
+            background: transparent; /* para que se vea el mesh */
+        }
+
+        /* --- FONDO MESH ANIMADO 8s --- */
+        .canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background: #e5e5e5;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(321,0%,100%,1) 0, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(0,0%,80%,1) 0, transparent 50%);
+            background-size: 200% 200%;
+            animation: meshMove 8s infinite alternate ease-in-out; /* 8s */
+        }
+
+        @keyframes meshMove {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
         }
 
         /* ENCABEZADO SUPERIOR (igual que profesional.php) */
@@ -44,7 +68,7 @@ $nombre = $_SESSION["nombre"];
             position: relative;
             flex: 0 0 auto;
         }
-        
+
         /* Etiqueta inferior (igual que profesional.php) */
         .user-role {
             position: absolute;
@@ -177,20 +201,6 @@ $nombre = $_SESSION["nombre"];
             background: #333;
         }
 
-        /* IMAGEN INFERIOR */
-        .bottom-image {
-            width: 100%;
-            height: 160px;
-            overflow: hidden;
-        }
-
-        .bottom-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
         /* RESPONSIVE */
         @media (max-width: 900px) {
             .games-section {
@@ -221,6 +231,9 @@ $nombre = $_SESSION["nombre"];
 </head>
 
 <body>
+
+    <!-- FONDO MESH -->
+    <div class="canvas-bg"></div>
 
     <!-- ENCABEZADO (igual que profesional.php) -->
     <div class="header">

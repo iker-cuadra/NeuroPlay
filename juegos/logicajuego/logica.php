@@ -388,7 +388,10 @@ if (!$dificultad_logica) {
             <div id="start-overlay" class="game-overlay" style="display:flex; z-index: 6;">
                 <div class="overlay-content">
                     <p>¿Listo para jugar?</p>
-                    <button id="btn-start" class="btn-game">Empezar</button>
+                    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+                        <button id="btn-start" class="btn-game">Empezar</button>
+                        <button id="btn-start-back" class="btn-game">Volver</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -604,12 +607,19 @@ if (!$dificultad_logica) {
             // NO arrancamos aquí. Solo preparamos botones.
             const startOverlay = document.getElementById('start-overlay');
             const btnStart = document.getElementById('btn-start');
+            const btnStartBack = document.getElementById('btn-start-back');
 
             if (btnStart) {
                 btnStart.addEventListener('click', function () {
                     if (startOverlay) startOverlay.style.display = 'none';
                     if (zona) zona.style.pointerEvents = "auto";
                     loadLogicGame(area); // aquí se crea el tablero y arranca el cronómetro
+                });
+            }
+
+            if (btnStartBack) {
+                btnStartBack.addEventListener('click', function () {
+                    window.location.href = "../../usuario.php";
                 });
             }
 
