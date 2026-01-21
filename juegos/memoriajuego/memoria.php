@@ -33,7 +33,7 @@ if (!$dificultad_memoria) {
             height: 100%;
             font-family: Arial, Helvetica, sans-serif;
             background: #887d7dff;
-            overflow: hidden; /* sin scroll */
+            overflow: hidden;
             font-size: 18px;
         }
 
@@ -50,7 +50,7 @@ if (!$dificultad_memoria) {
 
         /* CONTENEDOR DEL JUEGO (TARJETA MEJORADA) */
         .game-container {
-            position: relative; /* para overlay */
+            position: relative;
             width: min(900px, 100%);
             height: 100%;
             max-height: 100%;
@@ -130,7 +130,7 @@ if (!$dificultad_memoria) {
         }
 
         .game-header {
-            margin-top: 30px; /* espacio por flecha */
+            margin-top: 30px;
             margin-bottom: 10px;
             text-align: center;
             flex: 0 0 auto;
@@ -203,12 +203,13 @@ if (!$dificultad_memoria) {
 
             border: 1px solid rgba(0,0,0,0.10);
             box-shadow: 0 10px 18px rgba(0,0,0,0.14);
-            transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+            transition: transform 0.5s ease, box-shadow 0.18s ease, filter 0.18s ease;
             position: relative;
             overflow: hidden;
+            transform-style: preserve-3d;
         }
 
-        .memory-card:hover {
+        .memory-card:hover:not(.preview-mode):not(.matched) {
             transform: translateY(-3px);
             box-shadow: 0 16px 26px rgba(0,0,0,0.18);
         }
@@ -221,6 +222,7 @@ if (!$dificultad_memoria) {
 
         .memory-card.revealed {
             color: transparent;
+            transform: rotateY(0deg);
         }
 
         .memory-card.matched {
@@ -228,6 +230,16 @@ if (!$dificultad_memoria) {
             cursor: default;
             border: 3px solid #22c55e;
             transform: translateY(-1px);
+        }
+
+        /* Animación de volteo */
+        .memory-card.flipping {
+            transform: rotateY(180deg);
+        }
+
+        .memory-card.preview-mode {
+            cursor: default;
+            pointer-events: none;
         }
 
         /* Mensaje motivacional */
@@ -249,7 +261,7 @@ if (!$dificultad_memoria) {
             inset: 0;
             background: rgba(0,0,0,0.50);
             border-radius: inherit;
-            display: none; /* oculto hasta que se completa el juego */
+            display: none;
             align-items: center;
             justify-content: center;
             z-index: 5;
@@ -489,30 +501,30 @@ if (!$dificultad_memoria) {
         }
     }
 
-    // MEMORIA - FÁCIL (4 pares, 8 cartas)
+    // MEMORIA - FÁCIL (4 pares, 8 cartas) - COLORES OSCUROS
     function loadMemoryGameFacil(area) {
         const pairs = 4;
-        const colors = ['#EF4444','#3B82F6','#10B981','#F97316'];
+        const colors = ['#d20000','#061f70','#04f600a4','#8c00ff'];
         const cards = [];
         for (let i = 0; i < pairs; i++) cards.push(colors[i], colors[i]);
         cards.sort(() => Math.random() - 0.5);
         createMemoryGrid(area, cards, 4);
     }
 
-    // MEMORIA - Medio (6 pares, 12 cartas)
+    // MEMORIA - Medio (6 pares, 12 cartas) - COLORES OSCUROS
     function loadMemoryGameMedio(area) {
         const pairs = 6;
-        const colors = ['#EF4444','#3B82F6','#10B981','#F97316','#A855F7','#FACC15'];
+        const colors = ['#d20000','#061f70','#04f600a4','#8c00ff','#000000','#ffae00'];
         const cards = [];
         for (let i = 0; i < pairs; i++) cards.push(colors[i], colors[i]);
         cards.sort(() => Math.random() - 0.5);
         createMemoryGrid(area, cards, 4);
     }
 
-    // MEMORIA - DIFÍCIL (8 pares, 16 cartas)
+    // MEMORIA - DIFÍCIL (8 pares, 16 cartas) - COLORES OSCUROS
     function loadMemoryGameDificil(area) {
         const pairs = 8;
-        const colors = ['#EF4444','#3B82F6','#10B981','#F97316','#A855F7','#FACC15','#EC4899','#22C55E'];
+        const colors = ['#d20000','#061f70','#04f600a4','#8c00ff','#000000','#ffae00','#eeff00e2','#397061'];
         const cards = [];
         for (let i = 0; i < pairs; i++) cards.push(colors[i], colors[i]);
         cards.sort(() => Math.random() - 0.5);
@@ -531,84 +543,118 @@ if (!$dificultad_memoria) {
         let lockBoard = false;
         let matchedPairs = 0;
 
+        const allCards = [];
+
         cards.forEach((color, index) => {
             const card = document.createElement("div");
-            card.classList.add("memory-card", "hidden-symbol");
+            card.classList.add("memory-card", "hidden-symbol", "preview-mode");
             card.dataset.color = color;
             card.dataset.index = index;
 
-            card.addEventListener("click", function () {
-                if (lockBoard) return;
-                if (card.classList.contains("matched")) return;
-                if (card === firstCard) return;
-
-                // Mostrar la carta (color)
-                card.classList.remove("hidden-symbol");
-                card.classList.add("revealed");
-                card.style.backgroundColor = card.dataset.color;
-                card.style.backgroundImage = 'none';
-
-                if (!firstCard) {
-                    firstCard = card;
-                    return;
-                }
-
-                secondCard = card;
-                lockBoard = true;
-
-                const isMatch = firstCard.dataset.color === secondCard.dataset.color;
-
-                if (isMatch) {
-                    firstCard.classList.add("matched");
-                    secondCard.classList.add("matched");
-
-                    firstCard = null;
-                    secondCard = null;
-                    lockBoard = false;
-
-                    matchedPairs++;
-                    if (matchedPairs === cards.length / 2) {
-                        clearInterval(timerInterval);
-                        const puntosFinales = 100;
-                        const segundosTotales = elapsedSeconds;
-
-                        guardarResultadoMemoria(puntosFinales, segundosTotales);
-
-                        setTimeout(() => {
-                            if (motivacionDiv) {
-                                motivacionDiv.textContent =
-                                    obtenerMensajeMotivacion() +
-                                    ` (Tiempo: ${document.getElementById('timer').textContent})`;
-                            }
-                            showOverlay();
-                        }, 300);
-                    }
-                } else {
-                    setTimeout(() => {
-                        firstCard.classList.add("hidden-symbol");
-                        firstCard.classList.remove("revealed");
-                        firstCard.style.backgroundColor = '';
-                        firstCard.style.backgroundImage = '';
-
-                        secondCard.classList.add("hidden-symbol");
-                        secondCard.classList.remove("revealed");
-                        secondCard.style.backgroundColor = '';
-                        secondCard.style.backgroundImage = '';
-
-                        firstCard = null;
-                        secondCard = null;
-                        lockBoard = false;
-                    }, 800);
-                }
-            });
-
+            allCards.push(card);
             area.appendChild(card);
         });
 
-        startTimer();
+        // PREVIEW: Mostrar todas las cartas por 3 segundos
+        setTimeout(() => {
+            allCards.forEach(card => {
+                card.classList.remove("hidden-symbol");
+                card.classList.add("revealed", "flipping");
+                card.style.backgroundColor = card.dataset.color;
+                card.style.backgroundImage = 'none';
+            });
+
+            // Después de 3 segundos, ocultar todas y habilitar el juego
+            setTimeout(() => {
+                allCards.forEach(card => {
+                    card.classList.add("hidden-symbol");
+                    card.classList.remove("revealed", "flipping", "preview-mode");
+                    card.style.backgroundColor = '';
+                    card.style.backgroundImage = '';
+                });
+
+                // Ahora sí, habilitar el juego
+                startTimer();
+                enableCardClicks();
+            }, 3000);
+        }, 100);
+
+        function enableCardClicks() {
+            allCards.forEach(card => {
+                card.addEventListener("click", function handleClick() {
+                    if (lockBoard) return;
+                    if (card.classList.contains("matched")) return;
+                    if (card === firstCard) return;
+                    if (card.classList.contains("preview-mode")) return;
+
+                    // Mostrar la carta (color)
+                    card.classList.remove("hidden-symbol");
+                    card.classList.add("revealed", "flipping");
+                    card.style.backgroundColor = card.dataset.color;
+                    card.style.backgroundImage = 'none';
+
+                    if (!firstCard) {
+                        firstCard = card;
+                        return;
+                    }
+
+                    secondCard = card;
+                    lockBoard = true;
+
+                    const isMatch = firstCard.dataset.color === secondCard.dataset.color;
+
+                    if (isMatch) {
+                        setTimeout(() => {
+                            firstCard.classList.remove("flipping");
+                            secondCard.classList.remove("flipping");
+                            firstCard.classList.add("matched");
+                            secondCard.classList.add("matched");
+
+                            firstCard = null;
+                            secondCard = null;
+                            lockBoard = false;
+
+                            matchedPairs++;
+                            if (matchedPairs === cards.length / 2) {
+                                clearInterval(timerInterval);
+                                const puntosFinales = 100;
+                                const segundosTotales = elapsedSeconds;
+
+                                guardarResultadoMemoria(puntosFinales, segundosTotales);
+
+                                setTimeout(() => {
+                                    if (motivacionDiv) {
+                                        motivacionDiv.textContent =
+                                            obtenerMensajeMotivacion() +
+                                            ` (Tiempo: ${document.getElementById('timer').textContent})`;
+                                    }
+                                    showOverlay();
+                                }, 300);
+                            }
+                        }, 500);
+                    } else {
+                        setTimeout(() => {
+                            firstCard.classList.add("hidden-symbol");
+                            firstCard.classList.remove("revealed", "flipping");
+                            firstCard.style.backgroundColor = '';
+                            firstCard.style.backgroundImage = '';
+
+                            secondCard.classList.add("hidden-symbol");
+                            secondCard.classList.remove("revealed", "flipping");
+                            secondCard.style.backgroundColor = '';
+                            secondCard.style.backgroundImage = '';
+
+                            firstCard = null;
+                            secondCard = null;
+                            lockBoard = false;
+                        }, 800);
+                    }
+                });
+            });
+        }
     }
 
-    // Iniciar juego al cargar la página (AHORA NO: solo tras pulsar Empezar)
+    // Iniciar juego al cargar la página
     document.addEventListener("DOMContentLoaded", function () {
         const area = document.getElementById("zona-memoria");
         motivacionDiv = document.getElementById("motivacion");
@@ -624,7 +670,7 @@ if (!$dificultad_memoria) {
             btnStart.addEventListener("click", function () {
                 if (startOverlay) startOverlay.style.display = "none";
                 if (area) area.style.pointerEvents = "auto";
-                loadMemoryGame(area); // aquí se crea el tablero y arranca el cronómetro
+                loadMemoryGame(area);
             });
         }
 
