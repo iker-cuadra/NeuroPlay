@@ -22,14 +22,16 @@ $nombre = $_SESSION["nombre"] ?? 'Familiar';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel del Familiar</title>
+    <title>Panel del Familiar - Centro Pere Bas</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
     <style>
         :root{
-            --header-h: 160px;
+            --nav-height: 80px;
+            --primary: #3b82f6;
+            --text-dark: #1f2937;
         }
 
         html, body {
@@ -37,17 +39,14 @@ $nombre = $_SESSION["nombre"] ?? 'Familiar';
             padding: 0;
             height: 100%;
             width: 100%;
-            overflow: hidden;
+            overflow-x: hidden;
             font-family: 'Poppins', sans-serif;
         }
 
-        /* --- FONDO MESH ANIMADO (Exactamente igual) --- */
+        /* --- FONDO MESH ANIMADO --- */
         .canvas-bg {
             position: fixed;
-            top: 0; 
-            left: 0;
-            width: 100vw; 
-            height: 100vh;
+            top: 0; left: 0; width: 100vw; height: 100vh;
             z-index: -1; 
             background: #e5e5e5;
             background-image:
@@ -65,94 +64,110 @@ $nombre = $_SESSION["nombre"] ?? 'Familiar';
             100% { background-position: 100% 100%; }
         }
 
-        .layout{
-            height: 100vh;
+        .layout {
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            position: relative;
+            padding-top: var(--nav-height);
         }
 
-        .header{
+        /* --- NAVBAR ESTILO ACTUALIZADO --- */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: var(--header-h);
-            background-image: url('imagenes/Banner.svg');
-            background-size: cover;
-            background-position: center;
-            position: relative;
-            flex: 0 0 auto;
+            height: var(--nav-height);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            box-sizing: border-box;
+            z-index: 1000;
         }
 
-        .user-role{
-            position: absolute;
-            bottom: 10px;
-            left: 20px;
-            color: white;
+        .brand-text {
+            font-size: 20px;
             font-weight: 700;
-            font-size: 18px;
+            color: var(--text-dark);
+            letter-spacing: -0.5px;
         }
 
-        /* --- BOTÓN PREMIUM (Exactamente igual) --- */
-        .logout-button {
-            position: absolute;
-            top: 20px;
-            right: 20px;
+        .nav-links {
+            display: flex;
+            gap: 15px; /* Ajustado para que quepa bien el botón de Inicio */
+            align-items: center;
+        }
+
+        .nav-item {
+            text-decoration: none;
+            color: #4b5563;
+            font-weight: 500;
+            font-size: 15px;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 12px 20px;
-            font-size: 15px;
+            padding: 10px 18px;
+            border-radius: 12px;
+        }
+
+        .nav-item:hover {
+            color: var(--primary);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* Estilo para el botón activo (como en la imagen) */
+        .nav-item.active {
+            color: var(--primary);
+            background: rgba(59, 130, 246, 0.1);
             font-weight: 600;
-            border-radius: 16px;
-            background: rgba(255,255,255,0.05);
-            color: #fff;
-            border: 1.5px solid rgba(255,255,255,0.7);
-            cursor: pointer;
+        }
+
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .role-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-logout {
             text-decoration: none;
-            z-index: 10;
-            overflow: hidden;
-            transition: 
-                transform 0.25s cubic-bezier(.2,.8,.2,1),
-                box-shadow 0.25s cubic-bezier(.2,.8,.2,1),
-                background 0.3s ease,
-                border-color 0.3s ease;
+            color: #dc2626;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 10px 20px;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            transition: all 0.2s;
+            background: white;
         }
 
-        .logout-button::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(
-                120deg,
-                transparent 20%,
-                rgba(255,255,255,0.25),
-                transparent 80%
-            );
-            opacity: 0;
-            transform: translateX(-60%);
-            transition: opacity 0.35s ease, transform 0.35s ease;
+        .btn-logout:hover {
+            background: #fef2f2;
+            border-color: #dc2626;
         }
 
-        .logout-button:hover {
-            background: rgba(255,255,255,0.12);
-            transform: translateY(-2px);
-            box-shadow: 0 12px 25px rgba(0,0,0,0.35);
-            border-color: #fff;
-        }
-
-        .logout-button:hover::after {
-            opacity: 1;
-            transform: translateX(60%);
-        }
-
-        /* --- SECCIÓN CENTRAL Y TARJETAS PREMIUM --- */
+        /* --- SECCIÓN CENTRAL Y TARJETAS --- */
         .main-section {
-            flex: 1 1 auto;
+            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 50px;
             flex-wrap: wrap;
-            padding: 0;
+            padding: 40px;
         }
 
         .card {
@@ -160,50 +175,36 @@ $nombre = $_SESSION["nombre"] ?? 'Familiar';
             width: 260px;
             padding: 30px;
             border-radius: 20px;
-            background: rgba(195, 195, 195, 0.35); 
-            backdrop-filter: blur(15px) saturate(180%);
-            -webkit-backdrop-filter: blur(15px) saturate(180%);
-            border: 1px solid rgba(12, 12, 12, 0.2);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.4); 
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s, box-shadow 0.3s;
             cursor: pointer;
-            margin: 0;
-            color: #fff;
+            color: #1f2937;
         }
 
         .card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 0.6); 
         }
 
         .card img {
-            width: 200px;
-            height: 200px;
-            border-radius: 16px;
-            object-fit: cover;
+            width: 180px;
+            height: 180px;
+            object-fit: contain;
             margin-bottom: 20px;
         }
 
-        .card h2 { font-size: 24px; font-weight: 600; margin: 0; }
-        .card-subtitle { margin-top: 4px; font-size: 14px; color: rgba(255,255,255,0.7); font-weight: 500; }
+        .card h2 { font-size: 22px; font-weight: 700; margin: 0; color: #111; }
+        .card-subtitle { margin-top: 4px; font-size: 14px; color: #555; font-weight: 500; }
 
-        /* --- EFECTO SUBRAYADO AZUL --- */
-        .card-label::after {
-            content: '';
-            display: block;
-            width: 20px;
-            height: 2px;
-            background: #3b82f6;
-            margin: 8px auto 0;
-            transition: width 0.3s ease;
-        }
-
-        .card-label:hover::after { width: 60px; }
-
-        @media (max-width: 900px) {
-            .main-section { flex-direction: column; gap: 40px; }
-            .card { width: 220px; padding: 20px; }
-            .card img { width: 180px; height: 180px; }
+        @media (max-width: 1000px) {
+            .navbar { padding: 0 20px; height: auto; flex-direction: column; padding-bottom: 20px; gap: 10px;}
+            .brand-text { padding: 15px 0; }
+            .nav-links { flex-wrap: wrap; justify-content: center; }
+            .layout { padding-top: 200px; }
         }
     </style>
 </head>
@@ -212,25 +213,40 @@ $nombre = $_SESSION["nombre"] ?? 'Familiar';
 
     <div class="canvas-bg"></div>
 
-    <div class="layout">
-        <div class="header">
-            <div class="user-role">Panel del Familiar</div>
-            <a href="logout.php" class="logout-button">
-                <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+    <nav class="navbar">
+        <div class="brand">
+            <div class="brand-text">Centro de día Pere Bas</div>
+        </div>
+
+        <div class="nav-links">
+            <a href="ver_progreso_familiar.php" class="nav-item active">
+                <i class="fas fa-chart-line"></i> Mi Progreso
+            </a>
+            <a href="lista_profesionales.php" class="nav-item">
+                <i class="fas fa-comments"></i> Chat Profesional
             </a>
         </div>
 
+        <div class="user-actions">
+            <span class="role-badge">Familiar</span>
+            <a href="logout.php" class="btn-logout">
+                Cerrar sesión
+            </a>
+        </div>
+    </nav>
+
+    <div class="layout">
         <div class="main-section">
-            <div class="card card-label" onclick="location.href='ver_progreso_familiar.php'">
+            <div class="card" onclick="location.href='ver_progreso_familiar.php'">
                 <img src="imagenes/progreso.svg" alt="Progreso">
                 <h2>Progreso</h2>
-                <p class="card-subtitle">Seguimiento</p>
+                <p class="card-subtitle">Ver evolución del usuario</p>
             </div>
 
-            <div class="card card-label" onclick="location.href='lista_profesionales.php'">
+            <div class="card" onclick="location.href='lista_profesionales.php'">
                 <img src="imagenes/chat.svg" alt="Profesionales">
                 <h2>Profesionales</h2>
-                <p class="card-subtitle">Chatear</p>
+                <p class="card-subtitle">Contactar con el centro</p>
             </div>
         </div>
     </div>

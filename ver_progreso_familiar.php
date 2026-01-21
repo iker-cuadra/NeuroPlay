@@ -17,8 +17,6 @@ $usuario = null;
 // 2. BUSCAR EL USUARIO (MAYOR) ASOCIADO A ESTE FAMILIAR
 // ---------------------------------------------------------
 try {
-    // [OJO] Aquí asumo que en la tabla 'usuarios' tienes una columna 'familiar_id' 
-    // que indica quién es el familiar de ese usuario mayor.
     $stmt = $conexion->prepare("SELECT id, nombre, email, rol, foto FROM usuarios WHERE familiar_id = ? LIMIT 1");
     $stmt->execute([$familiar_id]);
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -27,7 +25,7 @@ try {
     die("Error de base de datos: " . $e->getMessage());
 }
 
-// Si no hay usuario asociado, mostramos mensaje y salimos
+// Si no hay usuario asociado
 if (!$usuario) {
     echo "<div style='padding:20px; font-family:sans-serif;'>No tienes ningún usuario asociado para ver su progreso. Contacta con el centro.</div>";
     exit;
@@ -35,607 +33,321 @@ if (!$usuario) {
 
 $user_id = (int)$usuario['id'];
 
-// Lógica para determinar la ruta de la foto del usuario mayor
+// Lógica para foto
 $ruta_foto = 'uploads/default.png';
 if (!empty($usuario['foto']) && $usuario['foto'] !== 'default.png') {
     $ruta_foto = 'uploads/' . htmlspecialchars($usuario['foto']);
 }
 
 // ----------------------------------------------------
-// 3. CARGAR DATOS DE DIFICULTADES (Solo lectura)
+// 3. CARGAR DATOS DE DIFICULTADES
 // ----------------------------------------------------
 $stmt_eval = $conexion->prepare("
-    SELECT dificultad_memoria,
-           dificultad_logica,
-           dificultad_razonamiento,
-           dificultad_atencion,
-           fecha_actualizacion,
-           (SELECT nombre FROM usuarios WHERE id = asignado_por) AS asignador_nombre
-    FROM dificultades_asignadas
-    WHERE usuario_id = ?
+    SELECT dificultad_memoria, dificultad_logica, dificultad_razonamiento, dificultad_atencion,
+           fecha_actualizacion, (SELECT nombre FROM usuarios WHERE id = asignado_por) AS asignador_nombre
+    FROM dificultades_asignadas WHERE usuario_id = ?
 ");
 $stmt_eval->execute([$user_id]);
 $res = $stmt_eval->fetch(PDO::FETCH_ASSOC);
 
-// Configuración de niveles por defecto
 $niveles_actuales = [
-    'memoria'      => ['nivel' => 'Fácil', 'asignador' => 'N/A', 'fecha' => 'N/A'],
-    'logica'       => ['nivel' => 'Fácil', 'asignador' => 'N/A', 'fecha' => 'N/A'],
-    'razonamiento' => ['nivel' => 'Fácil', 'asignador' => 'N/A', 'fecha' => 'N/A'],
-    'atencion'     => ['nivel' => 'Fácil', 'asignador' => 'N/A', 'fecha' => 'N/A'],
+    'memoria'      => ['nivel' => 'Fácil', 'fecha' => 'N/A'],
+    'logica'       => ['nivel' => 'Fácil', 'fecha' => 'N/A'],
+    'razonamiento' => ['nivel' => 'Fácil', 'fecha' => 'N/A'],
+    'atencion'     => ['nivel' => 'Fácil', 'fecha' => 'N/A'],
 ];
-$ultima_actualizacion = 'N/A';
-$ultimo_profesional   = 'N/A';
 
 if ($res) {
-    $niveles_actuales['memoria']['nivel']      = htmlspecialchars($res['dificultad_memoria']      ?: 'Fácil');
-    $niveles_actuales['logica']['nivel']       = htmlspecialchars($res['dificultad_logica']       ?: 'Fácil');
-    $niveles_actuales['razonamiento']['nivel'] = htmlspecialchars($res['dificultad_razonamiento'] ?: 'Fácil');
-    $niveles_actuales['atencion']['nivel']     = htmlspecialchars($res['dificultad_atencion']     ?: 'Fácil');
-
-    $asignador        = htmlspecialchars($res['asignador_nombre']);
-    $fecha_raw        = strtotime($res['fecha_actualizacion']);
-    $fecha_formateada = $fecha_raw ? date('d/m/Y H:i', $fecha_raw) : 'N/A';
-
-    foreach ($niveles_actuales as $key => $valor) {
-        $niveles_actuales[$key]['asignador'] = $asignador ?: 'N/A';
-        $niveles_actuales[$key]['fecha']     = $fecha_formateada;
-    }
-
-    $ultima_actualizacion = $fecha_formateada;
-    $ultimo_profesional   = $asignador ?: 'N/A';
+    $fecha_raw = strtotime($res['fecha_actualizacion']);
+    $fecha_f = $fecha_raw ? date('d/m/Y', $fecha_raw) : 'N/A';
+    
+    $niveles_actuales['memoria'] = ['nivel' => $res['dificultad_memoria'] ?: 'Fácil', 'fecha' => $fecha_f];
+    $niveles_actuales['logica'] = ['nivel' => $res['dificultad_logica'] ?: 'Fácil', 'fecha' => $fecha_f];
+    $niveles_actuales['razonamiento'] = ['nivel' => $res['dificultad_razonamiento'] ?: 'Fácil', 'fecha' => $fecha_f];
+    $niveles_actuales['atencion'] = ['nivel' => $res['dificultad_atencion'] ?: 'Fácil', 'fecha' => $fecha_f];
 }
 
 // ----------------------------------------------------
-// 4. HISTORIAL DE RESULTADOS Y PREPARACIÓN DE GRÁFICAS
+// 4. HISTORIAL Y GRÁFICAS
 // ----------------------------------------------------
-$stmt_hist = $conexion->prepare("
-    SELECT id, tipo_juego,
-           puntuacion,
-           tiempo_segundos,
-           dificultad,
-           fecha_juego
-    FROM resultados_juego
-    WHERE usuario_id = ?
-    ORDER BY fecha_juego DESC
-    LIMIT 50 
-"); 
+$stmt_hist = $conexion->prepare("SELECT id, tipo_juego, puntuacion, tiempo_segundos, dificultad, fecha_juego FROM resultados_juego WHERE usuario_id = ? ORDER BY fecha_juego DESC LIMIT 50");
 $stmt_hist->execute([$user_id]);
 $historialResultados = $stmt_hist->fetchAll(PDO::FETCH_ASSOC);
 
-// --- LÓGICA PARA GRÁFICAS ---
-// Preparamos arrays vacíos para Chart.js
-$datosGraficas = [
-    'memoria'      => ['labels' => [], 'data' => []],
-    'logica'       => ['labels' => [], 'data' => []],
-    'razonamiento' => ['labels' => [], 'data' => []],
-    'atencion'     => ['labels' => [], 'data' => []]
-];
-
-// Recorremos el historial AL REVÉS (de antiguo a nuevo) para que la gráfica se dibuje de izq a der
-$historialCronologico = array_reverse($historialResultados);
-
-foreach ($historialCronologico as $juego) {
+$datosGraficas = ['memoria'=>['labels'=>[],'data'=>[]],'logica'=>['labels'=>[],'data'=>[]],'razonamiento'=>['labels'=>[],'data'=>[]],'atencion'=>['labels'=>[],'data'=>[]]];
+foreach (array_reverse($historialResultados) as $juego) {
     $tipo = $juego['tipo_juego'];
-    // Solo si el tipo es válido
     if (isset($datosGraficas[$tipo])) {
-        // Formato fecha corto: 15/01
-        $fecha = date('d/m', strtotime($juego['fecha_juego']));
-        $datosGraficas[$tipo]['labels'][] = $fecha;
+        $datosGraficas[$tipo]['labels'][] = date('d/m', strtotime($juego['fecha_juego']));
         $datosGraficas[$tipo]['data'][] = (int)$juego['puntuacion'];
     }
 }
-// Convertimos a JSON para usarlo en JavaScript
 $jsonGraficas = json_encode($datosGraficas);
 
-
-// Función para obtener las rondas de razonamiento
+// Función para obtener detalles de rondas
 function obtenerDetalleRondas($conexion, $resultado_id) {
     $stmt = $conexion->prepare("SELECT ronda, correcta, tiempo_segundos FROM razonamiento_rondas WHERE resultado_id = ? ORDER BY ronda ASC");
     $stmt->execute([$resultado_id]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// Función para formatear segundos a mm:ss
 function formatSecondsToMMSS($segundos) {
     $segundos = (int)$segundos;
-    if ($segundos < 0) $segundos = 0;
-    $m  = floor($segundos / 60);
-    $s  = $segundos % 60;
-    return sprintf('%02d:%02d', $m, $s);
+    return sprintf('%02d:%02d', floor($segundos / 60), $segundos % 60);
 }
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Progreso de <?= htmlspecialchars($usuario["nombre"]) ?></title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-<style>
-/* MISMOS ESTILOS QUE EL ORIGINAL */
-:root{
-    --header-h: 160px;
-    --footer-h: 160px;
-    --bg: #f0f2f5;
-    --card: #ffffff;
-    --shadow: 0 12px 30px rgba(0,0,0,0.10);
-    --radius: 20px;
-    --text: #1d1d1f;
-    --muted: #6c6c6c;
-    --btn: #4a4a4a;
-    --btn-hover: #5a5a5a;
-}
-* { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; height: auto; }
-body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); background: #887d7dff; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Progreso - Centro Pere Bas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root{
+            --nav-height: 80px;
+            --primary: #3b82f6;
+            --text-dark: #1f2937;
+            --card-bg: rgba(255, 255, 255, 0.9);
+        }
 
-.layout { min-height: 100vh; display: flex; flex-direction: column; }
-.header{
-    width: 100%;
-    height: var(--header-h);
-    background-image: url('imagenes/Banner.svg');
-    background-size: cover;
-    background-position: center;
-    position: relative;
-    flex: 0 0 auto;
-}
-.back-arrow{
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    width: 38px;
-    height: 38px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-}
-.back-arrow svg{ transition: opacity 0.2s ease-in-out; }
-.back-arrow:hover svg{ opacity: 0.75; }
-.user-role {
-    position: absolute; bottom: 10px; left: 20px;
-    color: white; font-weight: 700; font-size: 18px;
-}
-.page-content {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 14px 16px;
-}
-.panel {
-    width: min(1000px, 95vw);
-    background: var(--card);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 20px;
-    margin-bottom: 14px;
-}
-.panel h1 {
-    margin: 0 0 20px 0;
-    font-size: 24px;
-    font-weight: 800;
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-.profile-card {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    padding: 15px;
-    background: #fcfcfd;
-    border-radius: 15px;
-    border: 1px solid #eef0f3;
-    margin-bottom: 20px;
-}
-.profile-card img {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid #7a7676;
-    flex-shrink: 0;
-}
-.profile-info h2 {
-    margin: 0 0 5px 0;
-    font-size: 20px;
-    font-weight: 700;
-}
-.profile-info p {
-    margin: 0;
-    font-size: 14px;
-    color: var(--muted);
-}
-.profile-info .role-badge {
-    margin-top: 5px;
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: capitalize;
-}
-.role-badge.usuario{ background:#e0f7fa; color:#00796b; }
-.evaluation-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 20px;
-    margin-top: 10px;
-    margin-bottom: 20px;
-}
-@media (max-width: 900px) { .evaluation-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 600px) { .evaluation-grid { grid-template-columns: 1fr; } }
+        html, body { margin: 0; padding: 0; min-height: 100%; font-family: 'Poppins', sans-serif; background: #e5e5e5; overflow-x: hidden; }
 
-.eval-item {
-    padding: 15px;
-    border-radius: 15px;
-    border: 1px solid #e2e5ea;
-    background: #fcfcfd;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-.eval-item h3 {
-    margin: 0 0 10px 0;
-    font-size: 16px;
-    font-weight: 700;
-    color: #4a4a4a;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-/* Estilo modificado para solo lectura */
-.read-only-level {
-    font-size: 18px;
-    font-weight: 600;
-    color: #4a4a4a;
-    background: #fff;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid #eee;
-    text-align: center;
-    margin-bottom: 5px;
-}
-.read-only-level span {
-    display: block;
-    font-size: 12px;
-    color: #888;
-    text-transform: uppercase;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
-}
-.level-badge {
-    color: #1e4db7;
-    font-weight: 800;
-    font-size: 20px;
-}
+        .canvas-bg {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; 
+            background-image: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
+                              radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
+                              radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%),
+                              radial-gradient(at 0% 100%, hsla(321,0%,100%,1) 0, transparent 50%),
+                              radial-gradient(at 100% 100%, hsla(0,0%,80%,1) 0, transparent 50%);
+            background-size: 200% 200%; animation: meshMove 8s infinite alternate ease-in-out;
+        }
+        @keyframes meshMove { 0% { background-position: 0% 0%; } 100% { background-position: 100% 100%; } }
 
-.last-update-info {
-    font-size: 11px;
-    color: #999;
-    line-height: 1.4;
-    margin-top: 10px;
-    text-align: center;
-}
+        /* NAVBAR */
+        .navbar {
+            position: fixed; top: 0; left: 0; width: 100%; height: var(--nav-height);
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 40px; box-sizing: border-box; z-index: 1000; box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+        .brand-text { font-size: 20px; font-weight: 700; color: var(--text-dark); }
+        .nav-links { display: flex; gap: 15px; align-items: center; }
+        .nav-item {
+            text-decoration: none; color: #4b5563; font-weight: 500; font-size: 15px;
+            display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 12px; transition: 0.2s;
+        }
+        .nav-item:hover { color: var(--primary); background: rgba(59, 130, 246, 0.05); }
+        .nav-item.active { color: var(--primary); background: rgba(59, 130, 246, 0.1); font-weight: 600; }
+        .user-actions { display: flex; align-items: center; gap: 20px; }
+        .role-badge { background: #e0f2fe; color: #0369a1; padding: 8px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; }
+        .btn-logout { 
+            text-decoration: none; color: #dc2626; font-weight: 600; font-size: 14px; 
+            padding: 10px 20px; border: 1px solid #fecaca; border-radius: 12px; background: white; transition: 0.2s; 
+        }
+        .btn-logout:hover { background: #fef2f2; border-color: #dc2626; }
 
-/* --- ESTILOS PARA LAS GRÁFICAS (NUEVO) --- */
-.charts-section {
-    margin-top: 30px;
-    margin-bottom: 20px;
-}
-.charts-section h2 {
-    margin: 0 0 15px 0;
-    font-size: 19px;
-    font-weight: 800;
-    color: var(--text);
-}
-.charts-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-}
-.chart-card {
-    background: #ffffff;
-    border-radius: 18px;
-    padding: 16px;
-    border: 1px solid #eef0f3;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.04);
-}
-.chart-card h4 {
-    margin: 0 0 10px 0;
-    font-size: 14px;
-    text-transform: uppercase;
-    color: var(--muted);
-    font-weight: 700;
-    text-align: center;
-}
-.canvas-container {
-    position: relative;
-    height: 200px;
-    width: 100%;
-}
-@media (max-width: 768px) {
-    .charts-grid { grid-template-columns: 1fr; }
-}
+        /* CONTENIDO */
+        .layout { padding-top: calc(var(--nav-height) + 30px); padding-bottom: 40px; display: flex; justify-content: center; }
+        .panel { width: min(1150px, 95vw); background: var(--card-bg); border-radius: 24px; padding: 35px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); backdrop-filter: blur(10px); }
+        .panel-title { font-size: 26px; font-weight: 800; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; color: #111; border-bottom: 2px solid #eee; padding-bottom: 15px; }
 
-/* HISTORIAL */
-.history-card {
-    margin-top: 24px;
-    padding: 16px 18px;
-    background: #fcfcfd;
-    border-radius: 18px;
-    border: 1px solid #eef0f3;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.04);
-}
-.history-card h2 { margin: 0 0 8px 0; font-size: 19px; font-weight: 800; }
-.history-intro { margin: 0 0 12px 0; font-size: 14px; color: var(--muted); }
-.no-history { font-size: 14px; color: var(--muted); }
-.history-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.history-table thead th { text-align: left; padding: 8px 6px; border-bottom: 1px solid #e3e6ec; color: #777; font-weight: 600; }
-.history-table tbody td { padding: 8px 6px; border-bottom: 1px solid #f1f2f6; }
-.history-table tbody tr:last-child td { border-bottom: none; }
-.history-tag { display: inline-block; padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: 600; }
-.history-tag.memoria { background:#e0f7fa; color:#006064; }
-.history-tag.logica { background:#e8f5e9; color:#2e7d32; }
-.history-tag.razonamiento { background:#fff3e0; color:#e65100; }
-.history-tag.atencion { background:#ede7f6; color:#4527a0; }
+        /* PERFIL Y EVALUACIÓN */
+        .profile-card { display: flex; align-items: center; gap: 20px; padding: 20px; background: rgba(255,255,255,0.5); border-radius: 18px; border: 1px solid rgba(255,255,255,0.8); margin-bottom: 30px; }
+        .profile-card img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .evaluation-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .eval-item { background: white; padding: 20px; border-radius: 20px; text-align: center; border: 1px solid #eee; }
+        .level-badge { font-size: 22px; font-weight: 800; color: var(--primary); margin: 5px 0; }
 
-</style>
+        /* GRÁFICAS */
+        .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; margin-bottom: 40px; }
+        .chart-card { background: white; padding: 20px; border-radius: 20px; border: 1px solid #eee; height: 300px; }
+
+        /* TABLA Y DESPLIEGUE RONDAS */
+        .history-card { background: white; padding: 25px; border-radius: 20px; border: 1px solid #eee; overflow-x: auto; }
+        .history-table { width: 100%; border-collapse: collapse; }
+        .history-table th { text-align: left; padding: 12px; color: #888; border-bottom: 2px solid #f5f5f5; }
+        .history-table td { padding: 15px 12px; border-bottom: 1px solid #f9f9f9; vertical-align: top; }
+        
+        .history-tag { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-block; margin-bottom: 5px; }
+        .history-tag.memoria { background: #e0f2fe; color: #0369a1; }
+        .history-tag.logica { background: #dcfce7; color: #166534; }
+        .history-tag.razonamiento { background: #fef3c7; color: #92400e; }
+        .history-tag.atencion { background: #f3e8ff; color: #6b21a8; }
+
+        /* BOTÓN DESPLEGAR */
+        .btn-ver-rondas {
+            background: none; border: 1px solid var(--primary); color: var(--primary);
+            padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;
+            margin-top: 5px;
+        }
+        .btn-ver-rondas:hover { background: var(--primary); color: white; }
+
+        /* CONTENEDOR OCULTO */
+        .rondas-wrapper {
+            display: none; /* OCULTO POR DEFECTO */
+            margin-top: 10px; padding: 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #edf2f7;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .summary-box { font-weight: 700; color: #4a5568; display: block; margin-bottom: 8px; font-size: 13px; }
+        .pills-container { display: flex; flex-wrap: wrap; gap: 6px; }
+        .round-pill { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+        .round-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .round-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+        @media (max-width: 900px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .navbar { padding: 0 20px; flex-direction: column; height: auto; padding-bottom: 15px; }
+            .nav-links { margin-top: 10px; flex-wrap: wrap; justify-content: center; }
+            .layout { padding-top: 200px; }
+        }
+    </style>
 </head>
-
 <body>
-<div class="layout">
-    <div class="header">
-        <a href="familiar.php" class="back-arrow" aria-label="Volver">
-            <svg xmlns="http://www.w3.org/2000/svg" height="34" width="34" viewBox="0 0 24 24" fill="white">
-                <path d="M14.7 20.3 6.4 12l8.3-8.3 1.4 1.4L9.2 12l6.9 6.9Z"/>
-            </svg>
-        </a>
-        <div class="user-role">Área Familiar</div>
-    </div>
 
-    <div class="page-content">
+    <div class="canvas-bg"></div>
+
+    <nav class="navbar">
+        <div class="brand"><div class="brand-text">Centro de día Pere Bas</div></div>
+        <div class="nav-links">
+            <a href="familiar.php" class="nav-item"><i class="fas fa-home"></i> Inicio</a>
+            <a href="ver_progreso_familiar.php" class="nav-item active"><i class="fas fa-chart-line"></i> Mi Progreso</a>
+            <a href="lista_profesionales.php" class="nav-item"><i class="fas fa-comments"></i> Chat Profesional</a>
+        </div>
+        <div class="user-actions">
+            <span class="role-badge">Familiar</span>
+            <a href="logout.php" class="btn-logout">Cerrar sesión</a>
+        </div>
+    </nav>
+
+    <div class="layout">
         <div class="panel">
-
-            <h1><i class="fas fa-chart-line"></i> Progreso Cognitivo</h1>
+            <h1 class="panel-title"><i class="fas fa-chart-bar"></i> Seguimiento Cognitivo</h1>
 
             <div class="profile-card">
-                <img src="<?= $ruta_foto ?>" alt="Foto de <?= htmlspecialchars($usuario["nombre"]) ?>">
+                <img src="<?= $ruta_foto ?>" alt="Usuario">
                 <div class="profile-info">
-                    <h2><?= htmlspecialchars($usuario["nombre"]) ?></h2>
-                    <p>Usuario del Centro</p>
-                    <span class="role-badge usuario">Usuario</span>
+                    <h2 style="margin:0;"><?= htmlspecialchars($usuario["nombre"]) ?></h2>
+                    <p style="margin:5px 0; color:#666; font-size:14px;">Seguimiento detallado del progreso</p>
                 </div>
             </div>
 
             <div class="evaluation-grid">
+                <?php 
+                $iconos = ['logica'=>'lightbulb', 'memoria'=>'brain', 'razonamiento'=>'cogs', 'atencion'=>'bullseye'];
+                foreach($niveles_actuales as $cat => $info): ?>
                 <div class="eval-item">
-                    <h3><i class="fas fa-lightbulb"></i> Lógica</h3>
-                    <div class="read-only-level">
-                        <span>Nivel Actual</span>
-                        <div class="level-badge"><?= htmlspecialchars($niveles_actuales['logica']['nivel']) ?></div>
-                    </div>
-                    <div class="last-update-info">
-                        Actualizado: <?= $niveles_actuales['logica']['fecha'] ?>
-                    </div>
+                    <h3 style="font-size:14px; color:#666; margin:0;"><i class="fas fa-<?= $iconos[$cat] ?>"></i> <?= ucfirst($cat) ?></h3>
+                    <div class="level-badge"><?= htmlspecialchars($info['nivel']) ?></div>
+                    <div class="last-update">Actualizado: <?= $info['fecha'] ?></div>
                 </div>
-
-                <div class="eval-item">
-                    <h3><i class="fas fa-brain"></i> Memoria</h3>
-                    <div class="read-only-level">
-                        <span>Nivel Actual</span>
-                        <div class="level-badge"><?= htmlspecialchars($niveles_actuales['memoria']['nivel']) ?></div>
-                    </div>
-                    <div class="last-update-info">
-                        Actualizado: <?= $niveles_actuales['memoria']['fecha'] ?>
-                    </div>
-                </div>
-
-                <div class="eval-item">
-                    <h3><i class="fas fa-cogs"></i> Razonamiento</h3>
-                    <div class="read-only-level">
-                        <span>Nivel Actual</span>
-                        <div class="level-badge"><?= htmlspecialchars($niveles_actuales['razonamiento']['nivel']) ?></div>
-                    </div>
-                    <div class="last-update-info">
-                        Actualizado: <?= $niveles_actuales['razonamiento']['fecha'] ?>
-                    </div>
-                </div>
-
-                <div class="eval-item">
-                    <h3><i class="fas fa-bullseye"></i> Atención</h3>
-                    <div class="read-only-level">
-                        <span>Nivel Actual</span>
-                        <div class="level-badge"><?= htmlspecialchars($niveles_actuales['atencion']['nivel']) ?></div>
-                    </div>
-                    <div class="last-update-info">
-                        Actualizado: <?= $niveles_actuales['atencion']['fecha'] ?>
-                    </div>
-                </div>
+                <?php endforeach; ?>
             </div>
 
-            <div class="charts-section">
-                <h2><i class="fas fa-chart-area"></i> Evolución por Categoría</h2>
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <h4>Memoria</h4>
-                        <div class="canvas-container">
-                            <canvas id="chartMemoria"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <h4>Lógica</h4>
-                        <div class="canvas-container">
-                            <canvas id="chartLogica"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <h4>Razonamiento</h4>
-                        <div class="canvas-container">
-                            <canvas id="chartRazonamiento"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <h4>Atención</h4>
-                        <div class="canvas-container">
-                            <canvas id="chartAtencion"></canvas>
-                        </div>
-                    </div>
-                </div>
+            <div class="charts-grid">
+                <div class="chart-card"><canvas id="chartMemoria"></canvas></div>
+                <div class="chart-card"><canvas id="chartLogica"></canvas></div>
+                <div class="chart-card"><canvas id="chartRazonamiento"></canvas></div>
+                <div class="chart-card"><canvas id="chartAtencion"></canvas></div>
             </div>
+
             <div class="history-card">
-                <h2><i class="fas fa-history"></i> Historial de partidas</h2>
-                <p class="history-intro">
-                    Aquí puedes ver cómo le ha ido a tu familiar en sus últimos juegos. Haz clic en las filas de "Razonamiento" para ver detalles.
-                </p>
-
-                <?php if (empty($historialResultados)): ?>
-                    <p class="no-history">Aún no hay partidas registradas.</p>
-                <?php else: ?>
-                    <table class="history-table">
-                        <thead>
+                <h3><i class="fas fa-history"></i> Historial de Actividades</h3>
+                <table class="history-table">
+                    <thead>
                         <tr>
                             <th>Fecha</th>
-                            <th>Juego</th>
+                            <th>Juego / Detalle</th>
                             <th>Dificultad</th>
                             <th>Puntuación</th>
                             <th>Tiempo</th>
                         </tr>
-                        </thead>
-                        <tbody>
+                    </thead>
+                    <tbody>
                         <?php foreach ($historialResultados as $fila): ?>
-                            <tr style="cursor: pointer;" onclick="toggleRondas(<?= $fila['id'] ?>)">
-                                <td>
-                                    <?= date('d/m/Y H:i', strtotime($fila['fecha_juego'])) ?>
-                                </td>
-                                <td>
-                                    <span class="history-tag <?= htmlspecialchars($fila['tipo_juego']) ?>">
-                                        <?= ucfirst(htmlspecialchars($fila['tipo_juego'])) ?>
-                                        <?php if($fila['tipo_juego'] === 'razonamiento'): ?> 
-                                            <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 5px; opacity: 0.7;"></i>
-                                        <?php endif; ?>
-                                    </span>
-                                </td>
-                                <td><?= htmlspecialchars($fila['dificultad']) ?></td>
-                                <td><strong><?= (int)$fila['puntuacion'] ?>%</strong></td>
-                                <td><?= formatSecondsToMMSS($fila['tiempo_segundos']) ?> min</td>
-                            </tr>
+                        <tr>
+                            <td style="font-size:13px;"><?= date('d/m/Y H:i', strtotime($fila['fecha_juego'])) ?></td>
+                            <td>
+                                <span class="history-tag <?= $fila['tipo_juego'] ?>"><?= ucfirst($fila['tipo_juego']) ?></span>
+                                
+                                <?php if ($fila['tipo_juego'] === 'razonamiento'): 
+                                    $rondas = obtenerDetalleRondas($conexion, $fila['id']);
+                                    if (!empty($rondas)):
+                                        $aciertos = 0; $fallos = 0;
+                                        foreach($rondas as $r) { if($r['correcta']) $aciertos++; else $fallos++; }
+                                ?>
+                                    <button class="btn-ver-rondas" onclick="toggleDetalle(this)">
+                                        <i class="fas fa-chevron-down"></i> Ver Rondas
+                                    </button>
 
-                            <?php if ($fila['tipo_juego'] === 'razonamiento'): 
-                                $rondas = obtenerDetalleRondas($conexion, $fila['id']); ?>
-                                <tr id="rondas-<?= $fila['id'] ?>" style="display: none; background: #fdfdfd;">
-                                    <td colspan="5" style="padding: 0;">
-                                        <div style="padding: 15px; border-left: 5px solid #e65100; margin: 10px; background: #fff; border-radius: 8px; box-shadow: inset 0 0 5px rgba(0,0,0,0.05);">
-                                            <h4 style="margin: 0 0 10px 0; font-size: 13px; color: #e65100; text-transform: uppercase; letter-spacing: 0.5px;">Desglose de Rondas</h4>
-                                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                                <?php foreach ($rondas as $r): ?>
-                                                    <div style="border: 1px solid #eee; padding: 8px 12px; border-radius: 10px; background: #fcfcfd; display: flex; align-items: center; gap: 8px;">
-                                                        <span style="font-weight: 700; color: #666;">R<?= $r['ronda'] ?></span>
-                                                        <span>
-                                                            <?= $r['correcta'] 
-                                                                ? '<i class="fas fa-check-circle" style="color: #2e7d32;"></i>' 
-                                                                : '<i class="fas fa-times-circle" style="color: #c62828;"></i>' ?>
-                                                        </span>
-                                                        <small style="color: #888; font-family: monospace;"><?= $r['tiempo_segundos'] ?>s</small>
-                                                    </div>
-                                                <?php endforeach; ?>
-                                            </div>
+                                    <div class="rondas-wrapper">
+                                        <span class="summary-box">
+                                            Resultado: <span style="color:#10b981"><?= $aciertos ?> ✓</span> | <span style="color:#ef4444"><?= $fallos ?> ✗</span>
+                                        </span>
+                                        <div class="pills-container">
+                                            <?php foreach ($rondas as $r): ?>
+                                                <span class="round-pill <?= $r['correcta'] ? 'round-success' : 'round-error' ?>">
+                                                    R<?= $r['ronda'] ?>: <?= $r['correcta'] ? 'Acierto' : 'Fallo' ?> (<?= $r['tiempo_segundos'] ?>s)
+                                                </span>
+                                            <?php endforeach; ?>
                                         </div>
-                                    </td>
-                                </tr>
-                            <?php endif; ?>
+                                    </div>
+                                <?php endif; endif; ?>
+                            </td>
+                            <td><?= $fila['dificultad'] ?></td>
+                            <td><strong><?= (int)$fila['puntuacion'] ?>%</strong></td>
+                            <td><?= formatSecondsToMMSS($fila['tiempo_segundos']) ?></td>
+                        </tr>
                         <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
-
         </div>
     </div>
 
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-    // Recuperamos los datos de PHP
-    const datos = <?= $jsonGraficas ?>;
-
-    // Configuración común para que todas se vean iguales
-    const commonOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                beginAtZero: true,
-                max: 100, // La puntuación suele ser sobre 100
-                grid: { color: '#f0f0f0' }
-            },
-            x: {
-                grid: { display: false }
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Función para desplegar/ocultar rondas
+        function toggleDetalle(btn) {
+            const wrapper = btn.nextElementSibling;
+            const icon = btn.querySelector('i');
+            
+            if (wrapper.style.display === "block") {
+                wrapper.style.display = "none";
+                btn.innerHTML = '<i class="fas fa-chevron-down"></i> Ver Rondas';
+            } else {
+                wrapper.style.display = "block";
+                btn.innerHTML = '<i class="fas fa-chevron-up"></i> Ocultar Rondas';
             }
-        },
-        plugins: {
-            legend: { display: false }
-        }
-    };
-
-    // Función para crear gráfica
-    function createChart(canvasId, label, color, bg, dataObj) {
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        
-        // Si no hay datos, no dibujamos nada
-        if(!dataObj || dataObj.data.length === 0) {
-            return; 
         }
 
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: dataObj.labels,
-                datasets: [{
-                    label: 'Puntuación',
-                    data: dataObj.data,
-                    borderColor: color,
-                    backgroundColor: bg,
-                    borderWidth: 3,
-                    pointBackgroundColor: '#fff',
-                    pointBorderColor: color,
-                    pointRadius: 4,
-                    tension: 0.3, // Curvatura suave
-                    fill: true
-                }]
-            },
-            options: commonOptions
-        });
-    }
-
-    // Renderizar las 4 gráficas
-    createChart('chartMemoria', 'Memoria', '#00acc1', 'rgba(0, 172, 193, 0.1)', datos.memoria);
-    createChart('chartLogica', 'Lógica', '#43a047', 'rgba(67, 160, 71, 0.1)', datos.logica);
-    createChart('chartRazonamiento', 'Razonamiento', '#fb8c00', 'rgba(251, 140, 0, 0.1)', datos.razonamiento);
-    createChart('chartAtencion', 'Atención', '#5e35b1', 'rgba(94, 53, 177, 0.1)', datos.atencion);
-
-</script>
-
-<script>
-function toggleRondas(id) {
-    const detalle = document.getElementById('rondas-' + id);
-    if (detalle) {
-        if (detalle.style.display === 'none') {
-            detalle.style.display = 'table-row';
-        } else {
-            detalle.style.display = 'none';
+        // Configuración de gráficas
+        const datos = <?= $jsonGraficas ?>;
+        function render(id, cat, color) {
+            const ctx = document.getElementById(id);
+            if(!ctx || !datos[cat].data.length) return;
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: datos[cat].labels,
+                    datasets: [{
+                        label: 'Evolución ' + cat,
+                        data: datos[cat].data,
+                        borderColor: color, backgroundColor: color + '22',
+                        fill: true, tension: 0.3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
         }
-    }
-}
-</script>
-
+        render('chartMemoria', 'memoria', '#3b82f6');
+        render('chartLogica', 'logica', '#10b981');
+        render('chartRazonamiento', 'razonamiento', '#f59e0b');
+        render('chartAtencion', 'atencion', '#8b5cf6');
+    </script>
 </body>
 </html>
