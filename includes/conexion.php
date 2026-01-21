@@ -2,10 +2,10 @@
 
 
 $host   = '127.0.0.1';
-$port   = 3306;   // <<--- CAMBIA AQUÍ TU PUERTO REAL
-$dbname = 'neuroplay';  // nombre de tu base de datos
-$user   = 'root';       // usuario MySQL
-$pass   = '';           // contraseña (vacía en XAMPP por defecto)
+$port   = 3307;   
+$dbname = 'neuroplay'; 
+$user   = 'root';      
+$pass   = '';          
 
 $dsn = "mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4";
 
