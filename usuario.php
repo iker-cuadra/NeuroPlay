@@ -195,6 +195,7 @@ $nombre = $_SESSION["nombre"];
         .game-card h2 {
             margin-bottom: 5px;
             font-weight: 600;
+            padding-bottom: 22px;
             font-size: 34px;
             color: #222;
         }
@@ -218,7 +219,7 @@ $nombre = $_SESSION["nombre"];
     </div>
 
     <div class="games-section">
-        <div class="game-card" onclick="location.href='juegos/logicajuego/logica.php'" style="background: rgba(255, 245, 200, 0.85);">
+        <div class="game-card" onclick="location.href='juegos/logicajuego/logica.php'" style="background: rgba(189, 253, 176, 0.85);">
             <h2>Lógica</h2>
             <div class="image-wrapper">
                 <img src="imagenes/logica.jpg" alt="Lógica">
@@ -234,7 +235,7 @@ $nombre = $_SESSION["nombre"];
             <div class="btn-play btn-premium">Jugar</div>
         </div>
 
-        <div class="game-card" onclick="location.href='juegos/razonamientojuego/razonamiento.php'" style="background: rgba(255, 220, 180, 0.85);">
+        <div class="game-card" onclick="location.href='juegos/razonamientojuego/razonamiento.php'" style="background: rgba(252, 209, 160, 0.85);">
             <h2>Razonamiento</h2>
             <div class="image-wrapper">
                 <img src="imagenes/razonamiento.jpg" alt="Razonamiento">
@@ -242,7 +243,7 @@ $nombre = $_SESSION["nombre"];
             <div class="btn-play btn-premium">Jugar</div>
         </div>
 
-        <div class="game-card" onclick="location.href='juegos/atencionjuego/atencion.php'" style="background: rgba(255, 118, 118, 0.85);">
+        <div class="game-card" onclick="location.href='juegos/atencionjuego/atencion.php'" style="background: rgba(255, 164, 164, 0.85);">
             <h2>Atención</h2>
             <div class="image-wrapper">
                 <img src="imagenes/atencion.png" alt="Atención">
