@@ -89,7 +89,7 @@ $nombre = $_SESSION["nombre"];
             position: relative;
             overflow: hidden;
             transition: all .25s cubic-bezier(.2,.8,.2,1);
-            box-sizing: border-box; /* Evita que se salga */
+            box-sizing: border-box;
         }
 
         .btn-premium::after {
@@ -127,11 +127,11 @@ $nombre = $_SESSION["nombre"];
 
         /* BOTÓN JUGAR (ESTILO OSCURO) */
         .btn-play {
-            width: 100%; /* Ocupa el ancho de la tarjeta */
+            width: 100%;
             padding: 12px 0;
             font-size: 16px;
             color: #ffffff;
-            background: #1a1a1a; /* FONDO OSCURO */
+            background: #1a1a1a;
             border: 1px solid rgba(255, 255, 255, 0.1);
             margin-top: 15px;
         }
@@ -164,12 +164,11 @@ $nombre = $_SESSION["nombre"];
             transition: all 0.4s ease;
             cursor: pointer;
             border: 1px solid rgba(255,255,255,0.4);
-            box-sizing: border-box; /* Importante para que el botón no se salga */
+            box-sizing: border-box;
         }
 
         .game-card:hover {
             transform: translateY(-10px);
-            background: rgba(255, 255, 255, 0.95);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
 
@@ -196,7 +195,7 @@ $nombre = $_SESSION["nombre"];
         .game-card h2 {
             margin-bottom: 5px;
             font-weight: 600;
-            font-size: 24px;
+            font-size: 34px;
             color: #222;
         }
 
@@ -219,31 +218,31 @@ $nombre = $_SESSION["nombre"];
     </div>
 
     <div class="games-section">
-        <div class="game-card" onclick="location.href='juegos/logicajuego/logica.php'">
+        <div class="game-card" onclick="location.href='juegos/logicajuego/logica.php'" style="background: rgba(255, 245, 200, 0.85);">
             <h2>Lógica</h2>
             <div class="image-wrapper">
-                <img src="imagenes/logica.png" alt="Lógica">
+                <img src="imagenes/logica.jpg" alt="Lógica">
             </div>
             <div class="btn-play btn-premium">Jugar</div>
         </div>
 
-        <div class="game-card" onclick="location.href='juegos/memoriajuego/memoria.php'">
+        <div class="game-card" onclick="location.href='juegos/memoriajuego/memoria.php'" style="background: rgba(200, 235, 255, 0.85);">
             <h2>Memoria</h2>
             <div class="image-wrapper">
-                <img src="imagenes/memoria.png" alt="Memoria">
+                <img src="imagenes/memoria.jpg" alt="Memoria">
             </div>
             <div class="btn-play btn-premium">Jugar</div>
         </div>
 
-        <div class="game-card" onclick="location.href='juegos/razonamientojuego/razonamiento.php'">
+        <div class="game-card" onclick="location.href='juegos/razonamientojuego/razonamiento.php'" style="background: rgba(255, 220, 180, 0.85);">
             <h2>Razonamiento</h2>
             <div class="image-wrapper">
-                <img src="imagenes/razonamiento.png" alt="Razonamiento">
+                <img src="imagenes/razonamiento.jpg" alt="Razonamiento">
             </div>
             <div class="btn-play btn-premium">Jugar</div>
         </div>
 
-        <div class="game-card" onclick="location.href='juegos/atencionjuego/atencion.php'">
+        <div class="game-card" onclick="location.href='juegos/atencionjuego/atencion.php'" style="background: rgba(180, 220, 220, 0.85);">
             <h2>Atención</h2>
             <div class="image-wrapper">
                 <img src="imagenes/atencion.jpg" alt="Atención">
