@@ -38,7 +38,7 @@ if (!$dificultad_memoria) {
             font-size: 18px;
         }
 
-        
+
         /* --- FONDO MESH ANIMADO 8s --- */
         .canvas-bg {
             position: fixed;
@@ -384,7 +384,7 @@ if (!$dificultad_memoria) {
 </head>
 
 <body>
-
+    <div class="canvas-bg"></div>
     <div class="game-wrapper">
         <div class="game-container">
             <!-- Flecha volver -->
