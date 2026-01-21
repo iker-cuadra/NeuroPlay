@@ -32,11 +32,10 @@ if (!$dificultad_razonamiento) {
             height: 100%;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: transparent;
-            overflow: hidden; /* sin scroll */
+            overflow: hidden;
             font-size: 18px;
         }
 
-        /* --- FONDO MESH ANIMADO 8s --- */
         .canvas-bg {
             position: fixed;
             top: 0;
@@ -52,7 +51,7 @@ if (!$dificultad_razonamiento) {
                 radial-gradient(at 0% 100%, hsla(321,0%,100%,1) 0, transparent 50%),
                 radial-gradient(at 100% 100%, hsla(0,0%,80%,1) 0, transparent 50%);
             background-size: 200% 200%;
-            animation: meshMove 8s infinite alternate ease-in-out; /* 8s */
+            animation: meshMove 8s infinite alternate ease-in-out;
         }
 
         @keyframes meshMove {
@@ -60,7 +59,6 @@ if (!$dificultad_razonamiento) {
             100% { background-position: 100% 100%; }
         }
 
-        /* ENVOLTORIO A PANTALLA COMPLETA */
         .game-wrapper {
             height: 100vh;
             width: 100%;
@@ -71,21 +69,16 @@ if (!$dificultad_razonamiento) {
             box-sizing: border-box;
         }
 
-        /* CONTENEDOR DEL JUEGO (TARJETA PREMIUM) */
         .game-container {
             position: relative;
             width: min(900px, 100%);
             height: 100%;
             max-height: 100%;
-
             background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
             border-radius: 26px;
             border: 1px solid rgba(0,0,0,0.08);
-            box-shadow:
-                0 18px 40px rgba(0,0,0,0.18),
-                0 2px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 18px 40px rgba(0,0,0,0.18), 0 2px 10px rgba(0,0,0,0.08);
             overflow: hidden;
-
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -93,7 +86,6 @@ if (!$dificultad_razonamiento) {
             box-sizing: border-box;
         }
 
-        /* Barra/acento superior sutil */
         .game-container::before {
             content: "";
             position: absolute;
@@ -106,7 +98,6 @@ if (!$dificultad_razonamiento) {
             z-index: 1;
         }
 
-        /* FLECHA VOLVER (COMO BOTÓN) */
         .back-arrow {
             position: absolute;
             top: 16px;
@@ -119,7 +110,6 @@ if (!$dificultad_razonamiento) {
             cursor: pointer;
             text-decoration: none;
             z-index: 3;
-
             background: rgba(255,255,255,0.9);
             border: 1px solid rgba(0,0,0,0.08);
             border-radius: 14px;
@@ -136,7 +126,6 @@ if (!$dificultad_razonamiento) {
             transform: translateX(-2px);
         }
 
-        /* PASTILLA SUPERIOR */
         .game-title-pill {
             margin-top: 4px;
             margin-bottom: 6px;
@@ -153,7 +142,7 @@ if (!$dificultad_razonamiento) {
         }
 
         .game-header {
-            margin-top: 30px; /* espacio para la flecha */
+            margin-top: 30px;
             margin-bottom: 10px;
             text-align: center;
             flex: 0 0 auto;
@@ -186,7 +175,6 @@ if (!$dificultad_razonamiento) {
             color: #111827;
         }
 
-        /* CUERPO DEL JUEGO */
         .game-body {
             flex: 1 1 auto;
             width: 100%;
@@ -215,9 +203,7 @@ if (!$dificultad_razonamiento) {
             border-radius: 20px;
             margin-bottom: 16px;
             letter-spacing: 10px;
-            box-shadow:
-                inset 0 2px 10px rgba(0,0,0,0.5),
-                0 14px 26px rgba(0,0,0,0.16);
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5), 0 14px 26px rgba(0,0,0,0.16);
             text-align: center;
             border: 1px solid rgba(255,255,255,0.10);
         }
@@ -247,7 +233,6 @@ if (!$dificultad_razonamiento) {
             align-items: center;
             justify-content: center;
             cursor: pointer;
-
             border: 1px solid rgba(0,0,0,0.10);
             box-shadow: 0 12px 20px rgba(0,0,0,0.14);
             transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
@@ -290,7 +275,6 @@ if (!$dificultad_razonamiento) {
             z-index: 2;
         }
 
-        /* OVERLAY FINAL */
         .game-overlay {
             position: absolute;
             inset: 0;
@@ -311,51 +295,16 @@ if (!$dificultad_razonamiento) {
             padding: 18px 18px;
             box-shadow: 0 18px 40px rgba(0,0,0,0.35);
             backdrop-filter: blur(10px);
-
-            max-width: 520px;
-            width: 90%;
-            max-height: 90%;
-            overflow-y: auto;
-        }
-
-        .overlay-content h3 {
-            margin-top: 8px;
-            margin-bottom: 6px;
-            font-size: 1.5rem;
-            font-weight: 800;
         }
 
         .overlay-content p {
-            margin: 4px 0;
-            color: rgba(255,255,255,0.92);
+            margin: 0 0 14px 0;
+            font-size: 24px;
+            font-weight: 800;
         }
-
-        .result-list {
-            margin: 14px auto 10px auto;
-            width: 100%;
-            max-width: 340px;
-            text-align: left;
-            font-size: 1rem;
-        }
-
-        .result-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(156,163,175,0.35);
-        }
-
-        .result-row:last-child {
-            border-bottom: none;
-        }
-
-        .result-round { font-weight: 700; }
-        .result-time  { font-family: monospace; }
 
         .overlay-buttons { margin-top: 14px; }
 
-        /* BOTONES */
         .btn-game {
             background: #4a4a4a;
             color: #fff;
@@ -377,25 +326,15 @@ if (!$dificultad_razonamiento) {
         }
 
         @media (max-width: 768px) {
-            .game-container {
-                padding: 16px 14px 12px 14px;
-            }
-            .sequence-display {
-                font-size: 2.2rem;
-                padding: 18px;
-                letter-spacing: 7px;
-            }
-            .pattern-option {
-                width: 92px;
-                height: 92px;
-                font-size: 2.6rem;
-            }
+            .game-container { padding: 16px 14px 12px 14px; }
+            .sequence-display { font-size: 2.2rem; padding: 18px; letter-spacing: 7px; }
+            .pattern-option { width: 92px; height: 92px; font-size: 2.6rem; }
             .game-title-pill { font-size: 30px; }
             .game-header h2 { font-size: 32px; }
         }
 
         @media (max-height: 680px) {
-            .sequence-display { margin-bottom: 12px; }
+            .sequence-display { margin-bottom: 12px; font-size: 2rem; }
             .sequence-question { margin-bottom: 12px; }
             .game-title-pill { font-size: 28px; padding: 6px 16px; }
         }
@@ -408,24 +347,21 @@ if (!$dificultad_razonamiento) {
 <div class="game-wrapper">
     <div class="game-container">
 
-        <!-- Flecha volver al panel de usuario -->
         <a href="../../usuario.php" class="back-arrow">
             <svg xmlns="http://www.w3.org/2000/svg" height="26" width="26" viewBox="0 0 24 24" fill="#000000">
                 <path d="M14.7 20.3 6.4 12l8.3-8.3 1.4 1.4L9.2 12l6.9 6.9Z"/>
             </svg>
         </a>
 
-        <!-- Pastilla superior -->
         <div class="game-title-pill">Razonamiento</div>
 
-        <!-- Cabecera -->
         <div class="game-header">
             <h2>Secuencias lógicas</h2>
             <p>
                 Dificultad asignada:
                 <strong><?= htmlspecialchars($dificultad_razonamiento) ?></strong>
                 &nbsp;|&nbsp;
-                Ronda: <strong id="ronda-indicador">1/5</strong>
+                Ronda: <strong id="ronda-indicador">1/10</strong>
             </p>
             <p class="timer">
                 <i class="far fa-clock"></i>
@@ -433,20 +369,16 @@ if (!$dificultad_razonamiento) {
             </p>
         </div>
 
-        <!-- Cuerpo del juego -->
         <div class="game-body">
             <div id="zona-razonamiento" class="reasoning-area"></div>
         </div>
 
-        <!-- Mensaje -->
         <div id="razonamiento-mensaje" class="logic-message"></div>
 
-        <!-- OVERLAY FINAL -->
         <div id="game-overlay" class="game-overlay">
             <div id="overlay-content" class="overlay-content"></div>
         </div>
 
-        <!-- OVERLAY INICIAL (antes de empezar) -->
         <div id="start-overlay" class="game-overlay" style="display:flex; z-index: 6;">
             <div class="overlay-content">
                 <p>¿Listo para jugar?</p>
@@ -462,10 +394,11 @@ if (!$dificultad_razonamiento) {
 
 <script>
     const dificultadRazonamientoBD = "<?= htmlspecialchars($dificultad_razonamiento, ENT_QUOTES) ?>";
-    let currentDifficulty = dificultadRazonamientoBD;
-    if (currentDifficulty === 'media') currentDifficulty = 'medio'; // por si tienes ese valor en BD
+    let currentDifficulty = dificultadRazonamientoBD.toLowerCase();
+    if (currentDifficulty === 'media') currentDifficulty = 'medio';
+    if (currentDifficulty === 'fácil') currentDifficulty = 'facil';
 
-    const TOTAL_RONDAS = 5;
+    const TOTAL_RONDAS = 10;
     let rondaActual = 0;
     let resultados = [];
     let segundos = 0;
@@ -519,14 +452,63 @@ if (!$dificultad_razonamiento) {
     function loadReasoningGame(area) {
         document.getElementById("ronda-indicador").textContent = (rondaActual + 1) + "/" + TOTAL_RONDAS;
 
-        const patterns = [
+        // PATRONES FÁCILES - Secuencias cortas (4 elementos) y simples
+        const patternsFacil = [
             {seq:['★','◆','★','◆'], ans:'★'},
             {seq:['●','■','●','■'], ans:'●'},
             {seq:['▲','▼','▲','▼'], ans:'▲'},
-            {seq:['■','■','◆','◆'], ans:'■'},
+            {seq:['★','★','◆','◆'], ans:'★'},
+            {seq:['●','●','■','■'], ans:'●'},
+            {seq:['▲','▲','▼','▼'], ans:'▲'},
+            {seq:['■','■','■','■'], ans:'■'},
+            {seq:['◆','◆','◆','◆'], ans:'◆'},
             {seq:['★','●','★','●'], ans:'★'},
-            {seq:['▲','●','▲','●'], ans:'▲'}
+            {seq:['▼','★','▼','★'], ans:'▼'},
         ];
+
+        // PATRONES MEDIOS - Secuencias medianas (5-6 elementos) con más variación
+        const patternsMedio = [
+            {seq:['★','◆','●','★','◆'], ans:'●'},
+            {seq:['■','▲','▼','■','▲'], ans:'▼'},
+            {seq:['●','●','■','●','●'], ans:'■'},
+            {seq:['★','▲','★','▲','★'], ans:'▲'},
+            {seq:['◆','■','●','◆','■'], ans:'●'},
+            {seq:['▼','▼','▲','▼','▼'], ans:'▲'},
+            {seq:['★','●','▲','■','★'], ans:'●'},
+            {seq:['■','■','◆','◆','■'], ans:'■'},
+            {seq:['▲','●','★','▲','●'], ans:'★'},
+            {seq:['◆','▼','◆','▼','◆'], ans:'▼'},
+            {seq:['●','★','●','●','★'], ans:'●'},
+            {seq:['■','▲','■','■','▲'], ans:'■'},
+        ];
+
+        // PATRONES DIFÍCILES - Secuencias largas (6-8 elementos) y complejas
+        const patternsDificil = [
+            {seq:['★','◆','●','■','★','◆'], ans:'●'},
+            {seq:['▲','▼','★','●','▲','▼'], ans:'★'},
+            {seq:['●','●','■','■','◆','◆'], ans:'●'},
+            {seq:['★','▲','●','★','▲','●'], ans:'★'},
+            {seq:['■','◆','▼','★','■','◆'], ans:'▼'},
+            {seq:['▲','▲','●','●','■','■'], ans:'▲'},
+            {seq:['★','●','▲','■','◆','▼'], ans:'★'},
+            {seq:['◆','★','◆','★','◆','★'], ans:'◆'},
+            {seq:['●','■','▲','●','■','▲'], ans:'●'},
+            {seq:['▼','★','●','▼','★','●'], ans:'▼'},
+            {seq:['■','■','◆','★','■','■'], ans:'◆'},
+            {seq:['▲','●','★','■','▲','●'], ans:'★'},
+            {seq:['◆','▼','★','●','◆','▼'], ans:'★'},
+            {seq:['★','★','●','●','▲','▲'], ans:'★'},
+        ];
+
+        let patterns;
+        if (currentDifficulty === 'facil') {
+            patterns = patternsFacil;
+        } else if (currentDifficulty === 'medio') {
+            patterns = patternsMedio;
+        } else {
+            patterns = patternsDificil;
+        }
+
         const p = patterns[Math.floor(Math.random() * patterns.length)];
         crearInterfaz(area, p);
     }
@@ -549,7 +531,11 @@ if (!$dificultad_razonamiento) {
 
         const symbols = ['★','◆','●','■','▲','▼'];
         let opts = [pattern.ans];
-        while (opts.length < 3) {
+        
+        // En difícil, más opciones de respuesta
+        const numOpciones = currentDifficulty === 'dificil' ? 4 : 3;
+        
+        while (opts.length < numOpciones) {
             let s = symbols[Math.floor(Math.random()*symbols.length)];
             if (!opts.includes(s)) opts.push(s);
         }
@@ -608,32 +594,13 @@ if (!$dificultad_razonamiento) {
         const overlayContent = document.getElementById("overlay-content");
         const totalTiempo = resultados.reduce((acc, r) => acc + r.tiempo_segundos, 0);
 
-        let resultRows = "";
-        resultados.forEach(r => {
-            resultRows += `
-                <div class="result-row">
-                    <span class="result-round">Ronda ${r.ronda}</span>
-                    <span class="result-time">${r.tiempo_segundos}s</span>
-                    <span class="result-icon">
-                        ${r.correcta
-                            ? '<i class="fas fa-check-circle" style="color:#22c55e;"></i>'
-                            : '<i class="fas fa-times-circle" style="color:#f97316;"></i>'}
-                    </span>
-                </div>
-            `;
-        });
-
         overlayContent.innerHTML = `
             <i class="fas fa-trophy" style="font-size:3rem; color:#facc15; margin-bottom:8px;"></i>
-            <h3>¡Ejercicio completado!</h3>
-            <p>Has acertado <strong>${aciertos}</strong> de <strong>${TOTAL_RONDAS}</strong> secuencias.</p>
-            <p>Tiempo total: <strong>${totalTiempo}s</strong></p>
+            <p>¡Ejercicio completado!</p>
+            <p style="font-size:18px; font-weight:normal;">Has acertado <strong>${aciertos}</strong> de <strong>${TOTAL_RONDAS}</strong> secuencias.</p>
+            <p style="font-size:18px; font-weight:normal;">Tiempo total: <strong>${totalTiempo}s</strong></p>
 
-            <div class="result-list">
-                ${resultRows}
-            </div>
-
-            <div class="overlay-buttons">
+            <div style="margin-top: 14px;">
                 <button id="btn-restart" class="btn-game">Jugar otra vez</button>
                 <button id="btn-volver" class="btn-game">Volver al panel</button>
             </div>
@@ -674,7 +641,6 @@ if (!$dificultad_razonamiento) {
         const btnStartBack = document.getElementById("btn-start-back");
         const zona = document.getElementById("zona-razonamiento");
 
-        // Bloquear clicks hasta empezar
         if (zona) zona.style.pointerEvents = "none";
 
         if (btnStart) {

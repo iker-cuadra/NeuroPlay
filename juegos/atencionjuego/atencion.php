@@ -62,18 +62,23 @@ if (!$dificultad_atencion) {
             z-index: -1;
             background: #e5e5e5;
             background-image:
-                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
-                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
-                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%),
-                radial-gradient(at 0% 100%, hsla(321,0%,100%,1) 0, transparent 50%),
-                radial-gradient(at 100% 100%, hsla(0,0%,80%,1) 0, transparent 50%);
+                radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(321, 0%, 100%, 1) 0, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(0, 0%, 80%, 1) 0, transparent 50%);
             background-size: 200% 200%;
             animation: meshMove 8s infinite alternate ease-in-out;
         }
 
         @keyframes meshMove {
-            0% { background-position: 0% 0%; }
-            100% { background-position: 100% 100%; }
+            0% {
+                background-position: 0% 0%;
+            }
+
+            100% {
+                background-position: 100% 100%;
+            }
         }
 
         /* ENVOLTORIO A PANTALLA COMPLETA */
@@ -96,10 +101,10 @@ if (!$dificultad_atencion) {
 
             background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
             border-radius: 26px;
-            border: 1px solid rgba(0,0,0,0.08);
+            border: 1px solid rgba(0, 0, 0, 0.08);
             box-shadow:
-                0 18px 40px rgba(0,0,0,0.18),
-                0 2px 10px rgba(0,0,0,0.08);
+                0 18px 40px rgba(0, 0, 0, 0.18),
+                0 2px 10px rgba(0, 0, 0, 0.08);
             overflow: hidden;
 
             display: flex;
@@ -136,10 +141,10 @@ if (!$dificultad_atencion) {
             text-decoration: none;
             z-index: 3;
 
-            background: rgba(255,255,255,0.9);
-            border: 1px solid rgba(0,0,0,0.08);
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.08);
             border-radius: 14px;
-            box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
             backdrop-filter: blur(6px);
         }
 
@@ -163,7 +168,7 @@ if (!$dificultad_atencion) {
             font-weight: bold;
             color: #ffffff;
             letter-spacing: 0.4px;
-            box-shadow: 0 10px 18px rgba(0,0,0,0.18);
+            box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18);
             position: relative;
             z-index: 2;
         }
@@ -206,11 +211,11 @@ if (!$dificultad_atencion) {
         }
 
         .status-pill {
-            background: rgba(243,244,246,0.95);
+            background: rgba(243, 244, 246, 0.95);
             padding: 10px 16px;
             border-radius: 999px;
-            border: 1px solid rgba(0,0,0,0.08);
-            box-shadow: 0 10px 18px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 10px 18px rgba(0, 0, 0, 0.08);
             font-size: 18px;
             font-weight: 700;
             color: #111827;
@@ -241,6 +246,7 @@ if (!$dificultad_atencion) {
             flex-direction: column;
             align-items: center;
             overflow: hidden;
+            transition: opacity 0.3s ease;
         }
 
         .instructions {
@@ -255,6 +261,7 @@ if (!$dificultad_atencion) {
             gap: 14px;
             justify-content: center;
             margin-top: 8px;
+            transition: opacity 0.3s ease;
         }
 
         .symbol-card {
@@ -270,19 +277,24 @@ if (!$dificultad_atencion) {
             cursor: pointer;
             user-select: none;
 
-            border: 1px solid rgba(255,255,255,0.10);
-            box-shadow: 0 12px 20px rgba(0,0,0,0.18);
-            transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease, background 0.18s ease;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.18);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease, background 0.4s ease, opacity 0.4s ease;
         }
 
         .symbol-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 16px 26px rgba(0,0,0,0.22);
+            box-shadow: 0 16px 26px rgba(0, 0, 0, 0.22);
             filter: brightness(1.03);
         }
 
-        .symbol-card.wrong { background: #b91c1c; }
-        .symbol-card.correct { background: #16a34a; }
+        .symbol-card.wrong {
+            background: #b91c1c;
+        }
+
+        .symbol-card.correct {
+            background: #16a34a;
+        }
 
         .motivacion {
             margin-top: 10px;
@@ -297,10 +309,12 @@ if (!$dificultad_atencion) {
         }
 
         /* OVERLAY (se usa para final e inicio) */
+
+        /* OVERLAYS */
         .game-overlay {
             position: absolute;
             inset: 0;
-            background: rgba(0,0,0,0.50);
+            background: rgba(0, 0, 0, 0.50);
             border-radius: inherit;
             display: none;
             align-items: center;
@@ -311,17 +325,18 @@ if (!$dificultad_atencion) {
         .overlay-content {
             text-align: center;
             color: #fff;
-            background: rgba(17,24,39,0.55);
-            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(17, 24, 39, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             border-radius: 22px;
             padding: 18px 18px;
-            box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
             backdrop-filter: blur(10px);
+        }
 
-            max-width: 520px;
-            width: 90%;
-            max-height: 90%;
-            overflow-y: auto;
+        .overlay-content p {
+            margin: 0 0 14px 0;
+            font-size: 24px;
+            font-weight: 800;
         }
 
         .overlay-content h3 {
@@ -333,11 +348,13 @@ if (!$dificultad_atencion) {
 
         .overlay-content p {
             margin: 6px 0;
-            color: rgba(255,255,255,0.92);
+            color: rgba(255, 255, 255, 0.92);
             font-size: 1.05rem;
         }
 
-        .overlay-buttons { margin-top: 14px; }
+        .overlay-buttons {
+            margin-top: 14px;
+        }
 
         /* BOTONES */
         .btn-game {
@@ -349,7 +366,7 @@ if (!$dificultad_atencion) {
             font-size: 18px;
             cursor: pointer;
             font-weight: 700;
-            box-shadow: 0 10px 18px rgba(0,0,0,0.22);
+            box-shadow: 0 10px 18px rgba(0, 0, 0, 0.22);
             transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
             margin: 0 6px;
         }
@@ -357,7 +374,7 @@ if (!$dificultad_atencion) {
         .btn-game:hover {
             background: #333;
             transform: translateY(-2px);
-            box-shadow: 0 14px 26px rgba(0,0,0,0.28);
+            box-shadow: 0 14px 26px rgba(0, 0, 0, 0.28);
         }
     </style>
 </head>
@@ -394,7 +411,7 @@ if (!$dificultad_atencion) {
                     </div>
                     <div class="status-pill">
                         Tiempo restante:
-                        <span id="time-left" class="timer-value">01:30</span>
+                        <span id="time-left" class="timer-value">01:00</span>
                     </div>
                 </div>
             </div>
@@ -444,13 +461,13 @@ if (!$dificultad_atencion) {
         // ============================
         //  VARIABLES GLOBALES
         // ============================
-        let attentionTimeLeft = 90;
+        let attentionTimeLeft = 60;
         let attentionTimerInt = null;
         let roundTimeoutId = null;
         let gameScore = 0;
         let gameEnded = false;
 
-        const TOTAL_TIME = 90;
+        const TOTAL_TIME = 60;
 
         // ============================
         //  UTILIDADES DE UI
@@ -503,8 +520,8 @@ if (!$dificultad_atencion) {
                     dificultad: dificultad
                 })
             })
-            .then(res => res.json())
-            .catch(err => console.error('Error al guardar resultado de atención:', err));
+                .then(res => res.json())
+                .catch(err => console.error('Error al guardar resultado de atención:', err));
         }
 
         // ============================
@@ -566,7 +583,7 @@ if (!$dificultad_atencion) {
                     <i class="fas fa-eye" style="font-size:3rem; color:#facc15; margin-bottom:6px;"></i>
                     <h3>¡Tiempo terminado!</h3>
                     <p>Puntuación final: <strong>${gameScore}</strong> puntos.</p>
-                    <p>Tiempo de juego: <strong>01:30</strong></p>
+                    <p>Tiempo de juego: <strong>01:00</strong></p>
 
                     <div class="overlay-buttons">
                         <button id="btn-restart" class="btn-game">Jugar otra vez</button>
@@ -636,45 +653,63 @@ if (!$dificultad_atencion) {
             if (roundTimeoutId) clearTimeout(roundTimeoutId);
             roundTimeoutId = setTimeout(() => {
                 if (!gameEnded && attentionTimeLeft > 0) startAttentionRound(area);
-            }, 10000);
+            }, 15000);
         }
 
         function generateAttentionExercise(container, symbolCount, symbolPairs) {
-            container.innerHTML = "";
+            // Fade out anterior
+            container.style.opacity = '0';
 
-            const pair = symbolPairs[Math.floor(Math.random() * symbolPairs.length)];
-            const symbols = new Array(symbolCount).fill(pair.base);
-            const differentIndex = Math.floor(Math.random() * symbolCount);
-            symbols[differentIndex] = pair.different;
+            setTimeout(() => {
+                container.innerHTML = "";
 
-            symbols.forEach((symbol, index) => {
-                const card = document.createElement('div');
-                card.className = "symbol-card";
-                card.textContent = symbol;
+                const pair = symbolPairs[Math.floor(Math.random() * symbolPairs.length)];
+                const symbols = new Array(symbolCount).fill(pair.base);
+                const differentIndex = Math.floor(Math.random() * symbolCount);
+                symbols[differentIndex] = pair.different;
 
-                card.addEventListener('click', () => {
-                    if (gameEnded) return;
+                symbols.forEach((symbol, index) => {
+                    const card = document.createElement('div');
+                    card.className = "symbol-card";
+                    card.textContent = symbol;
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.8)';
 
-                    if (index === differentIndex) {
-                        gameScore += 10;
-                        card.classList.add("correct");
-                        updateScoreboard();
+                    card.addEventListener('click', () => {
+                        if (gameEnded) return;
 
-                        const area = document.getElementById('zona-atencion');
-                        setTimeout(() => {
-                            if (!gameEnded && attentionTimeLeft > 0) startAttentionRound(area);
-                        }, 250);
-                    } else {
-                        gameScore = Math.max(0, gameScore - 5);
-                        card.classList.add("wrong");
-                        updateScoreboard();
+                        if (index === differentIndex) {
+                            gameScore += 10;
+                            card.classList.add("correct");
+                            updateScoreboard();
 
-                        setTimeout(() => card.classList.remove("wrong"), 400);
-                    }
+                            const area = document.getElementById('zona-atencion');
+                            setTimeout(() => {
+                                if (!gameEnded && attentionTimeLeft > 0) startAttentionRound(area);
+                            }, 600);
+                        } else {
+                            gameScore = Math.max(0, gameScore - 5);
+                            card.classList.add("wrong");
+                            updateScoreboard();
+
+                            setTimeout(() => card.classList.remove("wrong"), 800);
+                        }
+                    });
+
+                    container.appendChild(card);
+
+                    // Animar entrada de cada carta con delay escalonado
+                    setTimeout(() => {
+                        card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                        card.style.opacity = '1';
+                        card.style.transform = 'scale(1)';
+                    }, index * 50);
                 });
 
-                container.appendChild(card);
-            });
+                // Fade in del contenedor
+                container.style.transition = 'opacity 0.3s ease';
+                container.style.opacity = '1';
+            }, 300);
         }
 
         // ============================
