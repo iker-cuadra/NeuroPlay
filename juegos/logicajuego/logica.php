@@ -206,7 +206,9 @@ if (!$dificultad_logica) {
             display: flex;
             justify-content: center;
             align-items: center;
+            gap: 20px;
             width: 100%;
+            flex-wrap: wrap;
         }
 
         .sudoku-grid {
@@ -234,21 +236,94 @@ if (!$dificultad_logica) {
             background: #ffffff;
             color: #111;
             transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .sudoku-cell:focus {
-            outline: none;
+        .sudoku-cell.drag-over {
             border-color: #0070f3;
             box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.35), 0 12px 22px rgba(0, 0, 0, 0.12);
-            transform: translateY(-1px);
+            transform: scale(1.05);
         }
 
-        .sudoku-cell:disabled {
+        .sudoku-cell.disabled {
             background: #2f3742;
             color: #ffffff;
             border-color: #10141a;
             font-weight: 800;
             box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+        }
+
+        .sudoku-cell.error-shake {
+            animation: shake 0.4s ease-in-out;
+            border-color: #dc2626;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* NÚMEROS ARRASTRABLES */
+        .numbers-palette {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 14px;
+            border-radius: 18px;
+            background: #f1f3f6;
+            box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
+        }
+
+        .draggable-number {
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            font-size: 36px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.18);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        .draggable-number[data-number="1"] {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            color: #ffffff;
+        }
+
+        .draggable-number[data-number="2"] {
+            background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+            color: #ffffff;
+        }
+
+        .draggable-number[data-number="3"] {
+            background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+            color: #ffffff;
+        }
+
+        .draggable-number[data-number="4"] {
+            background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+            color: #ffffff;
+        }
+
+        .draggable-number:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .draggable-number:active {
+            cursor: grabbing;
+        }
+
+        .draggable-number.dragging {
+            opacity: 0.5;
         }
 
         /* MENSAJE / FEEDBACK */
@@ -318,6 +393,7 @@ if (!$dificultad_logica) {
         @media (max-height: 760px) {
             .sudoku-grid { max-width: 350px; gap: 8px; }
             .sudoku-cell { height: clamp(65px, 13vh, 100px); font-size: 32px; }
+            .draggable-number { width: 60px; height: 60px; font-size: 32px; }
             .game-header h2 { font-size: 34px; }
             .game-title-pill { font-size: 30px; }
         }
@@ -325,12 +401,15 @@ if (!$dificultad_logica) {
         @media (max-height: 680px) {
             .sudoku-grid { max-width: 330px; gap: 8px; }
             .sudoku-cell { height: clamp(60px, 12vh, 90px); font-size: 30px; }
+            .draggable-number { width: 55px; height: 55px; font-size: 30px; }
             .game-header h2 { font-size: 32px; }
             .game-title-pill { font-size: 28px; padding: 6px 16px; }
         }
 
         @media (max-width: 768px) {
             .game-container { padding: 16px 14px 12px 14px; }
+            .logic-area { flex-direction: column; }
+            .numbers-palette { flex-direction: row; }
         }
     </style>
 </head>
@@ -354,7 +433,7 @@ if (!$dificultad_logica) {
             <!-- Cabecera -->
             <div class="game-header">
                 <h2>Sudoku 4x4</h2>
-                <p>Completa el tablero con los números del <strong>1 al 4</strong>, sin repetir en filas ni columnas.</p>
+                <p>Arrastra los números del <strong>1 al 4</strong> a las casillas vacías, sin repetir en filas ni columnas.</p>
                 <p>Dificultad asignada: <strong><?= htmlspecialchars($dificultad_logica) ?></strong></p>
                 <p class="timer">Tiempo: <span id="timer">00:00</span></p>
             </div>
@@ -363,6 +442,7 @@ if (!$dificultad_logica) {
             <div class="game-body">
                 <div class="logic-area">
                     <div id="zona-logica"></div>
+                    <div id="numbers-palette" class="numbers-palette"></div>
                 </div>
             </div>
 
@@ -407,6 +487,7 @@ if (!$dificultad_logica) {
         }
 
         let gameScore = 0;
+        let currentSolution = [];
 
         // ---- Temporizador ----
         let elapsedSeconds = 0;
@@ -476,18 +557,21 @@ if (!$dificultad_logica) {
             const solution = generateSudoku4x4();
             const puzzle = createPuzzleFromSolution(solution, 6);
             createSudokuGrid(area, puzzle, solution);
+            createNumbersPalette();
         }
 
         function loadLogicGameMedio(area) {
             const solution = generateSudoku4x4();
             const puzzle = createPuzzleFromSolution(solution, 8);
             createSudokuGrid(area, puzzle, solution);
+            createNumbersPalette();
         }
 
         function loadLogicGameDificil(area) {
             const solution = generateSudoku4x4();
             const puzzle = createPuzzleFromSolution(solution, 10);
             createSudokuGrid(area, puzzle, solution);
+            createNumbersPalette();
         }
 
         function generateSudoku4x4() {
@@ -512,47 +596,114 @@ if (!$dificultad_logica) {
             return puzzle;
         }
 
+        function createNumbersPalette() {
+            const palette = document.getElementById('numbers-palette');
+            palette.innerHTML = '';
+
+            for (let i = 1; i <= 4; i++) {
+                const numberDiv = document.createElement('div');
+                numberDiv.className = 'draggable-number';
+                numberDiv.textContent = i;
+                numberDiv.draggable = true;
+                numberDiv.dataset.number = i;
+
+                numberDiv.addEventListener('dragstart', handleDragStart);
+                numberDiv.addEventListener('dragend', handleDragEnd);
+
+                palette.appendChild(numberDiv);
+            }
+        }
+
+        function handleDragStart(e) {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', e.target.dataset.number);
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
         function createSudokuGrid(area, puzzle, solution) {
+            currentSolution = solution;
             const grid = document.createElement('div');
             grid.className = 'sudoku-grid';
 
             puzzle.forEach((value, index) => {
-                const cell = document.createElement('input');
+                const cell = document.createElement('div');
                 cell.className = 'sudoku-cell';
-                cell.type = 'text';
-                cell.maxLength = 1;
+                cell.dataset.index = index;
 
                 if (value !== 0) {
-                    cell.value = value;
-                    cell.disabled = true;
+                    cell.textContent = value;
+                    cell.classList.add('disabled');
                 } else {
-                    cell.value = "";
-                    cell.addEventListener('input', function () {
-                        this.value = this.value.replace(/[^1-4]/g, '');
-                        checkSudoku(grid, solution);
-                    });
+                    cell.textContent = "";
+                    
+                    cell.addEventListener('dragover', handleDragOver);
+                    cell.addEventListener('dragleave', handleDragLeave);
+                    cell.addEventListener('drop', handleDrop);
                 }
 
                 grid.appendChild(cell);
             });
 
             area.appendChild(grid);
-            startTimer(); // arranca SOLO cuando se crea el tablero (tras pulsar Empezar)
+            startTimer();
         }
 
-        function checkSudoku(grid, solution) {
-            const cells = grid.querySelectorAll('input');
-            let correct = 0;
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const cell = e.currentTarget;
+            cell.classList.remove('drag-over');
+
+            const number = parseInt(e.dataTransfer.getData('text/plain'));
+            const index = parseInt(cell.dataset.index);
+
+            // Verificar si el número es correcto
+            if (number === currentSolution[index]) {
+                cell.textContent = number;
+                cell.classList.add('disabled');
+                checkSudoku();
+            } else {
+                // Animación de error
+                cell.classList.add('error-shake');
+                setTimeout(() => {
+                    cell.classList.remove('error-shake');
+                }, 400);
+                
+                const msg = document.getElementById('logic-message');
+                msg.textContent = "❌ ¡Incorrecto! Ese número no va ahí. Sigue intentándolo";
+                msg.style.color = '#b91c1c';
+                msg.style.fontWeight = '800';
+                setTimeout(() => {
+                    msg.textContent = "";
+                    msg.style.color = '#1b5e20';
+                }, 3000);
+            }
+        }
+
+        function checkSudoku() {
+            const cells = document.querySelectorAll('.sudoku-cell');
             let filled = 0;
 
-            cells.forEach((cell, index) => {
-                if (cell.value !== "") filled++;
-                if (cell.value == solution[index]) correct++;
+            cells.forEach((cell) => {
+                if (cell.textContent !== "") filled++;
             });
 
             const msg = document.getElementById('logic-message');
 
-            if (correct === 16) {
+            if (filled === 16) {
                 clearInterval(timerInterval);
                 gameScore = 100;
                 const segundosTotales = elapsedSeconds;
@@ -561,12 +712,9 @@ if (!$dificultad_logica) {
 
                 msg.textContent = "¡Muy bien! Has completado el sudoku correctamente. Tiempo: " +
                     document.getElementById('timer').textContent;
+                msg.style.color = '#1b5e20';
 
                 showOverlay();
-            } else if (filled === 16) {
-                msg.textContent = "Hay algún número que no encaja, prueba a revisar.";
-            } else {
-                msg.textContent = "";
             }
         }
 
@@ -575,7 +723,9 @@ if (!$dificultad_logica) {
 
             // Bloquear interacción hasta Empezar
             const zona = document.getElementById('zona-logica');
+            const palette = document.getElementById('numbers-palette');
             if (zona) zona.style.pointerEvents = "none";
+            if (palette) palette.style.pointerEvents = "none";
 
             const startOverlay = document.getElementById('start-overlay');
             const btnStart = document.getElementById('btn-start');
@@ -585,6 +735,7 @@ if (!$dificultad_logica) {
                 btnStart.addEventListener('click', function () {
                     if (startOverlay) startOverlay.style.display = 'none';
                     if (zona) zona.style.pointerEvents = "auto";
+                    if (palette) palette.style.pointerEvents = "auto";
                     loadLogicGame(area);
                 });
             }
