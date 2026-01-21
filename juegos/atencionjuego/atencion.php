@@ -399,7 +399,8 @@ if (!$dificultad_atencion) {
             <!-- Cabecera -->
             <div class="game-header">
                 <h2>Encuentra el símbolo diferente</h2>
-                <p>Observa todos los símbolos y pulsa sobre el que <strong>NO</strong> es igual a los demás.</p>
+                <p>Observa todos los símbolos y pulsa sobre el que <strong>NO</strong> es igual a los demás. <br>
+                 Cada respuesta correcta suma <strong>10</strong> puntos y cada respuesta incorrecta resta <strong>5</strong> puntos</p>
                 <p>
                     Dificultad asignada:
                     <strong id="dificultad-label"><?= htmlspecialchars($dificultad_atencion) ?></strong>
