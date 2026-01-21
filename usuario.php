@@ -242,10 +242,10 @@ $nombre = $_SESSION["nombre"];
             <div class="btn-play btn-premium">Jugar</div>
         </div>
 
-        <div class="game-card" onclick="location.href='juegos/atencionjuego/atencion.php'" style="background: rgba(180, 220, 220, 0.85);">
+        <div class="game-card" onclick="location.href='juegos/atencionjuego/atencion.php'" style="background: rgba(255, 118, 118, 0.85);">
             <h2>Atención</h2>
             <div class="image-wrapper">
-                <img src="imagenes/atencion.jpg" alt="Atención">
+                <img src="imagenes/atencion.png" alt="Atención">
             </div>
             <div class="btn-play btn-premium">Jugar</div>
         </div>
