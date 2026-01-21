@@ -34,7 +34,7 @@ if (!$dificultad_logica) {
             padding: 0;
             height: 100%;
             font-family: Arial, Helvetica, sans-serif;
-            background: #887d7dff;
+           
             overflow: hidden;
             font-size: 18px;
         }
