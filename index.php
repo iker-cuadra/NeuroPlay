@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
         exit;
     }
-    $error = "ACCESO DENEGADO";
+    $error = "E-mail o contraseña incorrectos.";
 }
 ?>
 <!DOCTYPE html>
@@ -29,196 +29,213 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OVERRIDE | Pere Bas</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
+<title>Centro Pere Bas - Acceso</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-        font-family: 'Orbitron', sans-serif;
-        background-color: #000;
-        height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-    }
+html, body {
+    height: 100%;
+    font-family: 'Poppins', sans-serif;
+    background-color: #000;
+    overflow: hidden;
+}
 
-    /* --- FONDO MESH HIPER-ACELERADO --- */
-    .canvas-bg {
-        position: fixed;
-        inset: 0;
-        z-index: 0;
-        background: #000;
-        background-image:
-            radial-gradient(at 0% 0%, #ff00ff 0, transparent 40%),
-            radial-gradient(at 50% 50%, #00ffff 0, transparent 40%),
-            radial-gradient(at 100% 100%, #ff0000 0, transparent 40%);
-        background-size: 150% 150%;
-        animation: meshHyper 3s infinite alternate linear; 
-        opacity: 0.6;
-    }
+/* --- FONDO MESH ANIMADO --- */
+.canvas-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    background: #e5e5e5;
+    background-image:
+        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
+        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%),
+        radial-gradient(at 0% 100%, hsla(321,0%,100%,1) 0, transparent 50%),
+        radial-gradient(at 100% 100%, hsla(0,0%,80%,1) 0, transparent 50%);
+    background-size: 200% 200%;
+    animation: meshMove 8s infinite alternate ease-in-out; 
+}
 
-    @keyframes meshHyper {
-        0% { background-position: 0% 0%; filter: hue-rotate(0deg); }
-        100% { background-position: 100% 100%; filter: hue-rotate(360deg); }
-    }
+@keyframes meshMove {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
+}
 
-    /* --- CONTENEDOR LED ULTRA-RÁPIDO --- */
-    .led-card-container {
-        position: relative;
-        width: 100%;
-        max-width: 420px;
-        padding: 5px; /* Borde más grueso */
-        background: #000;
-        border-radius: 20px;
-        overflow: hidden;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        box-shadow: 0 0 100px rgba(0, 255, 255, 0.4);
-    }
+.login-wrapper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+}
 
-    .led-card-container::before {
-        content: '';
-        position: absolute;
-        width: 200%;
-        height: 200%;
-        background: conic-gradient(
-            #ff0000, #ff00ff, #00ffff, #00ff00, #ffff00, #ff0000
-        );
-        /* Rotación ultra rápida: 1s */
-        animation: rotateLED 1s linear infinite;
-    }
+.login-left {
+    flex: 0 0 50%;
+    background: url('imagenes/imglogin.svg') no-repeat center center;
+    background-size: cover;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
 
-    @keyframes rotateLED {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
+.login-right {
+    flex: 0 0 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
 
-    /* Fondo de la tarjeta (Tapa el centro del gradiente) */
-    .led-card-container::after {
-        content: '';
-        position: absolute;
-        inset: 4px;
-        background: rgba(0,0,0,0.9);
-        border-radius: 18px;
-        z-index: 1;
-    }
+/* --- LOGIN CARD CON TRANSPARENCIA GLASS --- */
+.login-card {
+    width: 100%;
+    max-width: 440px;
+    padding: 50px 40px;
+    border-radius: 40px;
+    background: rgba(0, 0, 0, 0.35); /* Oscurecido */
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+    text-align: center;
+    color: #fff;
+}
 
-    .login-card {
-        position: relative;
-        z-index: 2;
-        width: 100%;
-        padding: 40px;
-        text-align: center;
-    }
 
-    /* --- TÍTULO CON GLITCH --- */
-    .glitch {
-        font-size: 36px;
-        font-weight: 900;
-        color: #fff;
-        text-transform: uppercase;
-        position: relative;
-        animation: glitchAnim 0.2s infinite;
-    }
+.login-card h1 {
+    font-size: 30px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+}
 
-    @keyframes glitchAnim {
-        0% { transform: translate(0); text-shadow: 2px 2px #ff00ff; }
-        25% { transform: translate(-2px, 2px); text-shadow: -2px -2px #00ffff; }
-        50% { transform: translate(2px, -2px); text-shadow: 2px -2px #ff0000; }
-        100% { transform: translate(0); }
-    }
+.subtitle {
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 40px;
+    font-size: 14px;
+}
 
-    .subtitle {
-        color: #00ffff;
-        font-size: 10px;
-        letter-spacing: 5px;
-        margin-bottom: 30px;
-        display: block;
-    }
+/* --- INPUTS TRANSPARENTES --- */
+input {
+    width: 100%;
+    padding: 16px 20px;
+    margin-bottom: 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255, 255, 255, 0.15);
+    font-size: 16px;
+    color: #fff;
+    outline: none;
+    transition: all 0.3s ease;
+}
 
-    /* --- INPUTS --- */
-    input {
-        width: 100%;
-        padding: 15px;
-        margin-bottom: 15px;
-        background: #111;
-        border: 2px solid #333;
-        color: #00ff00; /* Texto verde matrix */
-        font-family: 'Orbitron', sans-serif;
-        font-size: 14px;
-        outline: none;
-        transition: 0.1s;
-    }
+input::placeholder {
+    color: rgba(255,255,255,0.6);
+}
 
-    input:focus {
-        border-color: #00ffff;
-        box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-        background: #000;
-    }
+input:focus {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.2);
+}
 
-    /* --- BOTÓN EPILEPTICO --- */
-    button {
-        width: 100%;
-        padding: 15px;
-        background: #fff;
-        color: #000;
-        border: none;
-        font-weight: 900;
-        cursor: pointer;
-        text-transform: uppercase;
-        animation: strobe 0.1s infinite;
-    }
+/* --- BOTÓN TRANSPARENTE PREMIUM --- */
+button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px 24px;
+    border-radius: 16px; /* MISMO RADIO QUE EL OTRO BOTÓN */
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    background: rgba(255,255,255,0.05);
+    border: 1.5px solid rgba(255,255,255,0.7);
+    cursor: pointer;
+    overflow: hidden;
+    transition: 
+        transform 0.25s cubic-bezier(.2,.8,.2,1), 
+        box-shadow 0.25s cubic-bezier(.2,.8,.2,1),
+        background 0.3s ease,
+        border-color 0.3s ease;
+}
 
-    @keyframes strobe {
-        0% { background: #fff; color: #000; }
-        50% { background: #00ffff; color: #fff; box-shadow: 0 0 30px #00ffff; }
-        100% { background: #ff00ff; color: #fff; box-shadow: 0 0 30px #ff00ff; }
-    }
+button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        120deg,
+        transparent 20%,
+        rgba(255,255,255,0.25),
+        transparent 80%
+    );
+    opacity: 0;
+    transform: translateX(-60%);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
 
-    button:hover {
-        animation: none;
-        background: #00ff00;
-        color: #000;
-        transform: scale(1.1);
-    }
+button:hover {
+    background: rgba(255,255,255,0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.35);
+    border-color: #fff;
+}
 
-    .error-msg {
-        color: #ff0000;
-        font-size: 12px;
-        margin-bottom: 20px;
-        border: 1px solid #ff0000;
-        padding: 5px;
-        animation: blink 0.2s infinite;
-    }
+button:hover::after {
+    opacity: 1;
+    transform: translateX(60%);
+}
 
-    @keyframes blink {
-        0% { opacity: 0; }
-        100% { opacity: 1; }
-    }
+button:active {
+    transform: scale(0.97);
+}
 
+/* --- MENSAJE DE ERROR --- */
+.error-msg {
+    color: #ff6b6b;
+    background: rgba(255,107,107,0.1);
+    padding: 12px;
+    border-radius: 14px;
+    margin-bottom: 25px;
+    font-size: 14px;
+    border: 1px solid rgba(255,107,107,0.3);
+}
+
+/* RESPONSIVO */
+@media (max-width: 992px) {
+    .login-wrapper { flex-direction: column; }
+    .login-left { flex: 0 0 35%; width: 100%; }
+    .login-right { flex: 0 0 65%; width: 100%; }
+}
 </style>
 </head>
 <body>
 
 <div class="canvas-bg"></div>
 
-<div class="led-card-container">
-    <div class="login-card">
-        <h1 class="glitch" data-text="PERE BAS">PERE BAS</h1>
-        <span class="subtitle">SYSTEM OVERRIDE</span>
+<div class="login-wrapper">
+    <div class="login-left"></div>
 
-        <?php if ($error): ?>
-            <div class="error-msg"><?= $error ?></div>
-        <?php endif; ?>
+    <div class="login-right">
+        <div class="login-card">
+            <h1>Centro Pere Bas</h1>
+            <p class="subtitle">Bienvenido</p>
 
-        <form method="POST">
-            <input type="email" name="email" placeholder="USER_ID" required>
-            <input type="password" name="password" placeholder="ACCESS_KEY" required>
-            <button type="submit">INICIAR_SEC_LOGIN</button>
-        </form>
+            <?php if ($error): ?>
+                <div class="error-msg"><?= htmlspecialchars($error) ?></div>
+            <?php endif; ?>
+
+            <form method="POST">
+                <input type="email" name="email" placeholder="Correo electrónico" required>
+                <input type="password" name="password" placeholder="Contraseña" required>
+                <button type="submit">Iniciar Sesión</button>
+            </form>
+        </div>
     </div>
 </div>
 
