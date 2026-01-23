@@ -212,7 +212,7 @@ $nombre = $_SESSION["nombre"];
     <div class="canvas-bg"></div>
 
     <div class="header">
-        <a href="logout.php" class="logout-button btn-premium">
+        <a href="neuro.html" class="logout-button btn-premium">
             <i class="fas fa-sign-out-alt"></i> Cerrar sesión
         </a>
         <div class="user-role">Panel del Usuario</div>
