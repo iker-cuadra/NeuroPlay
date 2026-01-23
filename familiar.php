@@ -73,28 +73,31 @@ $nombre = $_SESSION["nombre"] ?? 'Familiar';
 
         /* --- NAVBAR ESTILO ACTUALIZADO --- */
         .navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: var(--nav-height);
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(12px);
-            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 40px;
-            box-sizing: border-box;
-            z-index: 1000;
-        }
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: var(--nav-height);
+    /* El 0.8 controla la opacidad (0 es invisible, 1 es sólido) */
+    background: rgba(31, 41, 55, 0.75); 
+    /* El blur crea el efecto de vidrio esmerilado */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px); /* Soporte para Safari */
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between;
+    padding: 0 40px; 
+    box-sizing: border-box; 
+    z-index: 1000; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Sutil línea divisoria */
+}
 
-        .brand-text {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text-dark);
-            letter-spacing: -0.5px;
-        }
+        .brand-text { 
+    font-size: 20px; 
+    font-weight: 700; 
+    color: #ffffff; /* Blanco */
+}
 
         .nav-links {
             display: flex;
@@ -102,30 +105,29 @@ $nombre = $_SESSION["nombre"] ?? 'Familiar';
             align-items: center;
         }
 
-        .nav-item {
-            text-decoration: none;
-            color: #4b5563;
-            font-weight: 500;
-            font-size: 15px;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 18px;
-            border-radius: 12px;
-        }
+       .nav-item {
+    text-decoration: none; 
+    color: #d1d5db; /* Gris claro */
+    font-weight: 500; 
+    font-size: 15px;
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    padding: 10px 18px; 
+    border-radius: 12px; 
+    transition: 0.2s;
+}
 
-        .nav-item:hover {
-            color: var(--primary);
-            background: rgba(59, 130, 246, 0.05);
-        }
+.nav-item:hover { 
+    color: #ffffff; 
+    background: rgba(255, 255, 255, 0.1); 
+}
 
-        /* Estilo para el botón activo (como en la imagen) */
-        .nav-item.active {
-            color: var(--primary);
-            background: rgba(59, 130, 246, 0.1);
-            font-weight: 600;
-        }
+.nav-item.active { 
+    color: #60a5fa; /* Azul claro para resaltar más */
+    background: rgba(96, 165, 250, 0.15); 
+    font-weight: 600; 
+}
 
         .user-actions {
             display: flex;
