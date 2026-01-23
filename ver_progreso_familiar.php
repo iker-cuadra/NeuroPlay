@@ -186,11 +186,27 @@ function formatSecondsToMMSS($segundos) {
         .btn-ver-rondas:hover { background: var(--primary); color: white; }
 
         /* CONTENEDOR OCULTO */
-        .rondas-wrapper {
-            display: none; /* OCULTO POR DEFECTO */
-            margin-top: 10px; padding: 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #edf2f7;
-            animation: fadeIn 0.3s ease;
-        }
+        /* CONTENEDOR CON ANIMACIÓN */
+.rondas-wrapper {
+    max-height: 0;        /* Empezamos sin altura */
+    overflow: hidden;     /* Escondemos el contenido que sobresale */
+    opacity: 0;           /* Transparente */
+    margin-top: 0; 
+    padding: 0 12px;      /* Padding lateral solamente al inicio */
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Animación suave */
+}
+
+/* Clase que aplicaremos con JavaScript */
+.rondas-wrapper.abierto {
+    max-height: 500px;    /* Un valor lo suficientemente alto */
+    opacity: 1;
+    margin-top: 10px;
+    padding: 12px;
+    border-color: #edf2f7;
+}
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
         .summary-box { font-weight: 700; color: #4a5568; display: block; margin-bottom: 8px; font-size: 13px; }
@@ -313,17 +329,19 @@ function formatSecondsToMMSS($segundos) {
     <script>
         // Función para desplegar/ocultar rondas
         function toggleDetalle(btn) {
-            const wrapper = btn.nextElementSibling;
-            const icon = btn.querySelector('i');
-            
-            if (wrapper.style.display === "block") {
-                wrapper.style.display = "none";
-                btn.innerHTML = '<i class="fas fa-chevron-down"></i> Ver Rondas';
-            } else {
-                wrapper.style.display = "block";
-                btn.innerHTML = '<i class="fas fa-chevron-up"></i> Ocultar Rondas';
-            }
-        }
+    const wrapper = btn.nextElementSibling;
+    const isOpened = wrapper.classList.contains('abierto');
+    
+    // Alternamos la clase 'abierto'
+    wrapper.classList.toggle('abierto');
+    
+    // Cambiamos el texto e icono del botón
+    if (isOpened) {
+        btn.innerHTML = '<i class="fas fa-chevron-down"></i> Ver Rondas';
+    } else {
+        btn.innerHTML = '<i class="fas fa-chevron-up"></i> Ocultar Rondas';
+    }
+}
 
         // Configuración de gráficas
         const datos = <?= $jsonGraficas ?>;
