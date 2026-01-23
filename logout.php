@@ -15,6 +15,6 @@ header("Pragma: no-cache");
 header("Expires: 0");
 
 // Redirigir a la pantalla principal
-header("Location: neuroplay/neuro.html");
+header("Location: neuro.html");
 exit;
 ?>
