@@ -201,7 +201,7 @@
     <div class="layout">
         <div class="header">
             <div class="user-role">Panel del Profesional</div>
-            <a href="neuro.html" class="logout-button">
+            <a href="logout.php" class="logout-button">
                 <i class="fas fa-sign-out-alt"></i> Cerrar sesión
             </a>
         </div>

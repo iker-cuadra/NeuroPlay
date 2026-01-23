@@ -229,7 +229,7 @@ $nombre = $_SESSION["nombre"] ?? 'Familiar';
 
         <div class="user-actions">
             <span class="role-badge">Familiar</span>
-            <a href="neuro.html" class="btn-logout">
+            <a href="logout.php" class="btn-logout">
                 Cerrar sesión
             </a>
         </div>
