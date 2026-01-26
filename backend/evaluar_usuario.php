@@ -1,7 +1,6 @@
 <?php
 // evaluar_usuario.php
 
-// Asegúrate de iniciar la sesión antes de cualquier salida
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
@@ -9,7 +8,6 @@ if (session_status() == PHP_SESSION_NONE) {
 require_once "includes/conexion.php";
 require_once "includes/auth.php";
 
-// Solo profesionales pueden acceder
 requireRole("profesional");
 
 // -------------------------
@@ -26,7 +24,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["save_evaluation"])) {
     $profesional_id = (int)($_SESSION["usuario_id"] ?? 0);
     $fecha          = date('Y-m-d H:i:s');
 
-    // Obtener los valores de dificultad del POST
     $memoria      = trim($_POST["memoria"] ?? "Fácil");
     $logica       = trim($_POST["logica"] ?? "Fácil");
     $razonamiento = trim($_POST["razonamiento"] ?? "Fácil");
@@ -35,7 +32,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["save_evaluation"])) {
     try {
         if ($user_id_post > 0 && $profesional_id > 0) {
 
-            // 1. Intentar actualizar la única fila para este usuario (UPSERT)
             $stmt_update = $conexion->prepare("
                 UPDATE dificultades_asignadas
                 SET dificultad_memoria       = ?,
@@ -56,7 +52,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["save_evaluation"])) {
                 $user_id_post
             ]);
 
-            // 2. Si no se actualizó ninguna fila (rowCount === 0), insertamos una nueva
             if ($stmt_update->rowCount() === 0) {
                 $stmt_insert = $conexion->prepare("
                     INSERT INTO dificultades_asignadas
@@ -88,13 +83,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["save_evaluation"])) {
         $_SESSION["flash_error"] = "Error al guardar dificultades: " . $e->getMessage();
     }
 
-    // Redirigir para evitar reenvío del formulario
     header("Location: evaluar_usuario.php?user_id=" . $user_id_post);
     exit;
 }
 
 // -------------------------
-// OBTENER ID DE USUARIO Y DATOS DE PERFIL (JOIN PARA EL FAMILIAR)
+// OBTENER ID DE USUARIO Y DATOS DE PERFIL
 // -------------------------
 $user_id = (int)($_GET['user_id'] ?? 0);
 $usuario = null;
@@ -114,27 +108,24 @@ if ($user_id > 0) {
     }
 }
 
-// Redirigir si el ID no es válido o el usuario no existe
 if (!$usuario) {
     header("Location: gestionar_users.php");
     exit;
 }
 
-// ----------------------------------------------------
-// FOTO DE PERFIL (predeterminada por rol o subida por usuario)
-// ----------------------------------------------------
+// -------------------------
+// FOTO PERFIL
+// -------------------------
 function resolverRutaFotoPerfil(array $usuario): string {
     $rol  = strtolower(trim((string)($usuario['rol'] ?? 'usuario')));
     $foto = trim((string)($usuario['foto'] ?? ''));
 
-    // Defaults por rol (en uploads/)
     $defaultPorRol = [
         'usuario'      => 'default_usuario.png',
         'familiar'     => 'default_familiar.png',
         'profesional'  => 'default_profesional.png',
     ];
 
-    // Nombres que consideramos "default genérico" (no personalizado)
     $defaults = [
         '',
         'default.png',
@@ -143,23 +134,16 @@ function resolverRutaFotoPerfil(array $usuario): string {
         'default_profesional.png',
     ];
 
-    // Seguridad: evitar rutas tipo ../
     $fotoSeguro = $foto !== '' ? basename($foto) : '';
-
-    // Carpeta de uploads
     $uploadsDirFisico = __DIR__ . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
 
-    // Si hay foto personalizada y existe, usarla
     if ($fotoSeguro !== '' && !in_array($fotoSeguro, $defaults, true)) {
         if (file_exists($uploadsDirFisico . $fotoSeguro)) {
             return 'uploads/' . $fotoSeguro;
         }
     }
 
-    // Si no hay foto o es default, escoger por rol
     $defaultElegido = $defaultPorRol[$rol] ?? 'default.png';
-
-    // Si el default por rol no existe, caer a default.png
     if (!file_exists($uploadsDirFisico . $defaultElegido)) {
         $defaultElegido = 'default.png';
     }
@@ -169,9 +153,9 @@ function resolverRutaFotoPerfil(array $usuario): string {
 
 $ruta_foto = resolverRutaFotoPerfil($usuario);
 
-// ----------------------------------------------------
-// CARGAR DATOS DE DIFICULTADES (tabla dificultades_asignadas)
-// ----------------------------------------------------
+// -------------------------
+// DIFICULTADES ASIGNADAS
+// -------------------------
 $stmt_eval = $conexion->prepare("
     SELECT dificultad_memoria,
            dificultad_logica,
@@ -186,20 +170,19 @@ $stmt_eval = $conexion->prepare("
 $stmt_eval->execute([$user_id]);
 $res = $stmt_eval->fetch(PDO::FETCH_ASSOC);
 
-// Definición de niveles para el dropdown y por defecto
 $niveles_opciones = [
     'Fácil'       => 'Fácil',
     'Intermedio'  => 'Intermedio',
     'Difícil'     => 'Difícil'
 ];
 
-// Configuración de niveles por defecto
 $niveles_actuales = [
     'memoria'      => ['nivel' => 'Fácil', 'asignador' => 'N/A', 'fecha' => 'N/A'],
     'logica'       => ['nivel' => 'Fácil', 'asignador' => 'N/A', 'fecha' => 'N/A'],
     'razonamiento' => ['nivel' => 'Fácil', 'asignador' => 'N/A', 'fecha' => 'N/A'],
     'atencion'     => ['nivel' => 'Fácil', 'asignador' => 'N/A', 'fecha' => 'N/A'],
 ];
+
 $ultima_actualizacion = 'N/A';
 $ultimo_profesional   = 'N/A';
 
@@ -222,10 +205,9 @@ if ($res) {
     $ultimo_profesional   = $asignador ?: 'N/A';
 }
 
-// ----------------------------------------------------
-// HISTORIAL DE RESULTADOS (tabla resultados_juego)
-// -> NO mostramos detalles_json, pero sí lo leemos si te sirve para calcular.
-// ----------------------------------------------------
+// -------------------------
+// HISTORIAL (NO mostramos detalles_json)
+// -------------------------
 $stmt_hist = $conexion->prepare("
     SELECT id, tipo_juego,
            puntuacion,
@@ -244,19 +226,9 @@ $stmt_hist = $conexion->prepare("
 $stmt_hist->execute([$user_id]);
 $historialResultados = $stmt_hist->fetchAll(PDO::FETCH_ASSOC);
 
-// Función para obtener las rondas de razonamiento
-function obtenerDetalleRondas($conexion, $resultado_id) {
-    $stmt = $conexion->prepare("
-        SELECT ronda, correcta, tiempo_segundos
-        FROM razonamiento_rondas
-        WHERE resultado_id = ?
-        ORDER BY ronda ASC
-    ");
-    $stmt->execute([$resultado_id]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-// Función para formatear segundos a mm:ss
+// -------------------------
+// Helpers
+// -------------------------
 function formatSecondsToMMSS($segundos) {
     $segundos = (int)$segundos;
     if ($segundos < 0) $segundos = 0;
@@ -265,19 +237,27 @@ function formatSecondsToMMSS($segundos) {
     return sprintf('%02d:%02d', $m, $s);
 }
 
-// Leer y limpiar flash
-$flash_success = $_SESSION["flash_success"];
-$flash_error   = $_SESSION["flash_error"];
-$_SESSION["flash_success"] = "";
-$_SESSION["flash_error"]   = "";
-
-// Helper: etiqueta juego
 function iconoJuego($tipo) {
     if ($tipo === 'memoria') return 'brain';
     if ($tipo === 'logica') return 'lightbulb';
     if ($tipo === 'razonamiento') return 'cogs';
     return 'bullseye';
 }
+
+$flash_success = $_SESSION["flash_success"];
+$flash_error   = $_SESSION["flash_error"];
+$_SESSION["flash_success"] = "";
+$_SESSION["flash_error"]   = "";
+
+// Juegos presentes y contadores
+$juegosDisponibles = [];
+$counts = ['memoria'=>0,'logica'=>0,'razonamiento'=>0,'atencion'=>0];
+foreach ($historialResultados as $f) {
+    $t = $f['tipo_juego'] ?? '';
+    if ($t !== '') $juegosDisponibles[$t] = true;
+    if (isset($counts[$t])) $counts[$t]++;
+}
+$totalCount = count($historialResultados);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -290,16 +270,17 @@ function iconoJuego($tipo) {
 <style>
 :root{
     --header-h: 160px;
-    --footer-h: 160px;
     --bg: #f0f2f5;
     --card: #ffffff;
     --shadow: 0 12px 30px rgba(0,0,0,0.10);
     --radius: 20px;
     --text: #1d1d1f;
     --muted: #6c6c6c;
-    --btn: #4a4a4a;
-    --btn-hover: #5a5a5a;
+    --primary: #1e4db7;
+    --pill-bg: #eef2f7;
+    --pill-active: #3f3f3f;
 }
+
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; height: auto; }
 body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--text); }
@@ -332,6 +313,7 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
     position: absolute; bottom: 10px; left: 20px;
     color: white; font-weight: 700; font-size: 18px;
 }
+
 .page-content {
     flex: 1;
     display: flex;
@@ -339,6 +321,7 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
     align-items: flex-start;
     padding: 14px 16px;
 }
+
 .panel {
     width: min(1000px, 95vw);
     background: var(--card);
@@ -347,6 +330,7 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
     padding: 20px;
     margin-bottom: 14px;
 }
+
 .panel h1 {
     margin: 0 0 20px 0;
     font-size: 24px;
@@ -357,6 +341,7 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
     align-items: center;
     gap: 15px;
 }
+
 .flash{
     padding: 10px 12px;
     border-radius: 14px;
@@ -366,6 +351,7 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
 }
 .flash.success{ background:#e8fff0; color:#0a7a3a; border:1px solid #c9f2d7; }
 .flash.error{ background:#ffecec; color:#c0392b; border:1px solid #ffd0d0; }
+
 .profile-card {
     display: flex;
     align-items: center;
@@ -376,6 +362,7 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
     border: 1px solid #eef0f3;
     margin-bottom: 20px;
 }
+
 .profile-card img {
     width: 80px;
     height: 80px;
@@ -384,6 +371,7 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
     border: 3px solid #7a7676;
     flex-shrink: 0;
 }
+
 .profile-info h2 {
     margin: 0 0 5px 0;
     font-size: 20px;
@@ -394,7 +382,6 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
     font-size: 14px;
     color: var(--muted);
 }
-
 .familiar-tag {
     display: block;
     margin-top: 5px;
@@ -416,6 +403,11 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
 .role-badge.familiar{ background:#fce4ec; color:#ad1457; }
 .role-badge.profesional{ background:#e8f5e9; color:#2e7d32; }
 
+.update-info {
+    text-align: right; font-size: 13px; color: #4a4a4a; padding-bottom: 10px;
+}
+.update-info strong { color: #2e7d32; font-weight: 700; }
+
 .evaluation-form {
     background: white;
     padding: 15px;
@@ -430,7 +422,6 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
     margin-top: 10px;
     margin-bottom: 20px;
 }
-
 @media (max-width: 900px) { .evaluation-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .evaluation-grid { grid-template-columns: 1fr; } }
 
@@ -462,10 +453,7 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
     padding-top: 8px;
     border-top: 1px dashed #eee;
 }
-.update-info {
-    text-align: right; font-size: 13px; color: #4a4a4a; padding-bottom: 10px;
-}
-.update-info strong { color: #2e7d32; font-weight: 700; }
+
 .form-actions {
     display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; flex-wrap: wrap;
 }
@@ -476,15 +464,80 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
     cursor: pointer; transition: transform 0.2s ease, background 0.2s ease;
     white-space: nowrap; font-size: 14px;
 }
-.btn-save { background: #1e4db7; color: white; }
+.btn-save { background: var(--primary); color: white; }
 .btn-save:hover { background: #1a42a0; transform: translateY(-1px); }
 
 /* HISTORIAL */
 .history-card {
-    margin-top: 24px; padding: 16px 18px; background: #fcfcfd; border-radius: 18px; border: 1px solid #eef0f3; box-shadow: 0 6px 16px rgba(0,0,0,0.04);
+    margin-top: 24px;
+    padding: 16px 18px;
+    background: #fcfcfd;
+    border-radius: 18px;
+    border: 1px solid #eef0f3;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.04);
 }
 
-/* FIX 1: envolver tabla para que NO se salga y no rompa el layout */
+/* ---------- Filtros estilo "píldora" como tu ejemplo ---------- */
+.filter-shell{
+    width: 100%;
+    background: var(--pill-bg);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 999px;
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 12px 0 14px 0;
+}
+
+.filter-label{
+    font-weight: 800;
+    color: #1d1d1f;
+    padding: 0 6px 0 10px;
+    white-space: nowrap;
+}
+
+.filter-btn{
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    padding: 10px 14px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    color: #111;
+    transition: background .18s ease, transform .18s ease, color .18s ease;
+    white-space: nowrap;
+}
+.filter-btn i{ opacity: 0.9; }
+
+.filter-btn:hover{
+    transform: translateY(-1px);
+    background: rgba(255,255,255,0.65);
+}
+
+.filter-btn.active{
+    background: var(--pill-active);
+    color: #fff;
+    box-shadow: 0 10px 18px rgba(0,0,0,0.14);
+}
+.filter-btn.active i{ opacity: 1; }
+
+.filter-count{
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+    background: rgba(0,0,0,0.08);
+}
+.filter-btn.active .filter-count{
+    background: rgba(255,255,255,0.22);
+}
+
+/* Tabla */
 .table-wrap{
     width: 100%;
     overflow-x: auto;
@@ -492,7 +545,6 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
     border-radius: 12px;
 }
 
-/* FIX 2: min-width + fixed layout para que no empuje columnas fuera */
 .history-table {
     width: 100%;
     min-width: 860px;
@@ -501,7 +553,6 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
     font-size: 14px;
     background: #fff;
 }
-
 .history-table thead th {
     text-align: left;
     padding: 8px 6px;
@@ -523,7 +574,6 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
 .history-tag.razonamiento { background:#fff3e0; color:#e65100; }
 .history-tag.atencion { background:#ede7f6; color:#4527a0; }
 
-/* Detalles expandibles */
 .details-container {
     padding: 20px;
     background: #f8f9fa;
@@ -558,7 +608,6 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
 .stat-box .stat-value.error { color: #c62828; }
 .stat-box .stat-value.neutral { color: #1976d2; }
 
-/* Info específica por tipo de juego */
 .game-specific-info {
     margin-top: 15px;
     padding: 15px;
@@ -591,57 +640,16 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
 }
 .info-badge.success { background: #e8f5e9; color: #2e7d32; }
 .info-badge.error { background: #ffebee; color: #c62828; }
-.info-badge.info { background: #e3f2fd; color: #1976d2; }
 
-/* Razonamiento rondas */
-.rondas-container {
-    padding: 15px;
-    border-left: 5px solid #e65100;
-    margin-top: 15px;
-    background: #fff;
-    border-radius: 8px;
-}
-.rondas-container h4 {
-    margin: 0 0 15px 0;
-    font-size: 14px;
-    color: #e65100;
-    font-weight: 700;
-}
-.rondas-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-    gap: 10px;
-}
-.ronda-item {
-    border: 1px solid #eee;
-    padding: 10px;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    background: #fafafa;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.ronda-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-.ronda-item .ronda-num {
-    font-weight: 700;
-    font-size: 13px;
-    color: #666;
-    text-transform: uppercase;
-}
-.ronda-item .ronda-status { font-size: 20px; }
-.ronda-item .ronda-time {
-    font-size: 12px;
+.no-results{
+    padding: 12px 12px;
+    border: 1px dashed #d6dbe6;
+    background: #ffffff;
+    border-radius: 14px;
+    color: #555;
     font-weight: 600;
-    color: #1976d2;
-}
-
-@media (max-width: 600px) {
-    .details-stats { grid-template-columns: repeat(2, 1fr); }
+    margin-top: 10px;
+    display:none;
 }
 </style>
 </head>
@@ -732,16 +740,62 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
             </form>
 
             <div class="history-card">
-                <h2><i class="fas fa-history"></i> Historial de resultados detallado</h2>
-                <p style="font-size:14px; color:var(--muted);">Últimas 30 partidas jugadas por este usuario con información completa.</p>
+                <h2><i class="fas fa-history"></i> Historial de resultados</h2>
+                <p style="font-size:14px; color:var(--muted);">Últimas 30 partidas jugadas por este usuario.</p>
 
                 <?php if (empty($historialResultados)): ?>
                     <p>Este usuario aún no tiene partidas registradas.</p>
                 <?php else: ?>
 
-                    <!-- WRAP para evitar que se rompa el layout en pantallas pequeñas -->
+                    <!-- FILTROS estilo píldora -->
+                    <div class="filter-shell" role="group" aria-label="Filtrar historial por juego">
+                        <div class="filter-label">Ver:</div>
+
+                        <button type="button" class="filter-btn active" data-filter="all">
+                            <i class="fas fa-layer-group"></i>
+                            Todos
+                            <span class="filter-count"><?= (int)$totalCount ?></span>
+                        </button>
+
+                        <?php if (!empty($juegosDisponibles['memoria'])): ?>
+                            <button type="button" class="filter-btn" data-filter="memoria">
+                                <i class="fas fa-brain"></i>
+                                Memoria
+                                <span class="filter-count"><?= (int)$counts['memoria'] ?></span>
+                            </button>
+                        <?php endif; ?>
+
+                        <?php if (!empty($juegosDisponibles['logica'])): ?>
+                            <button type="button" class="filter-btn" data-filter="logica">
+                                <i class="fas fa-lightbulb"></i>
+                                Lógica
+                                <span class="filter-count"><?= (int)$counts['logica'] ?></span>
+                            </button>
+                        <?php endif; ?>
+
+                        <?php if (!empty($juegosDisponibles['razonamiento'])): ?>
+                            <button type="button" class="filter-btn" data-filter="razonamiento">
+                                <i class="fas fa-cogs"></i>
+                                Razonamiento
+                                <span class="filter-count"><?= (int)$counts['razonamiento'] ?></span>
+                            </button>
+                        <?php endif; ?>
+
+                        <?php if (!empty($juegosDisponibles['atencion'])): ?>
+                            <button type="button" class="filter-btn" data-filter="atencion">
+                                <i class="fas fa-bullseye"></i>
+                                Atención
+                                <span class="filter-count"><?= (int)$counts['atencion'] ?></span>
+                            </button>
+                        <?php endif; ?>
+                    </div>
+
+                    <div id="no-results" class="no-results">
+                        No hay resultados para este filtro.
+                    </div>
+
                     <div class="table-wrap">
-                        <table class="history-table">
+                        <table class="history-table" id="history-table">
                             <thead>
                             <tr>
                                 <th style="width:160px;">Fecha</th>
@@ -756,37 +810,21 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
                             <?php foreach ($historialResultados as $fila):
                                 $tipo = $fila['tipo_juego'] ?? '';
 
-                                // NO mostrar JSON: lo decodificamos solo si lo necesitas internamente (ahora NO se imprime)
+                                // No mostramos JSON, solo lo leemos por si lo usas más adelante
                                 $detalles_json_arr = !empty($fila['detalles_json']) ? json_decode($fila['detalles_json'], true) : null;
 
                                 $aciertos = isset($fila['aciertos']) ? (int)$fila['aciertos'] : 0;
                                 $fallos   = isset($fila['fallos']) ? (int)$fila['fallos'] : 0;
                                 $nivel_alcanzado = isset($fila['nivel_alcanzado']) ? (string)$fila['nivel_alcanzado'] : '';
 
-                                // Para razonamiento: si no vienen aciertos/fallos, calculamos desde rondas
-                                $rondas = [];
-                                if ($tipo === 'razonamiento') {
-                                    $rondas = obtenerDetalleRondas($conexion, (int)$fila['id']);
-                                    if (($aciertos === 0 && $fallos === 0) && !empty($rondas)) {
-                                        $aciertos_calc = 0;
-                                        foreach ($rondas as $r) {
-                                            if (!empty($r['correcta'])) $aciertos_calc++;
-                                        }
-                                        $aciertos = $aciertos_calc;
-                                        $fallos = count($rondas) - $aciertos_calc;
-                                        if ($nivel_alcanzado === '' || $nivel_alcanzado === '0') {
-                                            $nivel_alcanzado = (string)count($rondas);
-                                        }
-                                    }
-                                }
-
-                                // Formato fecha
                                 $fechaCell = 'N/A';
                                 if (!empty($fila['fecha_juego'])) {
                                     $fechaCell = date('d/m/Y H:i', strtotime($fila['fecha_juego']));
                                 }
+
+                                $rowId = (int)$fila['id'];
                             ?>
-                                <tr>
+                                <tr class="history-row" data-game="<?= htmlspecialchars($tipo) ?>">
                                     <td style="white-space: nowrap;"><?= htmlspecialchars($fechaCell) ?></td>
                                     <td>
                                         <span class="history-tag <?= htmlspecialchars($tipo) ?>">
@@ -804,15 +842,14 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
                                     <td>
                                         <button
                                             type="button"
-                                            class="btn-details"
-                                            onclick="toggleDetails(<?= (int)$fila['id'] ?>)"
-                                            style="background: #1e4db7; color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600;">
+                                            onclick="toggleDetails(<?= $rowId ?>)"
+                                            style="background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700;">
                                             <i class="fas fa-chevron-down"></i> Ver más
                                         </button>
                                     </td>
                                 </tr>
 
-                                <tr id="details-<?= (int)$fila['id'] ?>" style="display: none; background: #fdfdfd;">
+                                <tr id="details-<?= $rowId ?>" class="details-row" data-game="<?= htmlspecialchars($tipo) ?>" style="display:none; background:#fdfdfd;">
                                     <td colspan="6" style="padding: 0;">
                                         <div class="details-container">
 
@@ -850,7 +887,6 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
                                                 </div>
                                             </div>
 
-                                            <!-- Info específica por juego (SIN imprimir JSON) -->
                                             <?php if ($tipo === 'memoria'): ?>
                                                 <div class="game-specific-info">
                                                     <h5><i class="fas fa-brain"></i> Detalles del Juego de Memoria</h5>
@@ -862,7 +898,7 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
 
                                             <?php elseif ($tipo === 'logica'): ?>
                                                 <div class="game-specific-info">
-                                                    <h5><i class="fas fa-lightbulb"></i> Detalles del Juego de Lógica (Sudoku 4x4)</h5>
+                                                    <h5><i class="fas fa-lightbulb"></i> Detalles del Juego de Lógica</h5>
                                                     <p><strong>Aciertos/Fallos:</strong>
                                                         <span class="info-badge success"><?= (int)$aciertos ?> aciertos</span>
                                                         <span class="info-badge error"><?= (int)$fallos ?> fallos</span>
@@ -870,6 +906,7 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
                                                 </div>
 
                                             <?php elseif ($tipo === 'razonamiento'): ?>
+                                                <!-- Pedido: NO mostrar rondas. Solo aciertos y fallos -->
                                                 <div class="game-specific-info">
                                                     <h5><i class="fas fa-cogs"></i> Detalles del Juego de Razonamiento</h5>
                                                     <p><strong>Aciertos/Fallos:</strong>
@@ -877,25 +914,6 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
                                                         <span class="info-badge error"><?= (int)$fallos ?> fallos</span>
                                                     </p>
                                                 </div>
-
-                                                <?php if (!empty($rondas)): ?>
-                                                    <div class="rondas-container">
-                                                        <h4><i class="fas fa-list"></i> Desglose Detallado de Rondas</h4>
-                                                        <div class="rondas-grid">
-                                                            <?php foreach ($rondas as $r): ?>
-                                                                <div class="ronda-item">
-                                                                    <span class="ronda-num">Ronda <?= (int)$r['ronda'] ?></span>
-                                                                    <span class="ronda-status">
-                                                                        <?= !empty($r['correcta'])
-                                                                            ? '<i class="fas fa-check-circle" style="color: #2e7d32;"></i>'
-                                                                            : '<i class="fas fa-times-circle" style="color: #c62828;"></i>' ?>
-                                                                    </span>
-                                                                    <span class="ronda-time"><?= (int)$r['tiempo_segundos'] ?>s</span>
-                                                                </div>
-                                                            <?php endforeach; ?>
-                                                        </div>
-                                                    </div>
-                                                <?php endif; ?>
 
                                             <?php elseif ($tipo === 'atencion'): ?>
                                                 <div class="game-specific-info">
@@ -916,26 +934,65 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
                     </div>
 
                 <?php endif; ?>
-
             </div>
+
         </div>
     </div>
 </div>
 
 <script>
+function closeAllDetails() {
+    document.querySelectorAll('tr[id^="details-"]').forEach(r => {
+        r.style.display = 'none';
+    });
+}
+
 function toggleDetails(id) {
-    // Abre/cierra la fila de detalles y cierra las demás
     const row = document.getElementById('details-' + id);
     if (!row) return;
 
     const isOpen = (row.style.display === 'table-row');
 
-    document.querySelectorAll('tr[id^="details-"]').forEach(r => {
+    closeAllDetails();
+    row.style.display = isOpen ? 'none' : 'table-row';
+}
+
+function applyFilter(filter) {
+    closeAllDetails();
+
+    const rows = document.querySelectorAll('.history-row');
+    const noResults = document.getElementById('no-results');
+
+    let visibleCount = 0;
+
+    rows.forEach(r => {
+        const game = (r.dataset.game || '').toLowerCase();
+        const show = (filter === 'all') ? true : (game === filter);
+        r.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+    });
+
+    // Siempre ocultamos detalles al filtrar
+    document.querySelectorAll('.details-row').forEach(r => {
         r.style.display = 'none';
     });
 
-    row.style.display = isOpen ? 'none' : 'table-row';
+    if (noResults) noResults.style.display = (visibleCount === 0) ? 'block' : 'none';
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btns = document.querySelectorAll('.filter-btn');
+    btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            btns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const filter = (btn.dataset.filter || 'all').toLowerCase();
+            applyFilter(filter);
+        });
+    });
+
+    applyFilter('all');
+});
 </script>
 </body>
 </html>
