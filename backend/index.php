@@ -73,7 +73,7 @@ html, body {
  
 .login-left {
     flex: 0 0 50%;
-    background: url('imagenes/imglogin.svg') no-repeat center center;
+    background: url('../frontend/imagenes/imglogin.svg') no-repeat center center;
     background-size: cover;
     border-right: 1px solid rgba(255, 255, 255, 0.1);
 }

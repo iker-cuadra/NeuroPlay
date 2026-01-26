@@ -240,13 +240,13 @@ $nombre = $_SESSION["nombre"] ?? 'Familiar';
     <div class="layout">
         <div class="main-section">
             <div class="card" onclick="location.href='ver_progreso_familiar.php'">
-                <img src="imagenes/progreso.svg" alt="Progreso">
+                <img src="../frontend/imagenes/progreso.svg" alt="Progreso">
                 <h2>Progreso</h2>
                 <p class="card-subtitle">Ver evolución del usuario</p>
             </div>
 
             <div class="card" onclick="location.href='lista_profesionales.php'">
-                <img src="imagenes/chat.svg" alt="Profesionales">
+                <img src="../frontend/imagenes/chat.svg" alt="Profesionales">
                 <h2>Profesionales</h2>
                 <p class="card-subtitle">Contactar con el centro</p>
             </div>

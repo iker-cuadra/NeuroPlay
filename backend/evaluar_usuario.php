@@ -122,7 +122,7 @@ if (!$usuario) {
 // Lógica para determinar la ruta de la foto
 $ruta_foto = 'uploads/default.png';
 if ($usuario['rol'] === 'profesional' && $usuario['foto'] === 'default.png') {
-    $ruta_foto = 'imagenes/admin.jpg';
+    $ruta_foto = '../frontend/imagenes/admin.jpg';
 } elseif (!empty($usuario['foto']) && $usuario['foto'] !== 'default.png') {
     $ruta_foto = 'uploads/' . htmlspecialchars($usuario['foto']);
 }
@@ -248,7 +248,7 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
 .header{
     width: 100%;
     height: var(--header-h);
-    background-image: url('imagenes/Banner.svg');
+    background-image: url('../frontend/imagenes/Banner.svg');
     background-size: cover;
     background-position: center;
     position: relative;

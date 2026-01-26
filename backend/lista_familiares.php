@@ -73,7 +73,7 @@ try {
         .header{
             width: 100%;
             height: var(--header-h);
-            background-image: url('imagenes/Banner.svg');
+            background-image: url('../frontend/imagenes/Banner.svg');
             background-size: cover;
             background-position: center;
             position: relative;
@@ -208,7 +208,7 @@ try {
             <?php foreach ($familiares as $familiar):
                 // Ruta de la foto: default o subida
                 $ruta_foto = (empty($familiar['foto']) || $familiar['foto'] === 'default.png')
-                    ? 'imagenes/avatar_default.png'
+                    ? '../frontend/imagenes/avatar_default.png'
                     : 'uploads/' . htmlspecialchars($familiar['foto']);
                 ?>
                 <div class="familiar-card"

@@ -57,7 +57,7 @@
         .header{
             width: 100%;
             height: var(--header-h);
-            background-image: url('imagenes/Banner.svg');
+            background-image: url('../frontend/imagenes/Banner.svg');
             background-size: cover;
             background-position: center;
             position: relative;
@@ -208,13 +208,13 @@
 
         <div class="main-section">
             <div class="card card-label" onclick="location.href='gestionar_users.php'">
-                <img src="imagenes/users.svg" alt="Usuarios">
+                <img src="../frontend/imagenes/users.svg" alt="Usuarios">
                 <h2>Usuarios</h2>
                 <p class="card-subtitle">Gestionar</p>
             </div>
 
             <div class="card card-label" onclick="location.href='lista_familiares.php'">
-                <img src="imagenes/family.svg" alt="Familiares">
+                <img src="../frontend/imagenes/family.svg" alt="Familiares">
                 <h2>Familiares</h2>
                 <p class="card-subtitle">Chatear</p>
             </div>

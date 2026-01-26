@@ -292,7 +292,7 @@ try {
         <div class="profesionales-grid">
             <?php if (count($profesionales) > 0): ?>
                 <?php foreach ($profesionales as $profesional):
-                    $ruta_foto = ($profesional['foto'] === 'default.png') ? 'imagenes/admin.jpg' : 'uploads/' . htmlspecialchars($profesional['foto']);
+                    $ruta_foto = ($profesional['foto'] === 'default.png') ? '../frontend/imagenes/admin.jpg' : 'uploads/' . htmlspecialchars($profesional['foto']);
                     ?>
                     <div class="profesional-card" onclick="location.href='chat.php?destinatario_id=<?= $profesional['id'] ?>'">
                         <img src="<?= $ruta_foto ?>" alt="Perfil">
