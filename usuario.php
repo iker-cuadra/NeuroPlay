@@ -222,7 +222,7 @@ $nombre = $_SESSION["nombre"];
         <div class="game-card" onclick="location.href='juegos/logicajuego/logica.php'" style="background: rgba(189, 253, 176, 0.85);">
             <h2>Lógica</h2>
             <div class="image-wrapper">
-                <img src="imagenes/logica.jpg" alt="Lógica">
+                <img src="../../imagenes/logica.jpg" alt="Lógica">
             </div>
             <div class="btn-play btn-premium">Jugar</div>
         </div>
@@ -230,7 +230,7 @@ $nombre = $_SESSION["nombre"];
         <div class="game-card" onclick="location.href='juegos/memoriajuego/memoria.php'" style="background: rgba(200, 235, 255, 0.85);">
             <h2>Memoria</h2>
             <div class="image-wrapper">
-                <img src="imagenes/memoria.jpg" alt="Memoria">
+                <img src="../../imagenes/memoria.jpg" alt="Memoria">
             </div>
             <div class="btn-play btn-premium">Jugar</div>
         </div>
