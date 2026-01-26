@@ -21,7 +21,7 @@ if (!isset($_SESSION["flash_error"])) $_SESSION["flash_error"] = "";
 // -------------------------
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["save_evaluation"])) {
     $user_id_post   = (int)($_POST["user_id"] ?? 0);
-    $profesional_id = $_SESSION["usuario_id"] ?? 0;
+    $profesional_id = (int)($_SESSION["usuario_id"] ?? 0);
     $fecha          = date('Y-m-d H:i:s');
 
     // Obtener los valores de dificultad del POST
@@ -92,18 +92,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["save_evaluation"])) {
 }
 
 // -------------------------
-// OBTENER ID DE USUARIO Y DATOS DE PERFIL (MODIFICADO CON JOIN PARA EL FAMILIAR)
+// OBTENER ID DE USUARIO Y DATOS DE PERFIL (JOIN PARA EL FAMILIAR)
 // -------------------------
 $user_id = (int)($_GET['user_id'] ?? 0);
 $usuario = null;
 
 if ($user_id > 0) {
     try {
-        // Realizamos un LEFT JOIN con la misma tabla para obtener el nombre del familiar
         $stmt = $conexion->prepare("
-            SELECT u1.id, u1.nombre, u1.email, u1.rol, u1.foto, u2.nombre AS nombre_familiar 
-            FROM usuarios u1 
-            LEFT JOIN usuarios u2 ON u1.familiar_id = u2.id 
+            SELECT u1.id, u1.nombre, u1.email, u1.rol, u1.foto, u2.nombre AS nombre_familiar
+            FROM usuarios u1
+            LEFT JOIN usuarios u2 ON u1.familiar_id = u2.id
             WHERE u1.id = ?
         ");
         $stmt->execute([$user_id]);
@@ -153,10 +152,9 @@ function resolverRutaFotoPerfil(array $usuario): string {
         if (file_exists($uploadsDirFisico . $fotoSeguro)) {
             return 'uploads/' . $fotoSeguro;
         }
-        // Si no existe físicamente, caer al default por rol
     }
 
-    // Si no hay foto o es default genérico, escoger por rol
+    // Si no hay foto o es default, escoger por rol
     $defaultElegido = $defaultPorRol[$rol] ?? 'default.png';
 
     // Si el default por rol no existe, caer a default.png
@@ -209,8 +207,8 @@ if ($res) {
     $niveles_actuales['razonamiento']['nivel'] = htmlspecialchars($res['dificultad_razonamiento'] ?: 'Fácil');
     $niveles_actuales['atencion']['nivel']     = htmlspecialchars($res['dificultad_atencion']     ?: 'Fácil');
 
-    $asignador        = htmlspecialchars($res['asignador_nombre']);
-    $fecha_raw        = strtotime($res['fecha_actualizacion']);
+    $asignador        = htmlspecialchars($res['asignador_nombre'] ?? '');
+    $fecha_raw        = !empty($res['fecha_actualizacion']) ? strtotime($res['fecha_actualizacion']) : false;
     $fecha_formateada = $fecha_raw ? date('d/m/Y H:i', $fecha_raw) : 'N/A';
 
     foreach ($niveles_actuales as $key => $valor) {
@@ -224,24 +222,34 @@ if ($res) {
 
 // ----------------------------------------------------
 // HISTORIAL DE RESULTADOS (tabla resultados_juego)
+// AHORA incluye: aciertos, fallos, nivel_alcanzado, detalles_json
 // ----------------------------------------------------
 $stmt_hist = $conexion->prepare("
     SELECT id, tipo_juego,
            puntuacion,
            tiempo_segundos,
            dificultad,
-           fecha_juego
+           fecha_juego,
+           aciertos,
+           fallos,
+           nivel_alcanzado,
+           detalles_json
     FROM resultados_juego
     WHERE usuario_id = ?
     ORDER BY fecha_juego DESC
-    LIMIT 20
+    LIMIT 30
 ");
-$stmt_hist->execute([$user_id]);
+$stmt_hist->execute([$user_id]); // <-- CORREGIDO: antes tenías $usuario_id / $Susuario_id
 $historialResultados = $stmt_hist->fetchAll(PDO::FETCH_ASSOC);
 
 // Función para obtener las rondas de razonamiento
 function obtenerDetalleRondas($conexion, $resultado_id) {
-    $stmt = $conexion->prepare("SELECT ronda, correcta, tiempo_segundos FROM razonamiento_rondas WHERE resultado_id = ? ORDER BY ronda ASC");
+    $stmt = $conexion->prepare("
+        SELECT ronda, correcta, tiempo_segundos
+        FROM razonamiento_rondas
+        WHERE resultado_id = ?
+        ORDER BY ronda ASC
+    ");
     $stmt->execute([$resultado_id]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
@@ -377,7 +385,6 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
     color: var(--muted);
 }
 
-/* Nuevo estilo para la etiqueta del familiar */
 .familiar-tag {
     display: block;
     margin-top: 5px;
@@ -468,70 +475,132 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
 }
 .history-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .history-table thead th { text-align: left; padding: 8px 6px; border-bottom: 1px solid #e3e6ec; color: #777; font-weight: 600; }
-.history-table tbody td { padding: 8px 6px; border-bottom: 1px solid #f1f2f6; }
+.history-table tbody td { padding: 8px 6px; border-bottom: 1px solid #f1f2f6; vertical-align: top; }
 .history-tag { display: inline-block; padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: 600; }
 .history-tag.memoria { background:#e0f7fa; color:#006064; }
 .history-tag.logica { background:#e8f5e9; color:#2e7d32; }
 .history-tag.razonamiento { background:#fff3e0; color:#e65100; }
 .history-tag.atencion { background:#ede7f6; color:#4527a0; }
 
-/* Estilos para el desglose de rondas */
+/* Detalles expandibles */
+.details-container {
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 10px;
+}
+.details-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+.stat-box {
+    background: white;
+    padding: 12px 15px;
+    border-radius: 10px;
+    border: 1px solid #e3e6ec;
+    text-align: center;
+}
+.stat-box .stat-label {
+    font-size: 12px;
+    color: #777;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+.stat-box .stat-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: #2e7d32;
+}
+.stat-box .stat-value.error { color: #c62828; }
+.stat-box .stat-value.neutral { color: #1976d2; }
+
+/* Info específica por tipo de juego */
+.game-specific-info {
+    margin-top: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #e3e6ec;
+}
+.game-specific-info h5 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #555;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.game-specific-info p {
+    margin: 5px 0;
+    font-size: 13px;
+    color: #666;
+    line-height: 1.6;
+}
+.info-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 5px;
+}
+.info-badge.success { background: #e8f5e9; color: #2e7d32; }
+.info-badge.error { background: #ffebee; color: #c62828; }
+.info-badge.info { background: #e3f2fd; color: #1976d2; }
+
+/* Razonamiento rondas */
 .rondas-container {
     padding: 15px;
     border-left: 5px solid #e65100;
-    margin: 10px;
+    margin-top: 15px;
     background: #fff;
     border-radius: 8px;
 }
-
 .rondas-container h4 {
-    margin: 0 0 10px 0;
-    font-size: 13px;
+    margin: 0 0 15px 0;
+    font-size: 14px;
     color: #e65100;
+    font-weight: 700;
 }
-
 .rondas-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
     gap: 10px;
 }
-
 .ronda-item {
     border: 1px solid #eee;
-    padding: 8px 12px;
+    padding: 10px;
     border-radius: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     background: #fafafa;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
 .ronda-item:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
-
 .ronda-item .ronda-num {
     font-weight: 700;
-    font-size: 14px;
-    color: #333;
-}
-
-.ronda-item .ronda-status {
-    font-size: 18px;
-}
-
-.ronda-item .ronda-time {
-    font-size: 11px;
+    font-size: 13px;
     color: #666;
+    text-transform: uppercase;
+}
+.ronda-item .ronda-status { font-size: 20px; }
+.ronda-item .ronda-time {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1976d2;
 }
 
 @media (max-width: 600px) {
-    .rondas-grid {
-        grid-template-columns: repeat(5, 1fr);
-    }
+    .details-stats { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 </head>
@@ -587,7 +656,7 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
                 <input type="hidden" name="save_evaluation" value="1">
 
                 <div class="evaluation-grid">
-                    <?php 
+                    <?php
                     $conf = [
                         'logica' => ['icon' => 'lightbulb', 'label' => 'Lógica'],
                         'memoria' => ['icon' => 'brain', 'label' => 'Memoria'],
@@ -622,8 +691,8 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
             </form>
 
             <div class="history-card">
-                <h2><i class="fas fa-history"></i> Historial de resultados</h2>
-                <p style="font-size:14px; color:var(--muted);">Últimas 20 partidas jugadas por este usuario.</p>
+                <h2><i class="fas fa-history"></i> Historial de resultados detallado</h2>
+                <p style="font-size:14px; color:var(--muted);">Últimas 30 partidas jugadas por este usuario con información completa.</p>
 
                 <?php if (empty($historialResultados)): ?>
                     <p>Este usuario aún no tiene partidas registradas.</p>
@@ -636,61 +705,180 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
                             <th>Dificultad</th>
                             <th>Puntuación</th>
                             <th>Tiempo</th>
+                            <th>Detalles</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <?php foreach ($historialResultados as $fila): ?>
-                            <tr style="cursor: pointer;" onclick="toggleRondas(<?= $fila['id'] ?>)">
-                                <td><?= date('d/m/Y H:i', strtotime($fila['fecha_juego'])) ?></td>
+                        <?php foreach ($historialResultados as $fila):
+                            $tipo = $fila['tipo_juego'] ?? '';
+                            $detalles_json = !empty($fila['detalles_json']) ? json_decode($fila['detalles_json'], true) : null;
+
+                            $aciertos = isset($fila['aciertos']) ? (int)$fila['aciertos'] : 0;
+                            $fallos   = isset($fila['fallos']) ? (int)$fila['fallos'] : 0;
+                            $nivel_alcanzado = isset($fila['nivel_alcanzado']) ? (string)$fila['nivel_alcanzado'] : '';
+                        ?>
+                            <tr>
+                                <td style="white-space: nowrap;"><?= date('d/m/Y H:i', strtotime($fila['fecha_juego'])) ?></td>
                                 <td>
-                                    <span class="history-tag <?= htmlspecialchars($fila['tipo_juego']) ?>">
-                                        <?= ucfirst(htmlspecialchars($fila['tipo_juego'])) ?>
-                                        <?php if($fila['tipo_juego'] === 'razonamiento'): ?> 
-                                            <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 5px;"></i>
-                                        <?php endif; ?>
+                                    <span class="history-tag <?= htmlspecialchars($tipo) ?>">
+                                        <i class="fas fa-<?= $tipo === 'memoria' ? 'brain' : ($tipo === 'logica' ? 'lightbulb' : ($tipo === 'razonamiento' ? 'cogs' : 'bullseye')) ?>"></i>
+                                        <?= ucfirst(htmlspecialchars($tipo)) ?>
                                     </span>
                                 </td>
-                                <td><?= htmlspecialchars($fila['dificultad']) ?></td>
-                                <td><strong><?= (int)$fila['puntuacion'] ?>%</strong></td>
-                                <td><?= formatSecondsToMMSS($fila['tiempo_segundos']) ?> min</td>
+                                <td><strong><?= htmlspecialchars($fila['dificultad']) ?></strong></td>
+                                <td style="text-align: center;">
+                                    <strong style="font-size: 18px;"><?= (int)$fila['puntuacion'] ?>%</strong>
+                                </td>
+                                <td style="text-align: center; font-family: monospace; font-weight: 600;">
+                                    <?= formatSecondsToMMSS($fila['tiempo_segundos']) ?>
+                                </td>
+                                <td>
+                                    <button
+                                        type="button"
+                                        onclick="toggleDetails(<?= (int)$fila['id'] ?>)"
+                                        style="background: #1e4db7; color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600;">
+                                        <i class="fas fa-chevron-down"></i> Ver más
+                                    </button>
+                                </td>
                             </tr>
 
-                            <?php if ($fila['tipo_juego'] === 'razonamiento'): 
-                                $rondas = obtenerDetalleRondas($conexion, $fila['id']); ?>
-                                <tr id="rondas-<?= $fila['id'] ?>" style="display: none; background: #fdfdfd;">
-                                    <td colspan="5" style="padding: 0;">
-                                        <div class="rondas-container">
-                                            <h4>Desglose de las 10 Rondas</h4>
-                                            <div class="rondas-grid">
-                                                <?php foreach ($rondas as $r): ?>
-                                                    <div class="ronda-item">
-                                                        <span class="ronda-num">R<?= $r['ronda'] ?></span>
-                                                        <span class="ronda-status">
-                                                            <?= $r['correcta'] ? '<i class="fas fa-check-circle" style="color: #2e7d32;"></i>' : '<i class="fas fa-times-circle" style="color: #c62828;"></i>' ?>
-                                                        </span>
-                                                        <span class="ronda-time"><?= $r['tiempo_segundos'] ?>s</span>
-                                                    </div>
-                                                <?php endforeach; ?>
+                            <tr id="details-<?= (int)$fila['id'] ?>" style="display: none; background: #fdfdfd;">
+                                <td colspan="6" style="padding: 0;">
+                                    <div class="details-container">
+
+                                        <div class="details-stats">
+                                            <div class="stat-box">
+                                                <div class="stat-label">Puntuación Final</div>
+                                                <div class="stat-value"><?= (int)$fila['puntuacion'] ?>%</div>
+                                            </div>
+
+                                            <div class="stat-box">
+                                                <div class="stat-label">Tiempo Total</div>
+                                                <div class="stat-value neutral"><?= formatSecondsToMMSS($fila['tiempo_segundos']) ?></div>
+                                            </div>
+
+                                            <div class="stat-box">
+                                                <div class="stat-label">Dificultad</div>
+                                                <div class="stat-value neutral" style="font-size: 18px;"><?= htmlspecialchars($fila['dificultad']) ?></div>
+                                            </div>
+
+                                            <!-- NUEVO: columnas añadidas -->
+                                            <div class="stat-box">
+                                                <div class="stat-label">Aciertos</div>
+                                                <div class="stat-value"><?= $aciertos ?></div>
+                                            </div>
+
+                                            <div class="stat-box">
+                                                <div class="stat-label">Fallos</div>
+                                                <div class="stat-value error"><?= $fallos ?></div>
+                                            </div>
+
+                                            <div class="stat-box">
+                                                <div class="stat-label">Nivel alcanzado</div>
+                                                <div class="stat-value neutral" style="font-size: 16px;">
+                                                    <?= $nivel_alcanzado !== '' ? htmlspecialchars($nivel_alcanzado) : 'N/A' ?>
+                                                </div>
                                             </div>
                                         </div>
-                                    </td>
-                                </tr>
-                            <?php endif; ?>
+
+                                        <?php if ($tipo === 'memoria'): ?>
+                                            <div class="game-specific-info">
+                                                <h5><i class="fas fa-brain"></i> Detalles del Juego de Memoria</h5>
+                                                <p><strong>Aciertos/Fallos:</strong>
+                                                    <span class="info-badge success"><?= $aciertos ?> aciertos</span>
+                                                    <span class="info-badge error"><?= $fallos ?> fallos</span>
+                                                </p>
+                                                <?php if (is_array($detalles_json)): ?>
+                                                    <p><i class="fas fa-code"></i> <strong>Detalles (JSON):</strong> <?= htmlspecialchars(json_encode($detalles_json, JSON_UNESCAPED_UNICODE)) ?></p>
+                                                <?php endif; ?>
+                                            </div>
+
+                                        <?php elseif ($tipo === 'logica'): ?>
+                                            <div class="game-specific-info">
+                                                <h5><i class="fas fa-lightbulb"></i> Detalles del Juego de Lógica (Sudoku 4x4)</h5>
+                                                <p><strong>Aciertos/Fallos:</strong>
+                                                    <span class="info-badge success"><?= $aciertos ?> aciertos</span>
+                                                    <span class="info-badge error"><?= $fallos ?> fallos</span>
+                                                </p>
+                                                <?php if (is_array($detalles_json)): ?>
+                                                    <p><i class="fas fa-code"></i> <strong>Detalles (JSON):</strong> <?= htmlspecialchars(json_encode($detalles_json, JSON_UNESCAPED_UNICODE)) ?></p>
+                                                <?php endif; ?>
+                                            </div>
+
+                                        <?php elseif ($tipo === 'razonamiento'): ?>
+                                            <?php
+                                                $rondas = obtenerDetalleRondas($conexion, (int)$fila['id']);
+                                                // Si no guardaste aciertos/fallos en la tabla, los puedes calcular desde rondas.
+                                                if ($aciertos === 0 && $fallos === 0 && !empty($rondas)) {
+                                                    $aciertos_calc = 0;
+                                                    foreach ($rondas as $r) {
+                                                        if (!empty($r['correcta'])) $aciertos_calc++;
+                                                    }
+                                                    $aciertos = $aciertos_calc;
+                                                    $fallos = count($rondas) - $aciertos_calc;
+                                                }
+                                            ?>
+                                            <div class="game-specific-info">
+                                                <h5><i class="fas fa-cogs"></i> Detalles del Juego de Razonamiento</h5>
+                                                <p><strong>Aciertos/Fallos:</strong>
+                                                    <span class="info-badge success"><?= (int)$aciertos ?> aciertos</span>
+                                                    <span class="info-badge error"><?= (int)$fallos ?> fallos</span>
+                                                </p>
+                                                <?php if (is_array($detalles_json)): ?>
+                                                    <p><i class="fas fa-code"></i> <strong>Detalles (JSON):</strong> <?= htmlspecialchars(json_encode($detalles_json, JSON_UNESCAPED_UNICODE)) ?></p>
+                                                <?php endif; ?>
+                                            </div>
+
+                                            <?php if (!empty($rondas)): ?>
+                                                <div class="rondas-container">
+                                                    <h4><i class="fas fa-list"></i> Desglose Detallado de Rondas</h4>
+                                                    <div class="rondas-grid">
+                                                        <?php foreach ($rondas as $r): ?>
+                                                            <div class="ronda-item">
+                                                                <span class="ronda-num">Ronda <?= (int)$r['ronda'] ?></span>
+                                                                <span class="ronda-status">
+                                                                    <?= !empty($r['correcta'])
+                                                                        ? '<i class="fas fa-check-circle" style="color: #2e7d32;"></i>'
+                                                                        : '<i class="fas fa-times-circle" style="color: #c62828;"></i>' ?>
+                                                                </span>
+                                                                <span class="ronda-time"><?= (int)$r['tiempo_segundos'] ?>s</span>
+                                                            </div>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                </div>
+                                            <?php endif; ?>
+
+                                        <?php elseif ($tipo === 'atencion'): ?>
+                                            <div class="game-specific-info">
+                                                <h5><i class="fas fa-bullseye"></i> Detalles del Juego de Atención</h5>
+                                                <p><strong>Aciertos/Fallos:</strong>
+                                                    <span class="info-badge success"><?= $aciertos ?> aciertos</span>
+                                                    <span class="info-badge error"><?= $fallos ?> fallos</span>
+                                                </p>
+                                                <?php if (is_array($detalles_json)): ?>
+                                                    <p><i class="fas fa-code"></i> <strong>Detalles (JSON):</strong> <?= htmlspecialchars(json_encode($detalles_json, JSON_UNESCAPED_UNICODE)) ?></p>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
+
+                                    </div>
+                                </td>
+                            </tr>
                         <?php endforeach; ?>
                         </tbody>
                     </table>
                 <?php endif; ?>
+
             </div>
         </div>
     </div>
 </div>
 
 <script>
-function toggleRondas(id) {
-    const detalle = document.getElementById('rondas-' + id);
-    if (detalle) {
-        detalle.style.display = (detalle.style.display === 'none') ? 'table-row' : 'none';
-    }
+function toggleDetails(id) {
+    const row = document.getElementById('details-' + id);
+    if (!row) return;
+    row.style.display = (row.style.display === 'none' || row.style.display === '') ? 'table-row' : 'none';
 }
 </script>
 </body>
