@@ -58,7 +58,7 @@ $nombre = $_SESSION["nombre"];
         .header {
             width: 100%;
             height: 160px;
-            background-image: url('imagenes/Banner.svg');
+            background-image: url('../../imagenes/Banner.svg');
             background-size: cover;
             background-position: center;
             position: relative;
@@ -238,7 +238,7 @@ $nombre = $_SESSION["nombre"];
         <div class="game-card" onclick="location.href='juegos/razonamientojuego/razonamiento.php'" style="background: rgba(252, 209, 160, 0.85);">
             <h2>Razonamiento</h2>
             <div class="image-wrapper">
-                <img src="imagenes/razonamiento.jpg" alt="Razonamiento">
+                <img src="../../imagenes/razonamiento.jpg" alt="Razonamiento">
             </div>
             <div class="btn-play btn-premium">Jugar</div>
         </div>
@@ -246,7 +246,7 @@ $nombre = $_SESSION["nombre"];
         <div class="game-card" onclick="location.href='juegos/atencionjuego/atencion.php'" style="background: rgba(255, 164, 164, 0.85);">
             <h2>Atención</h2>
             <div class="image-wrapper">
-                <img src="imagenes/atencion.png" alt="Atención">
+                <img src="../../imagenes/atencion.png" alt="Atención">
             </div>
             <div class="btn-play btn-premium">Jugar</div>
         </div>
