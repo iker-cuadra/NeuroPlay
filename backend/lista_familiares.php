@@ -1,4 +1,4 @@
-<?php
+<?php 
 // Asegúrate de incluir tu conexión y autenticación
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -15,18 +15,69 @@ if (!isset($conexion) || !($conexion instanceof PDO)) {
 }
 
 try {
-    // Consulta para seleccionar la información de los familiares
+    // Incluimos el usuario asociado (u2) mediante LEFT JOIN (u1 = familiar)
     $stmt = $conexion->prepare("
-        SELECT id, nombre, email, foto
-        FROM usuarios 
-        WHERE rol = 'familiar'
-        ORDER BY nombre ASC
+        SELECT 
+            u1.id, u1.nombre, u1.email, u1.foto, u1.rol,
+            u2.nombre AS usuario_asociado
+        FROM usuarios u1
+        LEFT JOIN usuarios u2 ON u2.familiar_id = u1.id AND u2.rol = 'usuario'
+        WHERE u1.rol = 'familiar'
+        ORDER BY u1.nombre ASC
     ");
     $stmt->execute();
     $familiares = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {
     die("Error al cargar la lista de familiares: " . $e->getMessage());
+}
+
+// ----------------------------------------------------
+// FOTO DE PERFIL (predeterminada por rol o subida por usuario)
+// ----------------------------------------------------
+function resolverRutaFotoPerfil(array $u): string {
+    $rol  = strtolower(trim((string)($u['rol'] ?? 'usuario')));
+    $foto = trim((string)($u['foto'] ?? ''));
+
+    // Defaults por rol (en uploads/)
+    $defaultPorRol = [
+        'usuario'      => 'default_usuario.png',
+        'familiar'     => 'default_familiar.png',
+        'profesional'  => 'default_profesional.png',
+    ];
+
+    // Nombres que consideramos "default genérico" (no personalizado)
+    $defaults = [
+        '',
+        'default.png',
+        'default_usuario.png',
+        'default_familiar.png',
+        'default_profesional.png',
+    ];
+
+    // Seguridad: evitar rutas tipo ../
+    $fotoSeguro = $foto !== '' ? basename($foto) : '';
+
+    // Carpeta de uploads
+    $uploadsDirFisico = __DIR__ . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
+
+    // Si hay foto personalizada y existe, usarla
+    if ($fotoSeguro !== '' && !in_array($fotoSeguro, $defaults, true)) {
+        if (file_exists($uploadsDirFisico . $fotoSeguro)) {
+            return 'uploads/' . $fotoSeguro;
+        }
+        // Si no existe físicamente, caer al default por rol
+    }
+
+    // Si no hay foto o es default genérico, escoger por rol
+    $defaultElegido = $defaultPorRol[$rol] ?? 'default.png';
+
+    // Si el default por rol no existe, caer a default.png
+    if (!file_exists($uploadsDirFisico . $defaultElegido)) {
+        $defaultElegido = 'default.png';
+    }
+
+    return 'uploads/' . $defaultElegido;
 }
 ?>
 <!DOCTYPE html>
@@ -163,7 +214,19 @@ try {
         .familiar-card p {
             font-size: 0.9rem;
             color: #777;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+        }
+
+        .asociado {
+            font-size: 0.85rem;
+            color: #4a4a4a;
+            font-weight: 600;
+            margin-bottom: 18px;
+        }
+
+        .asociado span {
+            font-weight: 700;
+            color: #2563eb;
         }
 
         .chat-indicator {
@@ -206,17 +269,22 @@ try {
     <div class="main-section">
         <?php if (count($familiares) > 0): ?>
             <?php foreach ($familiares as $familiar):
-                // Ruta de la foto: default o subida
-                $ruta_foto = (empty($familiar['foto']) || $familiar['foto'] === 'default.png')
-                    ? '../frontend/imagenes/avatar_default.png'
-                    : 'uploads/' . htmlspecialchars($familiar['foto']);
+                // Ruta de la foto: predeterminada por rol o subida por usuario
+                $ruta_foto = resolverRutaFotoPerfil($familiar);
+
+                $nombre_asociado = trim((string)($familiar['usuario_asociado'] ?? ''));
                 ?>
                 <div class="familiar-card"
                     onclick="window.location='chat.php?destinatario_id=<?= htmlspecialchars($familiar['id']) ?>'">
-                    <img src="<?= $ruta_foto ?>" alt="Perfil de <?= htmlspecialchars($familiar['nombre']) ?>">
+                    <img src="<?= htmlspecialchars($ruta_foto) ?>" alt="Perfil de <?= htmlspecialchars($familiar['nombre']) ?>">
 
                     <h2><?= htmlspecialchars($familiar['nombre']) ?></h2>
                     <p><?= htmlspecialchars($familiar['email']) ?></p>
+
+                    <div class="asociado">
+                        Usuario asociado:
+                        <span><?= $nombre_asociado !== '' ? htmlspecialchars($nombre_asociado) : 'Sin asignar' ?></span>
+                    </div>
 
                     <div class="chat-indicator">
                         <i class="fas fa-comment-dots"></i> Iniciar Conversación

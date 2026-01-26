@@ -58,7 +58,7 @@ $nombre = $_SESSION["nombre"];
         .header {
             width: 100%;
             height: 160px;
-            background-image: url('../../imagenes/Banner.svg');
+            background-image: url('../frontend/imagenes/Banner.svg');
             background-size: cover;
             background-position: center;
             position: relative;
