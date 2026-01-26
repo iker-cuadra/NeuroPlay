@@ -47,6 +47,42 @@ function qs_keep(array $extra = []): string {
 }
 
 // -------------------------
+// FOTO POR DEFECTO SEGÚN ROL (solo si NO hay foto manual)
+// -------------------------
+function foto_por_defecto_por_rol(string $rol): string {
+    switch ($rol) {
+        case "usuario": return "default_usuario.png";
+        case "familiar": return "default_familiar.png";
+        case "profesional": return "default_profesional.png";
+        default: return "default.png";
+    }
+}
+
+function foto_a_mostrar(?string $foto, string $rol): string {
+    $foto = trim((string)$foto);
+
+    // Si no hay foto guardada -> usar default por rol
+    if ($foto === "") {
+        return foto_por_defecto_por_rol($rol);
+    }
+
+    // Si la foto guardada es alguna "default", entonces mostrar la default del rol actual
+    $defaults = [
+        "default.png",
+        "default_usuario.png",
+        "default_familiar.png",
+        "default_profesional.png"
+    ];
+
+    if (in_array($foto, $defaults, true)) {
+        return foto_por_defecto_por_rol($rol);
+    }
+
+    // Si no es default, es foto manual -> se respeta
+    return $foto;
+}
+
+// -------------------------
 // ELIMINAR USUARIO (GET)
 // -------------------------
 if (isset($_GET['eliminar_id'])) {
@@ -56,11 +92,21 @@ if (isset($_GET['eliminar_id'])) {
         $stmt_msg = $conexion->prepare("DELETE FROM mensajes WHERE remitente_id = ? OR destinatario_id = ?");
         $stmt_msg->execute([$eliminar_id, $eliminar_id]);
 
-        $stmt_foto = $conexion->prepare("SELECT foto FROM usuarios WHERE id = ?");
+        $stmt_foto = $conexion->prepare("SELECT foto, rol FROM usuarios WHERE id = ?");
         $stmt_foto->execute([$eliminar_id]);
-        $foto_a_eliminar = $stmt_foto->fetchColumn();
+        $row_foto = $stmt_foto->fetch(PDO::FETCH_ASSOC);
 
-        $defaults = ["default.png", "default_usuario.png", "default_familiar.png"];
+        $foto_a_eliminar = $row_foto["foto"] ?? "";
+        $rol_a_eliminar  = $row_foto["rol"] ?? "";
+
+        // Defaults: no borrar
+        $defaults = [
+            "default.png",
+            "default_usuario.png",
+            "default_familiar.png",
+            "default_profesional.png"
+        ];
+
         if (!empty($foto_a_eliminar) && !in_array($foto_a_eliminar, $defaults, true) && file_exists('uploads/' . $foto_a_eliminar)) {
             unlink('uploads/' . $foto_a_eliminar);
         }
@@ -119,13 +165,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_id"])) {
         exit;
     }
 
-    $foto_nueva = $foto_actual ?: "default.png";
+    // Si no hay foto actual guardada, ponemos default según rol
+    $foto_nueva = $foto_actual ?: foto_por_defecto_por_rol($rol);
+
+    // Si la foto actual es default "genérica/rol", y cambia el rol, queremos que cambie el default al del rol nuevo
+    $defaults = [
+        "default.png",
+        "default_usuario.png",
+        "default_familiar.png",
+        "default_profesional.png"
+    ];
+    if (!empty($foto_actual) && in_array($foto_actual, $defaults, true)) {
+        $foto_nueva = foto_por_defecto_por_rol($rol);
+    }
+
+    // Si sube una foto manual, la guardamos y reemplazamos la anterior si era manual
     if (isset($_FILES["foto"]) && $_FILES["foto"]["name"] !== "") {
         if ($_FILES["foto"]["error"] === UPLOAD_ERR_OK) {
             $ext = strtolower(pathinfo($_FILES["foto"]["name"], PATHINFO_EXTENSION));
             $foto_nueva = uniqid("foto_", true) . "." . $ext;
             move_uploaded_file($_FILES["foto"]["tmp_name"], "uploads/" . $foto_nueva);
-            $defaults = ["default.png", "default_usuario.png", "default_familiar.png"];
+
+            // Borrar la foto anterior SOLO si NO era default
             if (!empty($foto_actual) && !in_array($foto_actual, $defaults, true) && file_exists("uploads/" . $foto_actual)) {
                 unlink("uploads/" . $foto_actual);
             }
@@ -167,9 +228,6 @@ if ($filtro_rol === "todos") {
 $total_usuarios = $stmt_count->fetchColumn();
 $total_paginas = ceil($total_usuarios / $por_pagina);
 
-// -------------------------
-// USER A EDITAR (GET)
-// -------------------------
 // -------------------------
 // USER A EDITAR (GET)
 // -------------------------
@@ -264,7 +322,7 @@ html, body{
         radial-gradient(at 0% 100%, hsla(321,0%,100%,1) 0, transparent 50%),
         radial-gradient(at 100% 100%, hsla(0,0%,80%,1) 0, transparent 50%);
     background-size: 200% 200%;
-    animation: meshMove 8s infinite alternate ease-in-out; 
+    animation: meshMove 8s infinite alternate ease-in-out;
 }
 @keyframes meshMove {
     0% { background-position: 0% 0%; }
@@ -314,7 +372,7 @@ html, body{
     flex: 1 1 auto;
     display: flex;
     justify-content: center;
-    align-items: center; /* ACTUALIZADO: Centra el formulario verticalmente cuando es corto */
+    align-items: center;
     padding: 14px 16px;
     overflow: hidden;
     min-height: 0;
@@ -330,7 +388,7 @@ html, body{
     gap: 12px;
     height: 100%;
     overflow: hidden;
-    transition: all 0.4s ease; /* Suaviza el cambio entre tabla y edición */
+    transition: all 0.4s ease;
 }
 .panel-header{
     display: flex;
@@ -393,18 +451,18 @@ html, body{
 tbody tr{ background: #fff; border-radius: 18px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); transition: all 0.3s ease; }
 tbody tr:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
 
-.action-btn{ 
-    display: inline-flex; 
-    align-items: center; 
+.action-btn{
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
-    gap: 8px; 
-    padding: 10px 14px; 
-    border-radius: 14px; 
-    text-decoration: none; 
-    font-weight: 900; 
-    font-size: 13px; 
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    text-decoration: none;
+    font-weight: 900;
+    font-size: 13px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .action-btn:hover { transform: translateY(-4px) scale(1.1); box-shadow: 0 8px 18px rgba(0,0,0,0.12); }
 .action-btn:active { transform: scale(0.9); }
@@ -440,23 +498,22 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
 .form-group label{ display: block; font-size: 12px; font-weight: 700; color: #444; margin-bottom: 6px; }
 .form-group input, .form-group select{ width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid #dde2ea; font-size: 14px; transition: border 0.2s; }
 /* Botón Cancelar */
-.btn-secondary { 
-    background: #f1f5f9; 
-    color: #475569; 
-    border: 1px solid #e2e8f0; 
+.btn-secondary {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
 }
-.btn-secondary:hover { 
-    background: #e2e8f0; 
-    color: #1e293b; 
-    transform: translateY(-3px); 
+.btn-secondary:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+    transform: translateY(-3px);
 }
 
-/* Recuadro de Vinculación */
 /* --- Mejora del recuadro de vinculación --- */
 .vinculo-box {
     margin-top: 20px;
     padding: 18px;
-    background: #f0f7ff; /* Azul muy suave */
+    background: #f0f7ff;
     border-radius: 16px;
     border: 2px solid #e0eafc;
     display: flex;
@@ -465,7 +522,6 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
     width: 100%;
     box-shadow: 0 4px 12px rgba(0,0,0,0.03);
 }
-
 .vinculo-header {
     display: flex;
     align-items: center;
@@ -474,7 +530,6 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
     font-weight: 700;
     color: #2563eb;
 }
-
 .vinculo-select {
     width: 100%;
     padding: 10px;
@@ -485,7 +540,6 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
     background-color: white;
     cursor: pointer;
 }
-
 .vinculo-info-text {
     font-size: 11px;
     color: #64748b;
@@ -502,38 +556,31 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
 }
 
 /* --- ACTUALIZACIÓN PARA EL MODO EDICIÓN COMPACTO --- */
-
 .editing-active {
-    height: auto !important; /* ACTUALIZADO: Ya no fuerza el 100% de alto */
-    max-width: 850px;       /* ACTUALIZADO: Ancho más contenido para edición */
+    height: auto !important;
+    max-width: 850px;
     margin: 0 auto;
 }
-
-.editing-active .panel-header, 
-.editing-active .table-wrap, 
+.editing-active .panel-header,
+.editing-active .table-wrap,
 .editing-active .pagination-container {
     display: none !important;
 }
-
 .editing-active .edit-card {
-    height: auto;           /* ACTUALIZADO: Se ajusta al contenido */
+    height: auto;
     margin-bottom: 0;
     flex: none;
     border: none;
     background: white;
 }
-
 .editing-active .edit-right {
     display: flex;
     flex-direction: column;
 }
-
 .editing-active form {
-    flex: none;             /* ACTUALIZADO: No fuerza el estiramiento */
+    flex: none;
     display: block;
 }
-
-/* Reducimos un poco los espacios internos en edición para que se vea más ordenado */
 .editing-active .form-grid {
     gap: 15px;
     margin-bottom: 20px;
@@ -541,7 +588,7 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
 </style>
 </head>
 
-<bodty>
+<body>
 <div class="canvas-bg"></div>
 <div class="layout">
     <div class="header">
@@ -552,25 +599,24 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
     </div>
 
     <div class="page-content">
-            <div class="panel <?= $editar_user ? 'editing-active' : '' ?>">
-                <div class="panel-header">
+        <div class="panel <?= $editar_user ? 'editing-active' : '' ?>">
+            <div class="panel-header">
                 <h1>Panel de Gestión de Usuarios</h1>
                 <div class="actions">
                     <div class="filter-buttons">
                         <span style="font-weight:900; padding:0 8px;">Ver:</span>
                         <a href="#" class="filter-link active" data-rol="todos">
-    <i class="fas fa-layer-group"></i> Todos
-</a>
-<a href="#" class="filter-link" data-rol="usuario">
-    <i class="fas fa-user"></i> Usuarios
-</a>
-<a href="#" class="filter-link" data-rol="familiar">
-    <i class="fas fa-users"></i> Familiares
-</a>
-<a href="#" class="filter-link" data-rol="profesional">
-    <i class="fas fa-user-tie"></i> Profesionales
-</a>
-
+                            <i class="fas fa-layer-group"></i> Todos
+                        </a>
+                        <a href="#" class="filter-link" data-rol="usuario">
+                            <i class="fas fa-user"></i> Usuarios
+                        </a>
+                        <a href="#" class="filter-link" data-rol="familiar">
+                            <i class="fas fa-users"></i> Familiares
+                        </a>
+                        <a href="#" class="filter-link" data-rol="profesional">
+                            <i class="fas fa-user-tie"></i> Profesionales
+                        </a>
                     </div>
                     <a class="btn btn-primary" href="crear_usuario.php"><i class="fas fa-plus"></i> Crear usuario</a>
                 </div>
@@ -579,82 +625,84 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
             <?php if ($flash_success): ?><div class="flash success"><?= htmlspecialchars($flash_success) ?></div><?php endif; ?>
             <?php if ($flash_error): ?><div class="flash error"><?= htmlspecialchars($flash_error) ?></div><?php endif; ?>
 
-           <?php if ($editar_user): ?>
-    <div class="edit-card">
-        <div class="edit-left">
-            <img class="edit-photo" src="uploads/<?= $editar_user['foto'] ?: 'default.png' ?>" style="width: 110px; height: 110px; border-radius: 20px;">
-            <div style="font-size:13px; color:var(--muted); margin-bottom: 5px;">ID Usuario: <strong>#<?= $editar_user["id"] ?></strong></div>
-            
-            <?php if ($editar_user['rol'] === 'usuario'): ?>
-                <div class="vinculo-box">
-                    <div class="vinculo-header">
-                        <i class="fas fa-link"></i> Familiar Asignado
+            <?php if ($editar_user): ?>
+                <div class="edit-card">
+                    <div class="edit-left">
+                        <img class="edit-photo"
+                             src="uploads/<?= htmlspecialchars(foto_a_mostrar($editar_user['foto'] ?? '', $editar_user['rol']), ENT_QUOTES) ?>"
+                             style="width: 110px; height: 110px; border-radius: 20px;">
+                        <div style="font-size:13px; color:var(--muted); margin-bottom: 5px;">ID Usuario: <strong>#<?= $editar_user["id"] ?></strong></div>
+
+                        <?php if ($editar_user['rol'] === 'usuario'): ?>
+                            <div class="vinculo-box">
+                                <div class="vinculo-header">
+                                    <i class="fas fa-link"></i> Familiar Asignado
+                                </div>
+
+                                <select name="familiar_id" form="form-editar" class="vinculo-select">
+                                    <option value="">-- Sin familiar asignado --</option>
+                                    <?php foreach ($familiares_disponibles as $f): ?>
+                                        <option value="<?= $f['id'] ?>" <?= ($editar_user['familiar_id'] == $f['id']) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($f['nombre']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+
+                                <div class="vinculo-info-text">
+                                    Este familiar recibirá las notificaciones y reportes de este usuario.
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     </div>
-                    
-                    <select name="familiar_id" form="form-editar" class="vinculo-select">
-                        <option value="">-- Sin familiar asignado --</option>
-                        <?php foreach ($familiares_disponibles as $f): ?>
-                            <option value="<?= $f['id'] ?>" <?= ($editar_user['familiar_id'] == $f['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($f['nombre']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    
-                    <div class="vinculo-info-text">
-                        Este familiar recibirá las notificaciones y reportes de este usuario.
+
+                    <div class="edit-right" style="padding: 10px 25px;">
+                        <h2 style="font-size:20px; margin-bottom:20px; color: #1d1d1f; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px;">
+                            <i class="fas fa-user-edit" style="margin-right:8px; color: #4a4a4a;"></i>Editar perfil
+                        </h2>
+
+                        <form method="POST" enctype="multipart/form-data" id="form-editar">
+                            <input type="hidden" name="csrf" value="<?= $_SESSION["csrf"] ?>">
+                            <input type="hidden" name="update_id" value="<?= $editar_user["id"] ?>">
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Nombre completo</label>
+                                    <input type="text" name="nombre" value="<?= htmlspecialchars($editar_user["nombre"]) ?>" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Email de contacto</label>
+                                    <input type="email" name="email" value="<?= htmlspecialchars($editar_user["email"]) ?>" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Rol</label>
+                                    <select name="rol">
+                                        <option value="usuario" <?= $editar_user["rol"]=="usuario"?"selected":"" ?>>Usuario</option>
+                                        <option value="familiar" <?= $editar_user["rol"]=="familiar"?"selected":"" ?>>Familiar</option>
+                                        <option value="profesional" <?= $editar_user["rol"]=="profesional"?"selected":"" ?>>Profesional</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Contraseña (opcional)</label>
+                                    <input type="password" name="password" placeholder="Dejar vacío para no cambiar">
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label>Imagen de perfil</label>
+                                    <input type="file" name="foto" style="background: #f8fafc; border: 1px dashed #cbd5e1;">
+                                </div>
+                            </div>
+
+                            <div style="margin-top:30px; display:flex; justify-content:flex-end; gap:12px;">
+                                <a href="gestionar_users.php<?= qs_keep() ?>" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                                <button class="btn btn-primary" type="submit" style="min-width: 160px;">
+                                    <i class="fas fa-save"></i> Actualizar Usuario
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             <?php endif; ?>
-        </div>
-
-        <div class="edit-right" style="padding: 10px 25px;">
-            <h2 style="font-size:20px; margin-bottom:20px; color: #1d1d1f; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px;">
-                <i class="fas fa-user-edit" style="margin-right:8px; color: #4a4a4a;"></i>Editar perfil
-            </h2>
-            
-            <form method="POST" enctype="multipart/form-data" id="form-editar">
-                <input type="hidden" name="csrf" value="<?= $_SESSION["csrf"] ?>">
-                <input type="hidden" name="update_id" value="<?= $editar_user["id"] ?>">
-                
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Nombre completo</label>
-                        <input type="text" name="nombre" value="<?= htmlspecialchars($editar_user["nombre"]) ?>" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Email de contacto</label>
-                        <input type="email" name="email" value="<?= htmlspecialchars($editar_user["email"]) ?>" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Rol</label>
-                        <select name="rol">
-                            <option value="usuario" <?= $editar_user["rol"]=="usuario"?"selected":"" ?>>Usuario</option>
-                            <option value="familiar" <?= $editar_user["rol"]=="familiar"?"selected":"" ?>>Familiar</option>
-                            <option value="profesional" <?= $editar_user["rol"]=="profesional"?"selected":"" ?>>Profesional</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Contraseña (opcional)</label>
-                        <input type="password" name="password" placeholder="Dejar vacío para no cambiar">
-                    </div>
-                    <div class="form-group" style="grid-column: span 2;">
-                        <label>Imagen de perfil</label>
-                        <input type="file" name="foto" style="background: #f8fafc; border: 1px dashed #cbd5e1;">
-                    </div>
-                </div>
-
-                <div style="margin-top:30px; display:flex; justify-content:flex-end; gap:12px;">
-                    <a href="gestionar_users.php<?= qs_keep() ?>" class="btn btn-secondary">
-                        <i class="fas fa-times"></i> Cancelar
-                    </a>
-                    <button class="btn btn-primary" type="submit" style="min-width: 160px;">
-                        <i class="fas fa-save"></i> Actualizar Usuario
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-<?php endif; ?>
 
             <div class="table-wrap">
                 <table>
@@ -667,10 +715,13 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
                             <th style="width:260px; text-align:center;">Acciones</th>
                         </tr>
                     </thead>
-<tbody id="tabla-usuarios">
+                    <tbody id="tabla-usuarios">
                         <?php foreach ($usuarios as $u): ?>
                         <tr>
-                            <td style="text-align:center;"><img class="user-photo" src="uploads/<?= $u['foto'] ?: 'default.png' ?>"></td>
+                            <td style="text-align:center;">
+                                <img class="user-photo"
+                                     src="uploads/<?= htmlspecialchars(foto_a_mostrar($u['foto'] ?? '', $u['rol']), ENT_QUOTES) ?>">
+                            </td>
                             <td><?= htmlspecialchars($u["nombre"]) ?></td>
                             <td><?= htmlspecialchars($u["email"]) ?></td>
                             <td><span class="role-badge <?= $u["rol"] ?>"><?= $u["rol"] ?></span></td>
@@ -685,73 +736,74 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
                             </td>
                         </tr>
                         <?php endforeach; ?>
+
                         <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const contenedorTabla = document.getElementById('tabla-usuarios');
-    const contenedorPaginacion = document.querySelector('.pagination-container');
+                        document.addEventListener('DOMContentLoaded', () => {
+                            const contenedorTabla = document.getElementById('tabla-usuarios');
+                            const contenedorPaginacion = document.querySelector('.pagination-container');
 
-    function cargarUsuarios(rol = 'todos', pagina = 1) {
-        // Actualizar botones de filtro visualmente
-        document.querySelectorAll('.filter-link').forEach(link => {
-            link.classList.toggle('active', link.dataset.rol === rol);
-        });
+                            function cargarUsuarios(rol = 'todos', pagina = 1) {
+                                // Actualizar botones de filtro visualmente
+                                document.querySelectorAll('.filter-link').forEach(link => {
+                                    link.classList.toggle('active', link.dataset.rol === rol);
+                                });
 
-        // Petición AJAX
-        fetch(`ajax/usuarios_filtrados.php?filtro_rol=${rol}&p=${pagina}`)
-            .then(res => res.json())
-            .then(data => {
-                contenedorTabla.innerHTML = data.tabla;
-                if (contenedorPaginacion) {
-                    contenedorPaginacion.innerHTML = data.paginacion;
-                }
-            })
-            .catch(err => console.error("Error al cargar:", err));
-    }
+                                // Petición AJAX
+                                fetch(`ajax/usuarios_filtrados.php?filtro_rol=${rol}&p=${pagina}`)
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        contenedorTabla.innerHTML = data.tabla;
+                                        if (contenedorPaginacion) {
+                                            contenedorPaginacion.innerHTML = data.paginacion;
+                                        }
+                                    })
+                                    .catch(err => console.error("Error al cargar:", err));
+                            }
 
-    // Evento clics en Filtros
-    document.querySelectorAll('.filter-link').forEach(btn => {
-        btn.addEventListener('click', e => {
-            e.preventDefault();
-            cargarUsuarios(btn.dataset.rol, 1); // Reset a pág 1 al filtrar
-        });
-    });
+                            // Evento clics en Filtros
+                            document.querySelectorAll('.filter-link').forEach(btn => {
+                                btn.addEventListener('click', e => {
+                                    e.preventDefault();
+                                    cargarUsuarios(btn.dataset.rol, 1); // Reset a pág 1 al filtrar
+                                });
+                            });
 
-    // Evento clics en Paginación (Delegado)
-    document.addEventListener('click', e => {
-        const pLink = e.target.closest('.page-ajax');
-        if (pLink) {
-            e.preventDefault();
-            const rolActivo = document.querySelector('.filter-link.active').dataset.rol;
-            const numPagina = pLink.dataset.page;
-            cargarUsuarios(rolActivo, numPagina);
-        }
-    });
-});
-</script>
-
+                            // Evento clics en Paginación (Delegado)
+                            document.addEventListener('click', e => {
+                                const pLink = e.target.closest('.page-ajax');
+                                if (pLink) {
+                                    e.preventDefault();
+                                    const rolActivo = document.querySelector('.filter-link.active').dataset.rol;
+                                    const numPagina = pLink.dataset.page;
+                                    cargarUsuarios(rolActivo, numPagina);
+                                }
+                            });
+                        });
+                        </script>
                     </tbody>
                 </table>
             </div>
 
             <?php if ($total_paginas > 1): ?>
-<div class="pagination-container">
-    <?php if ($pagina_actual <= 1): ?>
-        <span class="page-link disabled"><i class="fas fa-chevron-left"></i></span>
-    <?php else: ?>
-        <a href="#" class="page-link page-ajax" data-page="<?= $pagina_actual - 1 ?>"><i class="fas fa-chevron-left"></i></a>
-    <?php endif; ?>
+            <div class="pagination-container">
+                <?php if ($pagina_actual <= 1): ?>
+                    <span class="page-link disabled"><i class="fas fa-chevron-left"></i></span>
+                <?php else: ?>
+                    <a href="#" class="page-link page-ajax" data-page="<?= $pagina_actual - 1 ?>"><i class="fas fa-chevron-left"></i></a>
+                <?php endif; ?>
 
-    <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
-        <a href="#" class="page-link page-ajax <?= ($i == $pagina_actual) ? 'active' : '' ?>" data-page="<?= $i ?>"><?= $i ?></a>
-    <?php endfor; ?>
+                <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
+                    <a href="#" class="page-link page-ajax <?= ($i == $pagina_actual) ? 'active' : '' ?>" data-page="<?= $i ?>"><?= $i ?></a>
+                <?php endfor; ?>
 
-    <?php if ($pagina_actual >= $total_paginas): ?>
-        <span class="page-link disabled"><i class="fas fa-chevron-right"></i></span>
-    <?php else: ?>
-        <a href="#" class="page-link page-ajax" data-page="<?= $pagina_actual + 1 ?>"><i class="fas fa-chevron-right"></i></a>
-    <?php endif; ?>
-</div>
-<?php endif; ?>
+                <?php if ($pagina_actual >= $total_paginas): ?>
+                    <span class="page-link disabled"><i class="fas fa-chevron-right"></i></span>
+                <?php else: ?>
+                    <a href="#" class="page-link page-ajax" data-page="<?= $pagina_actual + 1 ?>"><i class="fas fa-chevron-right"></i></a>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+
         </div>
     </div>
 </div>

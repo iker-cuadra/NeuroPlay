@@ -347,7 +347,7 @@ const fileNameSpan = document.getElementById('file-name');
 const defaults = {
     usuario: 'uploads/default_usuario.png',
     familiar: 'uploads/default_familiar.png',
-    profesional: 'uploads/default.png'
+    profesional: 'uploads/default_profesional.png'
 };
 
 function updateRoleVisuals(){
