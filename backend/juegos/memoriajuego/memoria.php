@@ -1,4 +1,8 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once "../../includes/conexion.php";
 require_once "../../includes/auth.php";
 
@@ -38,7 +42,6 @@ if (!$dificultad_memoria) {
             font-size: 18px;
         }
 
-
         /* --- FONDO MESH ANIMADO 8s --- */
         .canvas-bg {
             position: fixed;
@@ -59,13 +62,8 @@ if (!$dificultad_memoria) {
         }
 
         @keyframes meshMove {
-            0% {
-                background-position: 0% 0%;
-            }
-
-            100% {
-                background-position: 100% 100%;
-            }
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
         }
 
         /* ENVOLTORIO A PANTALLA COMPLETA */
@@ -337,48 +335,21 @@ if (!$dificultad_memoria) {
         }
 
         @media (max-height: 760px) {
-            .memory-grid {
-                gap: 16px;
-                max-width: 500px;
-            }
-
-            .memory-card {
-                height: clamp(75px, 13vh, 110px);
-            }
-
-            .game-header h2 {
-                font-size: 32px;
-            }
-
-            .game-title-pill {
-                font-size: 30px;
-            }
+            .memory-grid { gap: 16px; max-width: 500px; }
+            .memory-card { height: clamp(75px, 13vh, 110px); }
+            .game-header h2 { font-size: 32px; }
+            .game-title-pill { font-size: 30px; }
         }
 
         @media (max-height: 680px) {
-            .memory-grid {
-                gap: 14px;
-                max-width: 460px;
-            }
-
-            .memory-card {
-                height: clamp(70px, 12vh, 100px);
-            }
-
-            .game-header h2 {
-                font-size: 30px;
-            }
-
-            .game-title-pill {
-                font-size: 28px;
-                padding: 6px 16px;
-            }
+            .memory-grid { gap: 14px; max-width: 460px; }
+            .memory-card { height: clamp(70px, 12vh, 100px); }
+            .game-header h2 { font-size: 30px; }
+            .game-title-pill { font-size: 28px; padding: 6px 16px; }
         }
 
         @media (max-width: 768px) {
-            .game-container {
-                padding: 16px 14px 12px 14px;
-            }
+            .game-container { padding: 16px 14px 12px 14px; }
         }
     </style>
 </head>
@@ -395,9 +366,7 @@ if (!$dificultad_memoria) {
             </a>
 
             <!-- Pastilla superior -->
-            <div class="game-title-pill">
-                Memoria
-            </div>
+            <div class="game-title-pill">Memoria</div>
 
             <!-- Cabecera -->
             <div class="game-header">
@@ -408,9 +377,7 @@ if (!$dificultad_memoria) {
 
             <!-- Cuerpo (tablero) -->
             <div class="game-body">
-                <div id="zona-memoria" class="memory-grid">
-                    <!-- Aquí se cargan las cartas por JavaScript -->
-                </div>
+                <div id="zona-memoria" class="memory-grid"></div>
             </div>
 
             <!-- Mensaje motivacional -->
@@ -425,7 +392,7 @@ if (!$dificultad_memoria) {
                 </div>
             </div>
 
-            <!-- OVERLAY INICIAL (antes de empezar) -->
+            <!-- OVERLAY INICIAL -->
             <div id="start-overlay" class="game-overlay" style="display:flex; z-index: 6;">
                 <div class="overlay-content">
                     <p>¿Listo para jugar?</p>
@@ -480,23 +447,24 @@ if (!$dificultad_memoria) {
             }, 1000);
         }
 
-        // ---- Guardar resultado en la BD ----
-        function guardarResultadoMemoria(puntos, segundos) {
-            console.log('Enviando resultado memoria...', puntos, segundos, dificultadMemoriaBD);
+        // ====== NUEVO: métricas ======
+        let aciertos = 0;       // nº de parejas correctas
+        let fallos = 0;         // nº de parejas incorrectas
+        let clicks = 0;         // nº de clicks totales
+        let totalPairs = 0;     // pares del tablero
+        let cartasTotales = 0;  // cartas del tablero
+        let previewMs = 3000;   // preview fijo (según tu código)
 
+        // ---- Guardar resultado en la BD ----
+        function guardarResultadoMemoria(payload) {
             fetch('../../guardar_resultado.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    tipo_juego: 'memoria',
-                    puntuacion: puntos,
-                    tiempo_segundos: segundos,
-                    dificultad: dificultadMemoriaBD
-                })
+                body: JSON.stringify(payload)
             })
-                .then(r => r.json())
-                .then(data => console.log('Respuesta guardar_resultado (memoria):', data))
-                .catch(err => console.error('Error en fetch memoria:', err));
+            .then(r => r.json())
+            .then(data => console.log('Respuesta guardar_resultado (memoria):', data))
+            .catch(err => console.error('Error en fetch memoria:', err));
         }
 
         // Mensajes motivacionales aleatorios
@@ -530,6 +498,13 @@ if (!$dificultad_memoria) {
             resetTimer();
             hideOverlay();
 
+            // ====== reset métricas ======
+            aciertos = 0;
+            fallos = 0;
+            clicks = 0;
+            totalPairs = 0;
+            cartasTotales = 0;
+
             if (currentDifficulty === 'facil') {
                 loadMemoryGameFacil(area);
             } else if (currentDifficulty === 'medio') {
@@ -539,33 +514,45 @@ if (!$dificultad_memoria) {
             }
         }
 
-        // MEMORIA - FÁCIL (4 pares, 8 cartas) - COLORES OSCUROS
+        // MEMORIA - FÁCIL (4 pares, 8 cartas)
         function loadMemoryGameFacil(area) {
             const pairs = 4;
             const colors = ['#d20000', '#061f70', '#04f600a4', '#8c00ff'];
             const cards = [];
             for (let i = 0; i < pairs; i++) cards.push(colors[i], colors[i]);
             cards.sort(() => Math.random() - 0.5);
+
+            totalPairs = pairs;
+            cartasTotales = cards.length;
+
             createMemoryGrid(area, cards, 4);
         }
 
-        // MEMORIA - Medio (6 pares, 12 cartas) - COLORES OSCUROS
+        // MEMORIA - Medio (6 pares, 12 cartas)
         function loadMemoryGameMedio(area) {
             const pairs = 6;
             const colors = ['#d20000', '#061f70', '#04f600a4', '#8c00ff', '#000000', '#ffae00'];
             const cards = [];
             for (let i = 0; i < pairs; i++) cards.push(colors[i], colors[i]);
             cards.sort(() => Math.random() - 0.5);
+
+            totalPairs = pairs;
+            cartasTotales = cards.length;
+
             createMemoryGrid(area, cards, 4);
         }
 
-        // MEMORIA - DIFÍCIL (8 pares, 16 cartas) - COLORES OSCUROS
+        // MEMORIA - DIFÍCIL (8 pares, 16 cartas)
         function loadMemoryGameDificil(area) {
             const pairs = 8;
             const colors = ['#d20000', '#061f70', '#04f600a4', '#8c00ff', '#000000', '#ffae00', '#eeff00e2', '#397061'];
             const cards = [];
             for (let i = 0; i < pairs; i++) cards.push(colors[i], colors[i]);
             cards.sort(() => Math.random() - 0.5);
+
+            totalPairs = pairs;
+            cartasTotales = cards.length;
+
             createMemoryGrid(area, cards, 4);
         }
 
@@ -614,7 +601,7 @@ if (!$dificultad_memoria) {
                     // Ahora sí, habilitar el juego
                     startTimer();
                     enableCardClicks();
-                }, 3000);
+                }, previewMs);
             }, 100);
 
             function enableCardClicks() {
@@ -624,6 +611,9 @@ if (!$dificultad_memoria) {
                         if (card.classList.contains("matched")) return;
                         if (card === firstCard) return;
                         if (card.classList.contains("preview-mode")) return;
+
+                        // ====== NUEVO: contar clicks ======
+                        clicks++;
 
                         // Mostrar la carta (color)
                         card.classList.remove("hidden-symbol");
@@ -648,6 +638,9 @@ if (!$dificultad_memoria) {
                                 firstCard.classList.add("matched");
                                 secondCard.classList.add("matched");
 
+                                // ====== NUEVO: aciertos (parejas correctas) ======
+                                aciertos++;
+
                                 firstCard = null;
                                 secondCard = null;
                                 lockBoard = false;
@@ -655,10 +648,35 @@ if (!$dificultad_memoria) {
                                 matchedPairs++;
                                 if (matchedPairs === cards.length / 2) {
                                     clearInterval(timerInterval);
-                                    const puntosFinales = 100;
+
                                     const segundosTotales = elapsedSeconds;
 
-                                    guardarResultadoMemoria(puntosFinales, segundosTotales);
+                                    // ====== puntuación: por parejas acertadas (debería ser 100 al completar) ======
+                                    const puntosFinales = totalPairs > 0 ? Math.round((aciertos / totalPairs) * 100) : 100;
+
+                                    // ====== detalles_json ======
+                                    const detalles = {
+                                        juego: 'memoria',
+                                        dificultad: dificultadMemoriaBD,
+                                        total_pairs: totalPairs,
+                                        cartas_totales: cartasTotales,
+                                        aciertos_parejas: aciertos,
+                                        fallos_parejas: fallos,
+                                        clicks: clicks,
+                                        preview_ms: previewMs,
+                                        tiempo_segundos: segundosTotales
+                                    };
+
+                                    guardarResultadoMemoria({
+                                        tipo_juego: 'memoria',
+                                        puntuacion: puntosFinales,
+                                        tiempo_segundos: segundosTotales,
+                                        dificultad: dificultadMemoriaBD,
+                                        aciertos: aciertos,
+                                        fallos: fallos,
+                                        nivel_alcanzado: totalPairs,
+                                        detalles_json: JSON.stringify(detalles)
+                                    });
 
                                     setTimeout(() => {
                                         if (motivacionDiv) {
@@ -671,6 +689,9 @@ if (!$dificultad_memoria) {
                                 }
                             }, 500);
                         } else {
+                            // ====== NUEVO: fallos (parejas incorrectas) ======
+                            fallos++;
+
                             setTimeout(() => {
                                 firstCard.classList.add("hidden-symbol");
                                 firstCard.classList.remove("revealed", "flipping");

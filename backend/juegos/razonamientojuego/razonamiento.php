@@ -26,6 +26,7 @@ if (!$dificultad_razonamiento) {
     <title>Juego de Razonamiento</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
+        /* (Tu CSS intacto) */
         html, body {
             margin: 0;
             padding: 0;
@@ -394,15 +395,22 @@ if (!$dificultad_razonamiento) {
 
 <script>
     const dificultadRazonamientoBD = "<?= htmlspecialchars($dificultad_razonamiento, ENT_QUOTES) ?>";
+
+    // Normalización a facil/medio/dificil (como lo usas en el código)
     let currentDifficulty = dificultadRazonamientoBD.toLowerCase();
     if (currentDifficulty === 'media') currentDifficulty = 'medio';
     if (currentDifficulty === 'fácil') currentDifficulty = 'facil';
 
     const TOTAL_RONDAS = 10;
+
     let rondaActual = 0;
-    let resultados = [];
+    let resultados = []; // [{ronda, tiempo_segundos, correcta}]
     let segundos = 0;
     let timer = null;
+
+    // Métricas adicionales
+    let aciertosTotales = 0;
+    let fallosTotales = 0;
 
     function iniciarTemporizador() {
         detenerTemporizador();
@@ -417,14 +425,27 @@ if (!$dificultad_razonamiento) {
 
     function detenerTemporizador() {
         if (timer) clearInterval(timer);
+        timer = null;
     }
 
+    // Envío completo (incluye columnas nuevas + detalles_json)
     function enviarDatosFinales() {
-        const totalTiempo = resultados.reduce((acc, r) => acc + r.tiempo_segundos, 0);
+        const totalTiempo = resultados.reduce((acc, r) => acc + (parseInt(r.tiempo_segundos,10) || 0), 0);
         const aciertos = resultados.filter(r => r.correcta === 1).length;
+        const fallos   = resultados.filter(r => r.correcta === 0).length;
         const puntuacionTotal = Math.round((aciertos / TOTAL_RONDAS) * 100);
 
-        fetch('../../guardar_resultado.php', {
+        const detalles = {
+            juego: 'razonamiento',
+            dificultad: dificultadRazonamientoBD,
+            total_rondas: TOTAL_RONDAS,
+            aciertos: aciertos,
+            fallos: fallos,
+            tiempo_total_segundos: totalTiempo,
+            rondas: resultados
+        };
+
+        return fetch('../../guardar_resultado.php', {
             method: 'POST',
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({
@@ -432,11 +453,26 @@ if (!$dificultad_razonamiento) {
                 dificultad: dificultadRazonamientoBD,
                 puntuacion: puntuacionTotal,
                 tiempo_segundos: totalTiempo,
+
+                // Columnas extra (si existen en resultados_juego)
+                aciertos: aciertos,
+                fallos: fallos,
+                nivel_alcanzado: TOTAL_RONDAS,
+                detalles_json: JSON.stringify(detalles),
+
+                // Mantener compatibilidad con tu guardar_resultado (razonamiento_rondas)
                 rondas: resultados
             })
         })
         .then(r => r.json())
-        .catch(err => console.error("Error al guardar:", err));
+        .then(data => {
+            console.log('Respuesta guardar_resultado (razonamiento):', data);
+            return data;
+        })
+        .catch(err => {
+            console.error("Error al guardar razonamiento:", err);
+            return { ok:false };
+        });
     }
 
     function showOverlay() {
@@ -452,7 +488,6 @@ if (!$dificultad_razonamiento) {
     function loadReasoningGame(area) {
         document.getElementById("ronda-indicador").textContent = (rondaActual + 1) + "/" + TOTAL_RONDAS;
 
-        // PATRONES FÁCILES - Secuencias cortas (4 elementos) y simples
         const patternsFacil = [
             {seq:['★','◆','★','◆'], ans:'★'},
             {seq:['●','■','●','■'], ans:'●'},
@@ -466,7 +501,6 @@ if (!$dificultad_razonamiento) {
             {seq:['▼','★','▼','★'], ans:'▼'},
         ];
 
-        // PATRONES MEDIOS - Secuencias medianas (5-6 elementos) con más variación
         const patternsMedio = [
             {seq:['★','◆','●','★','◆'], ans:'●'},
             {seq:['■','▲','▼','■','▲'], ans:'▼'},
@@ -482,7 +516,6 @@ if (!$dificultad_razonamiento) {
             {seq:['■','▲','■','■','▲'], ans:'■'},
         ];
 
-        // PATRONES DIFÍCILES - Secuencias largas (6-8 elementos) y complejas
         const patternsDificil = [
             {seq:['★','◆','●','■','★','◆'], ans:'●'},
             {seq:['▲','▼','★','●','▲','▼'], ans:'★'},
@@ -501,13 +534,9 @@ if (!$dificultad_razonamiento) {
         ];
 
         let patterns;
-        if (currentDifficulty === 'facil') {
-            patterns = patternsFacil;
-        } else if (currentDifficulty === 'medio') {
-            patterns = patternsMedio;
-        } else {
-            patterns = patternsDificil;
-        }
+        if (currentDifficulty === 'facil') patterns = patternsFacil;
+        else if (currentDifficulty === 'medio') patterns = patternsMedio;
+        else patterns = patternsDificil;
 
         const p = patterns[Math.floor(Math.random() * patterns.length)];
         crearInterfaz(area, p);
@@ -531,10 +560,8 @@ if (!$dificultad_razonamiento) {
 
         const symbols = ['★','◆','●','■','▲','▼'];
         let opts = [pattern.ans];
-        
-        // En difícil, más opciones de respuesta
+
         const numOpciones = currentDifficulty === 'dificil' ? 4 : 3;
-        
         while (opts.length < numOpciones) {
             let s = symbols[Math.floor(Math.random()*symbols.length)];
             if (!opts.includes(s)) opts.push(s);
@@ -547,16 +574,20 @@ if (!$dificultad_razonamiento) {
             btn.textContent = o;
 
             btn.onclick = () => {
+                // bloquear clicks
                 const todosLosBotones = options.querySelectorAll('.pattern-option');
                 todosLosBotones.forEach(b => b.style.pointerEvents = 'none');
 
                 detenerTemporizador();
+
                 const esCorrecto = (o === pattern.ans);
 
                 if (esCorrecto) {
                     btn.classList.add("correct");
+                    aciertosTotales++;
                 } else {
                     btn.classList.add("incorrect");
+                    fallosTotales++;
                     todosLosBotones.forEach(b => {
                         if (b.textContent === pattern.ans) b.classList.add("correct");
                     });
@@ -572,8 +603,10 @@ if (!$dificultad_razonamiento) {
 
                 setTimeout(() => {
                     if (rondaActual >= TOTAL_RONDAS) {
-                        enviarDatosFinales();
-                        mostrarResumenFinal();
+                        // Guardar y luego mostrar resumen
+                        enviarDatosFinales().finally(() => {
+                            mostrarResumenFinal();
+                        });
                     } else {
                         iniciarTemporizador();
                         loadReasoningGame(area);
@@ -591,13 +624,15 @@ if (!$dificultad_razonamiento) {
         detenerTemporizador();
 
         const aciertos = resultados.filter(r => r.correcta === 1).length;
+        const totalTiempo = resultados.reduce((acc, r) => acc + (parseInt(r.tiempo_segundos,10) || 0), 0);
+
         const overlayContent = document.getElementById("overlay-content");
-        const totalTiempo = resultados.reduce((acc, r) => acc + r.tiempo_segundos, 0);
 
         overlayContent.innerHTML = `
             <i class="fas fa-trophy" style="font-size:3rem; color:#facc15; margin-bottom:8px;"></i>
             <p>¡Ejercicio completado!</p>
             <p style="font-size:18px; font-weight:normal;">Has acertado <strong>${aciertos}</strong> de <strong>${TOTAL_RONDAS}</strong> secuencias.</p>
+            <p style="font-size:18px; font-weight:normal;">Fallos: <strong>${TOTAL_RONDAS - aciertos}</strong></p>
             <p style="font-size:18px; font-weight:normal;">Tiempo total: <strong>${totalTiempo}s</strong></p>
 
             <div style="margin-top: 14px;">
@@ -628,7 +663,12 @@ if (!$dificultad_razonamiento) {
     function reiniciarJuego() {
         rondaActual = 0;
         resultados = [];
-        document.getElementById("razonamiento-mensaje").innerHTML = "";
+        aciertosTotales = 0;
+        fallosTotales = 0;
+
+        const msg = document.getElementById("razonamiento-mensaje");
+        if (msg) msg.innerHTML = "";
+
         document.getElementById("ronda-indicador").textContent = "1/" + TOTAL_RONDAS;
 
         iniciarTemporizador();

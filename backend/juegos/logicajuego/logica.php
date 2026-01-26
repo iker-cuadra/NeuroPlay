@@ -1,4 +1,7 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once "../../includes/conexion.php";
 require_once "../../includes/auth.php";
 
@@ -378,7 +381,7 @@ if (!$dificultad_logica) {
             font-size: 18px;
             cursor: pointer;
             font-weight: 700;
-            box-shadow: 0 10px 18px rgba(0, 0, 0, 0.22);
+            box-shadow: 0 10px 18px rgba(0,  0, 0, 0.22);
             transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
             margin: 0 6px;
         }
@@ -489,6 +492,12 @@ if (!$dificultad_logica) {
         let gameScore = 0;
         let currentSolution = [];
 
+        // ====== NUEVO: métricas para registrar ======
+        let totalVacias = 0;       // número de casillas que estaban vacías al inicio
+        let aciertos = 0;          // colocaciones correctas (casillas editables)
+        let fallos = 0;            // intentos incorrectos (drops incorrectos)
+        let puzzleInicial = [];    // para detalles_json
+
         // ---- Temporizador ----
         let elapsedSeconds = 0;
         let timerInterval = null;
@@ -516,16 +525,11 @@ if (!$dificultad_logica) {
         }
 
         // ---- Guardar resultado en la BD ----
-        function guardarResultadoLogica(puntos, segundos) {
+        function guardarResultadoLogica(payload) {
             fetch('../../guardar_resultado.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    tipo_juego: 'logica',
-                    puntuacion: puntos,
-                    tiempo_segundos: segundos,
-                    dificultad: dificultadLogicaBD
-                })
+                body: JSON.stringify(payload)
             }).catch(() => {});
         }
 
@@ -543,6 +547,12 @@ if (!$dificultad_logica) {
             area.innerHTML = "";
             resetTimer();
             hideOverlay();
+
+            // ====== NUEVO: reset métricas ======
+            aciertos = 0;
+            fallos = 0;
+            totalVacias = 0;
+            puzzleInicial = [];
 
             if (currentDifficulty === 'facil') {
                 loadLogicGameFacil(area);
@@ -626,6 +636,11 @@ if (!$dificultad_logica) {
 
         function createSudokuGrid(area, puzzle, solution) {
             currentSolution = solution;
+
+            // ====== NUEVO: total vacías + snapshot del puzzle ======
+            puzzleInicial = [...puzzle];
+            totalVacias = puzzle.filter(v => v === 0).length;
+
             const grid = document.createElement('div');
             grid.className = 'sudoku-grid';
 
@@ -667,6 +682,9 @@ if (!$dificultad_logica) {
             const cell = e.currentTarget;
             cell.classList.remove('drag-over');
 
+            // Si ya está bloqueada, no hacer nada (extra seguridad)
+            if (cell.classList.contains('disabled')) return;
+
             const number = parseInt(e.dataTransfer.getData('text/plain'));
             const index = parseInt(cell.dataset.index);
 
@@ -674,8 +692,15 @@ if (!$dificultad_logica) {
             if (number === currentSolution[index]) {
                 cell.textContent = number;
                 cell.classList.add('disabled');
+
+                // ====== NUEVO: sumar acierto SOLO si era una casilla vacía original ======
+                aciertos++;
+
                 checkSudoku();
             } else {
+                // ====== NUEVO: sumar fallo por intento incorrecto ======
+                fallos++;
+
                 // Animación de error
                 cell.classList.add('error-shake');
                 setTimeout(() => {
@@ -705,10 +730,35 @@ if (!$dificultad_logica) {
 
             if (filled === 16) {
                 clearInterval(timerInterval);
-                gameScore = 100;
+
                 const segundosTotales = elapsedSeconds;
 
-                guardarResultadoLogica(gameScore, segundosTotales);
+                // ====== NUEVO: puntuación calculada por vacías (debería dar 100 al completar bien) ======
+                const puntuacionCalc = totalVacias > 0 ? Math.round((aciertos / totalVacias) * 100) : 100;
+                gameScore = puntuacionCalc;
+
+                // ====== NUEVO: detalles_json ======
+                const detalles = {
+                    juego: 'logica',
+                    dificultad: dificultadLogicaBD,
+                    total_vacias: totalVacias,
+                    aciertos: aciertos,
+                    fallos: fallos,
+                    tiempo_segundos: segundosTotales,
+                    puzzle_inicial: puzzleInicial
+                };
+
+                // ====== NUEVO: payload completo ======
+                guardarResultadoLogica({
+                    tipo_juego: 'logica',
+                    puntuacion: gameScore,
+                    tiempo_segundos: segundosTotales,
+                    dificultad: dificultadLogicaBD,
+                    aciertos: aciertos,
+                    fallos: fallos,
+                    nivel_alcanzado: totalVacias, // en sudoku: cuántas vacías completó (aquí completó todas)
+                    detalles_json: JSON.stringify(detalles)
+                });
 
                 msg.textContent = "¡Muy bien! Has completado el sudoku correctamente. Tiempo: " +
                     document.getElementById('timer').textContent;

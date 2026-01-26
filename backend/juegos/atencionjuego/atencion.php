@@ -72,13 +72,8 @@ if (!$dificultad_atencion) {
         }
 
         @keyframes meshMove {
-            0% {
-                background-position: 0% 0%;
-            }
-
-            100% {
-                background-position: 100% 100%;
-            }
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
         }
 
         /* ENVOLTORIO A PANTALLA COMPLETA */
@@ -288,13 +283,8 @@ if (!$dificultad_atencion) {
             filter: brightness(1.03);
         }
 
-        .symbol-card.wrong {
-            background: #b91c1c;
-        }
-
-        .symbol-card.correct {
-            background: #16a34a;
-        }
+        .symbol-card.wrong { background: #b91c1c; }
+        .symbol-card.correct { background: #16a34a; }
 
         .motivacion {
             margin-top: 10px;
@@ -307,8 +297,6 @@ if (!$dificultad_atencion) {
             position: relative;
             z-index: 2;
         }
-
-        /* OVERLAY (se usa para final e inicio) */
 
         /* OVERLAYS */
         .game-overlay {
@@ -333,12 +321,6 @@ if (!$dificultad_atencion) {
             backdrop-filter: blur(10px);
         }
 
-        .overlay-content p {
-            margin: 0 0 14px 0;
-            font-size: 24px;
-            font-weight: 800;
-        }
-
         .overlay-content h3 {
             margin-top: 8px;
             margin-bottom: 6px;
@@ -352,9 +334,7 @@ if (!$dificultad_atencion) {
             font-size: 1.05rem;
         }
 
-        .overlay-buttons {
-            margin-top: 14px;
-        }
+        .overlay-buttons { margin-top: 14px; }
 
         /* BOTONES */
         .btn-game {
@@ -381,210 +361,275 @@ if (!$dificultad_atencion) {
 
 <body>
 
-    <div class="canvas-bg"></div>
+<div class="canvas-bg"></div>
 
-    <div class="game-wrapper">
-        <div class="game-container">
+<div class="game-wrapper">
+    <div class="game-container">
 
-            <!-- Flecha volver al panel de usuario -->
-            <a href="../../usuario.php" class="back-arrow">
-                <svg xmlns="http://www.w3.org/2000/svg" height="26" width="26" viewBox="0 0 24 24" fill="#000000">
-                    <path d="M14.7 20.3 6.4 12l8.3-8.3 1.4 1.4L9.2 12l6.9 6.9Z" />
-                </svg>
-            </a>
+        <!-- Flecha volver al panel de usuario -->
+        <a href="../../usuario.php" class="back-arrow">
+            <svg xmlns="http://www.w3.org/2000/svg" height="26" width="26" viewBox="0 0 24 24" fill="#000000">
+                <path d="M14.7 20.3 6.4 12l8.3-8.3 1.4 1.4L9.2 12l6.9 6.9Z" />
+            </svg>
+        </a>
 
-            <!-- Pastilla superior -->
-            <div class="game-title-pill">Atención</div>
+        <!-- Pastilla superior -->
+        <div class="game-title-pill">Atención</div>
 
-            <!-- Cabecera -->
-            <div class="game-header">
-                <h2>Encuentra el símbolo diferente</h2>
-                <p>Observa todos los símbolos y pulsa sobre el que <strong>NO</strong> es igual a los demás. <br>
-                 Cada respuesta correcta suma <strong>10</strong> puntos y cada respuesta incorrecta resta <strong>5</strong> puntos</p>
-                <p>
-                    Dificultad asignada:
-                    <strong id="dificultad-label"><?= htmlspecialchars($dificultad_atencion) ?></strong>
-                </p>
+        <!-- Cabecera -->
+        <div class="game-header">
+            <h2>Encuentra el símbolo diferente</h2>
+            <p>
+                Observa todos los símbolos y pulsa sobre el que <strong>NO</strong> es igual a los demás. <br>
+                Cada respuesta correcta suma <strong>10</strong> puntos y cada respuesta incorrecta resta <strong>5</strong> puntos
+            </p>
+            <p>
+                Dificultad asignada:
+                <strong id="dificultad-label"><?= htmlspecialchars($dificultad_atencion) ?></strong>
+            </p>
 
-                <div class="status-bar">
-                    <div class="status-pill">
-                        Puntuación: <span id="score">0</span>
-                    </div>
-                    <div class="status-pill">
-                        Tiempo restante:
-                        <span id="time-left" class="timer-value">01:00</span>
-                    </div>
+            <div class="status-bar">
+                <div class="status-pill">Puntuación: <span id="score">0</span></div>
+                <div class="status-pill">
+                    Tiempo restante:
+                    <span id="time-left" class="timer-value">01:00</span>
                 </div>
             </div>
-
-            <!-- Cuerpo del juego -->
-            <div class="game-body">
-                <div id="zona-atencion"></div>
-            </div>
-
-            <!-- Mensaje motivacional -->
-            <div id="motivacion" class="motivacion"></div>
-
-            <!-- OVERLAY FINAL -->
-            <div id="game-overlay" class="game-overlay">
-                <div id="overlay-content" class="overlay-content"></div>
-            </div>
-
-            <!-- OVERLAY INICIAL (antes de empezar) -->
-            <div id="start-overlay" class="game-overlay" style="display:flex; z-index: 6;">
-                <div class="overlay-content">
-                    <p>¿Listo para jugar?</p>
-                    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-                        <button id="btn-start" class="btn-game">Empezar</button>
-                        <button id="btn-start-back" class="btn-game">Volver</button>
-                    </div>
-                </div>
-            </div>
-
         </div>
+
+        <!-- Cuerpo del juego -->
+        <div class="game-body">
+            <div id="zona-atencion"></div>
+        </div>
+
+        <!-- Mensaje motivacional -->
+        <div id="motivacion" class="motivacion"></div>
+
+        <!-- OVERLAY FINAL -->
+        <div id="game-overlay" class="game-overlay">
+            <div id="overlay-content" class="overlay-content"></div>
+        </div>
+
+        <!-- OVERLAY INICIAL -->
+        <div id="start-overlay" class="game-overlay" style="display:flex; z-index: 6;">
+            <div class="overlay-content">
+                <p style="margin:0 0 14px 0; font-size:24px; font-weight:800;">¿Listo para jugar?</p>
+                <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+                    <button id="btn-start" class="btn-game">Empezar</button>
+                    <button id="btn-start-back" class="btn-game">Volver</button>
+                </div>
+            </div>
+        </div>
+
     </div>
+</div>
 
-    <script>
-        // ============================
-        //  DIFICULTAD DESDE PHP
-        // ============================
-        let dificultadTexto = "<?= htmlspecialchars($dificultad_atencion, ENT_QUOTES) ?>";
+<script>
+    // ============================
+    //  DIFICULTAD DESDE PHP
+    // ============================
+    const dificultadTexto = "<?= htmlspecialchars($dificultad_atencion, ENT_QUOTES) ?>";
 
-        function mapDifficultyCode(texto) {
-            const t = (texto || "").toLowerCase();
-            if (t === "fácil" || t === "facil") return "facil";
-            if (t === "difícil" || t === "dificil") return "dificil";
-            return "medio";
+    function mapDifficultyCode(texto) {
+        const t = (texto || "").toLowerCase();
+        if (t === "fácil" || t === "facil") return "facil";
+        if (t === "difícil" || t === "dificil") return "dificil";
+        return "medio";
+    }
+
+    let currentDifficulty = mapDifficultyCode(dificultadTexto);
+
+    // ============================
+    //  VARIABLES GLOBALES
+    // ============================
+    const TOTAL_TIME = 60; // segundos
+    let attentionTimeLeft = TOTAL_TIME;
+    let attentionTimerInt = null;
+    let roundTimeoutId = null;
+    let gameScore = 0;
+    let gameEnded = false;
+
+    // métricas
+    let aciertos = 0;
+    let fallos = 0;
+    let rondas = 0;
+
+    // tiempos de reacción
+    let roundStartMs = 0;
+
+    // eventos para DB (si existe atencion_eventos)
+    // { estimulo: 1 si es el diferente, respuesta: 1 si clicó diferente, tiempo_reaccion: ms }
+    let eventos = [];
+
+    // ============================
+    //  UTILIDADES UI
+    // ============================
+    function updateScoreboard() {
+        const scoreEl = document.getElementById('score');
+        const timeEl = document.getElementById('time-left');
+
+        if (scoreEl) scoreEl.textContent = String(gameScore);
+
+        if (timeEl) {
+            const m = Math.floor(attentionTimeLeft / 60);
+            const s = attentionTimeLeft % 60;
+            timeEl.textContent = String(m).padStart(2, '0') + ":" + String(s).padStart(2, '0');
         }
+    }
 
-        let currentDifficulty = mapDifficultyCode(dificultadTexto);
+    function getMotivationalMessage() {
+        const mensajes = [
+            "¡Buen trabajo! Tu atención va mejorando.",
+            "¡Genial! Has mantenido la concentración todo el tiempo.",
+            "¡Muy bien! Cada ronda refuerza tu capacidad de foco.",
+            "¡Excelente! Has completado el ejercicio de atención.",
+            "¡Lo estás haciendo de maravilla!"
+        ];
+        return mensajes[Math.floor(Math.random() * mensajes.length)];
+    }
 
-        // ============================
-        //  VARIABLES GLOBALES
-        // ============================
-        let attentionTimeLeft = 60;
-        let attentionTimerInt = null;
-        let roundTimeoutId = null;
-        let gameScore = 0;
-        let gameEnded = false;
+    function showOverlay() {
+        const overlay = document.getElementById("game-overlay");
+        if (overlay) overlay.style.display = "flex";
+    }
 
-        const TOTAL_TIME = 60;
+    function hideOverlay() {
+        const overlay = document.getElementById("game-overlay");
+        if (overlay) overlay.style.display = "none";
+    }
 
-        // ============================
-        //  UTILIDADES DE UI
-        // ============================
-        function updateScoreboard() {
-            const scoreEl = document.getElementById('score');
-            const timeEl = document.getElementById('time-left');
+    // ============================
+    //  GUARDAR RESULTADO
+    // ============================
+    function saveAttentionResult() {
+        // tiempo real jugado (si termina antes por lo que sea)
+        const tiempoJugado = Math.max(0, TOTAL_TIME - attentionTimeLeft);
 
-            if (scoreEl) scoreEl.textContent = gameScore;
+        // puntuación normalizada (0..100) además de la score cruda si quieres
+        // aquí usamos una métrica simple: ratio de aciertos sobre intentos.
+        const intentos = aciertos + fallos;
+        const precision = intentos > 0 ? (aciertos / intentos) : 0;
+        const puntuacionNormalizada = Math.round(precision * 100);
 
-            if (timeEl) {
-                const m = Math.floor(attentionTimeLeft / 60);
-                const s = attentionTimeLeft % 60;
-                timeEl.textContent = String(m).padStart(2, '0') + ":" + String(s).padStart(2, '0');
-            }
-        }
+        const detalles = {
+            juego: "atencion",
+            dificultad: dificultadTexto,
+            tiempo_total_segundos: tiempoJugado,
+            score_cruda: gameScore,
+            puntuacion_normalizada: puntuacionNormalizada,
+            rondas: rondas,
+            aciertos: aciertos,
+            fallos: fallos,
+            precision: precision,
+            eventos: eventos
+        };
 
-        function getMotivationalMessage() {
-            const mensajes = [
-                "¡Buen trabajo! Tu atención va mejorando.",
-                "¡Genial! Has mantenido la concentración todo el tiempo.",
-                "¡Muy bien! Cada ronda refuerza tu capacidad de foco.",
-                "¡Excelente! Has completado el ejercicio de atención.",
-                "¡Lo estás haciendo de maravilla!"
-            ];
-            return mensajes[Math.floor(Math.random() * mensajes.length)];
-        }
+        return fetch('../../guardar_resultado.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tipo_juego: 'atencion',
 
-        function showOverlay() {
-            const overlay = document.getElementById("game-overlay");
-            if (overlay) overlay.style.display = "flex";
-        }
+                // panel principal
+                puntuacion: puntuacionNormalizada,
+                tiempo_segundos: tiempoJugado,
+                dificultad: dificultadTexto,
 
-        function hideOverlay() {
-            const overlay = document.getElementById("game-overlay");
-            if (overlay) overlay.style.display = "none";
-        }
+                // columnas nuevas (si existen)
+                aciertos: aciertos,
+                fallos: fallos,
+                nivel_alcanzado: rondas,
+                detalles_json: JSON.stringify(detalles),
 
-        // ============================
-        //  GUARDAR RESULTADO
-        // ============================
-        function saveAttentionResult(score, seconds, dificultad) {
-            fetch('../../guardar_resultado.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    tipo_juego: 'atencion',
-                    puntuacion: score,
-                    tiempo_segundos: seconds,
-                    dificultad: dificultad
-                })
+                // para tabla atencion_eventos (si existe)
+                eventos: eventos
             })
-                .then(res => res.json())
-                .catch(err => console.error('Error al guardar resultado de atención:', err));
-        }
+        })
+        .then(r => r.json())
+        .then(data => {
+            console.log('Respuesta guardar_resultado (atencion):', data);
+            return data;
+        })
+        .catch(err => {
+            console.error('Error al guardar resultado de atención:', err);
+            return { ok:false };
+        });
+    }
 
-        // ============================
-        //  INICIO / FIN DE PARTIDA
-        // ============================
-        function startNewAttentionGame() {
-            const area = document.getElementById('zona-atencion');
-            const motivacionDiv = document.getElementById('motivacion');
-            if (motivacionDiv) motivacionDiv.textContent = "";
+    // ============================
+    //  INICIO / FIN DE PARTIDA
+    // ============================
+    function startNewAttentionGame() {
+        const area = document.getElementById('zona-atencion');
+        const motivacionDiv = document.getElementById('motivacion');
 
-            hideOverlay();
+        if (motivacionDiv) motivacionDiv.textContent = "";
+        hideOverlay();
 
-            gameEnded = false;
-            attentionTimeLeft = TOTAL_TIME;
-            gameScore = 0;
+        // reset estado
+        gameEnded = false;
+        attentionTimeLeft = TOTAL_TIME;
+        gameScore = 0;
 
-            if (attentionTimerInt) clearInterval(attentionTimerInt);
-            if (roundTimeoutId) clearTimeout(roundTimeoutId);
-            attentionTimerInt = null;
-            roundTimeoutId = null;
+        aciertos = 0;
+        fallos = 0;
+        rondas = 0;
+        eventos = [];
 
+        if (attentionTimerInt) clearInterval(attentionTimerInt);
+        if (roundTimeoutId) clearTimeout(roundTimeoutId);
+        attentionTimerInt = null;
+        roundTimeoutId = null;
+
+        updateScoreboard();
+        if (area) area.style.pointerEvents = "auto";
+
+        startAttentionRound(area);
+
+        attentionTimerInt = setInterval(() => {
+            attentionTimeLeft--;
+            if (attentionTimeLeft < 0) attentionTimeLeft = 0;
             updateScoreboard();
-            if (area) area.style.pointerEvents = "auto";
 
-            startAttentionRound(area);
+            if (attentionTimeLeft <= 0) endAttentionGame();
+        }, 1000);
+    }
 
-            attentionTimerInt = setInterval(() => {
-                attentionTimeLeft--;
-                if (attentionTimeLeft < 0) attentionTimeLeft = 0;
-                updateScoreboard();
+    function endAttentionGame() {
+        if (gameEnded) return;
+        gameEnded = true;
 
-                if (attentionTimeLeft <= 0) endAttentionGame();
-            }, 1000);
+        if (attentionTimerInt) clearInterval(attentionTimerInt);
+        if (roundTimeoutId) clearTimeout(roundTimeoutId);
+        attentionTimerInt = null;
+        roundTimeoutId = null;
+
+        const area = document.getElementById('zona-atencion');
+        const motivacionDiv = document.getElementById('motivacion');
+
+        if (area) area.style.pointerEvents = "none";
+
+        const tiempoJugado = Math.max(0, TOTAL_TIME - attentionTimeLeft);
+        const intentos = aciertos + fallos;
+        const precision = intentos > 0 ? (aciertos / intentos) : 0;
+        const puntuacionNormalizada = Math.round(precision * 100);
+
+        if (motivacionDiv) {
+            motivacionDiv.textContent =
+                getMotivationalMessage() +
+                " Puntuación final: " + puntuacionNormalizada + " / 100.";
         }
 
-        function endAttentionGame() {
-            if (gameEnded) return;
-            gameEnded = true;
-
-            if (attentionTimerInt) clearInterval(attentionTimerInt);
-            if (roundTimeoutId) clearTimeout(roundTimeoutId);
-            attentionTimerInt = null;
-            roundTimeoutId = null;
-
-            const area = document.getElementById('zona-atencion');
-            const motivacionDiv = document.getElementById('motivacion');
-
-            if (area) area.style.pointerEvents = "none";
-
-            if (motivacionDiv) {
-                motivacionDiv.textContent = getMotivationalMessage() + " Puntuación final: " + gameScore + " puntos.";
-            }
-
-            saveAttentionResult(gameScore, TOTAL_TIME, dificultadTexto);
-
+        saveAttentionResult().finally(() => {
             const overlayContent = document.getElementById("overlay-content");
             if (overlayContent) {
                 overlayContent.innerHTML = `
                     <i class="fas fa-eye" style="font-size:3rem; color:#facc15; margin-bottom:6px;"></i>
                     <h3>¡Tiempo terminado!</h3>
-                    <p>Puntuación final: <strong>${gameScore}</strong> puntos.</p>
-                    <p>Tiempo de juego: <strong>01:00</strong></p>
+                    <p>Puntuación (0-100): <strong>${puntuacionNormalizada}</strong></p>
+                    <p>Score (cruda): <strong>${gameScore}</strong></p>
+                    <p>Aciertos: <strong>${aciertos}</strong> | Fallos: <strong>${fallos}</strong></p>
+                    <p>Tiempo jugado: <strong>${String(Math.floor(tiempoJugado/60)).padStart(2,'0')}:${String(tiempoJugado%60).padStart(2,'0')}</strong></p>
 
                     <div class="overlay-buttons">
                         <button id="btn-restart" class="btn-game">Jugar otra vez</button>
@@ -600,148 +645,161 @@ if (!$dificultad_atencion) {
 
             if (btnRestart) btnRestart.onclick = () => startNewAttentionGame();
             if (btnVolver) btnVolver.onclick = () => window.location.href = "../../usuario.php";
+        });
+    }
+
+    // ============================
+    //  RONDAS Y SÍMBOLOS
+    // ============================
+    function startAttentionRound(area) {
+        if (gameEnded || !area) return;
+
+        rondas++;
+
+        let symbolCount;
+        let symbolPairs;
+
+        if (currentDifficulty === 'facil') {
+            symbolCount = 6;
+            symbolPairs = [
+                { base: '★', different: '◆' },
+                { base: '■', different: '▲' },
+                { base: '●', different: '◆' },
+                { base: '▲', different: '■' }
+            ];
+        } else if (currentDifficulty === 'medio') {
+            symbolCount = 9;
+            symbolPairs = [
+                { base: '◆', different: '✦' },
+                { base: '■', different: '⬛' },
+                { base: '●', different: '◎' },
+                { base: '▲', different: '△' }
+            ];
+        } else {
+            symbolCount = 12;
+            symbolPairs = [
+                { base: '⬤', different: '◯' },
+                { base: '◆', different: '◇' },
+                { base: '■', different: '□' },
+                { base: '▲', different: '△' }
+            ];
         }
 
-        // ============================
-        //  RONDAS Y SÍMBOLOS
-        // ============================
-        function startAttentionRound(area) {
-            if (gameEnded || !area) return;
+        area.innerHTML = "";
 
-            let symbolCount;
-            let symbolPairs;
+        const instructions = document.createElement('p');
+        instructions.className = "instructions";
+        instructions.textContent = "Pulsa el símbolo diferente lo más rápido posible.";
+        area.appendChild(instructions);
 
-            if (currentDifficulty === 'facil') {
-                symbolCount = 6;
-                symbolPairs = [
-                    { base: '★', different: '◆' },
-                    { base: '■', different: '▲' },
-                    { base: '●', different: '◆' },
-                    { base: '▲', different: '■' }
-                ];
-            } else if (currentDifficulty === 'medio') {
-                symbolCount = 9;
-                symbolPairs = [
-                    { base: '◆', different: '✦' },
-                    { base: '■', different: '⬛' },
-                    { base: '●', different: '◎' },
-                    { base: '▲', different: '△' }
-                ];
-            } else {
-                symbolCount = 12;
-                symbolPairs = [
-                    { base: '⬤', different: '◯' },
-                    { base: '◆', different: '◇' },
-                    { base: '■', different: '□' },
-                    { base: '▲', different: '△' }
-                ];
-            }
+        const grid = document.createElement('div');
+        grid.className = "symbol-grid";
+        grid.style.gridTemplateColumns = `repeat(${Math.ceil(Math.sqrt(symbolCount))}, 92px)`;
+        area.appendChild(grid);
 
-            area.innerHTML = "";
+        generateAttentionExercise(grid, symbolCount, symbolPairs);
 
-            const instructions = document.createElement('p');
-            instructions.className = "instructions";
-            instructions.textContent = "Pulsa el símbolo diferente lo más rápido posible.";
-            area.appendChild(instructions);
+        if (roundTimeoutId) clearTimeout(roundTimeoutId);
+        roundTimeoutId = setTimeout(() => {
+            if (!gameEnded && attentionTimeLeft > 0) startAttentionRound(area);
+        }, 15000);
+    }
 
-            const grid = document.createElement('div');
-            grid.className = "symbol-grid";
-            grid.style.gridTemplateColumns = `repeat(${Math.ceil(Math.sqrt(symbolCount))}, 92px)`;
-            area.appendChild(grid);
+    function generateAttentionExercise(container, symbolCount, symbolPairs) {
+        container.style.opacity = '0';
 
-            generateAttentionExercise(grid, symbolCount, symbolPairs);
+        setTimeout(() => {
+            container.innerHTML = "";
 
-            if (roundTimeoutId) clearTimeout(roundTimeoutId);
-            roundTimeoutId = setTimeout(() => {
-                if (!gameEnded && attentionTimeLeft > 0) startAttentionRound(area);
-            }, 15000);
-        }
+            const pair = symbolPairs[Math.floor(Math.random() * symbolPairs.length)];
+            const symbols = new Array(symbolCount).fill(pair.base);
+            const differentIndex = Math.floor(Math.random() * symbolCount);
+            symbols[differentIndex] = pair.different;
 
-        function generateAttentionExercise(container, symbolCount, symbolPairs) {
-            // Fade out anterior
-            container.style.opacity = '0';
+            // marca inicio ronda para reaction time
+            roundStartMs = performance.now();
 
-            setTimeout(() => {
-                container.innerHTML = "";
+            symbols.forEach((symbol, index) => {
+                const card = document.createElement('div');
+                card.className = "symbol-card";
+                card.textContent = symbol;
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.8)';
 
-                const pair = symbolPairs[Math.floor(Math.random() * symbolPairs.length)];
-                const symbols = new Array(symbolCount).fill(pair.base);
-                const differentIndex = Math.floor(Math.random() * symbolCount);
-                symbols[differentIndex] = pair.different;
+                card.addEventListener('click', () => {
+                    if (gameEnded) return;
 
-                symbols.forEach((symbol, index) => {
-                    const card = document.createElement('div');
-                    card.className = "symbol-card";
-                    card.textContent = symbol;
-                    card.style.opacity = '0';
-                    card.style.transform = 'scale(0.8)';
+                    const rt = Math.max(0, performance.now() - roundStartMs); // ms
+                    const esDiferente = (index === differentIndex);
 
-                    card.addEventListener('click', () => {
-                        if (gameEnded) return;
-
-                        if (index === differentIndex) {
-                            gameScore += 10;
-                            card.classList.add("correct");
-                            updateScoreboard();
-
-                            const area = document.getElementById('zona-atencion');
-                            setTimeout(() => {
-                                if (!gameEnded && attentionTimeLeft > 0) startAttentionRound(area);
-                            }, 600);
-                        } else {
-                            gameScore = Math.max(0, gameScore - 5);
-                            card.classList.add("wrong");
-                            updateScoreboard();
-
-                            setTimeout(() => card.classList.remove("wrong"), 800);
-                        }
+                    // estimulo: si la carta clicada era el diferente
+                    // respuesta: 1 si clicó la correcta (diferente), 0 si no
+                    eventos.push({
+                        estimulo: esDiferente ? 1 : 0,
+                        respuesta: esDiferente ? 1 : 0,
+                        tiempo_reaccion: rt
                     });
 
-                    container.appendChild(card);
+                    if (esDiferente) {
+                        aciertos++;
+                        gameScore += 10;
+                        card.classList.add("correct");
+                        updateScoreboard();
 
-                    // Animar entrada de cada carta con delay escalonado
-                    setTimeout(() => {
-                        card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-                        card.style.opacity = '1';
-                        card.style.transform = 'scale(1)';
-                    }, index * 50);
+                        const area = document.getElementById('zona-atencion');
+                        setTimeout(() => {
+                            if (!gameEnded && attentionTimeLeft > 0) startAttentionRound(area);
+                        }, 600);
+                    } else {
+                        fallos++;
+                        gameScore = Math.max(0, gameScore - 5);
+                        card.classList.add("wrong");
+                        updateScoreboard();
+
+                        setTimeout(() => card.classList.remove("wrong"), 800);
+                    }
                 });
 
-                // Fade in del contenedor
-                container.style.transition = 'opacity 0.3s ease';
-                container.style.opacity = '1';
-            }, 300);
+                container.appendChild(card);
+
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'scale(1)';
+                }, index * 50);
+            });
+
+            container.style.transition = 'opacity 0.3s ease';
+            container.style.opacity = '1';
+        }, 300);
+    }
+
+    // ============================
+    //  INICIALIZACIÓN
+    // ============================
+    document.addEventListener("DOMContentLoaded", function () {
+        const startOverlay = document.getElementById("start-overlay");
+        const btnStart = document.getElementById("btn-start");
+        const btnStartBack = document.getElementById("btn-start-back");
+        const zona = document.getElementById("zona-atencion");
+
+        if (zona) zona.style.pointerEvents = "none";
+
+        if (btnStart) {
+            btnStart.addEventListener("click", function () {
+                if (startOverlay) startOverlay.style.display = "none";
+                if (zona) zona.style.pointerEvents = "auto";
+                startNewAttentionGame();
+            });
         }
 
-        // ============================
-        //  INICIALIZACIÓN
-        // ============================
-        document.addEventListener("DOMContentLoaded", function () {
-            const startOverlay = document.getElementById("start-overlay");
-            const btnStart = document.getElementById("btn-start");
-            const btnStartBack = document.getElementById("btn-start-back");
-            const zona = document.getElementById("zona-atencion");
-
-            // Bloquear interacción hasta empezar
-            if (zona) zona.style.pointerEvents = "none";
-
-            // No iniciar juego aquí; solo cuando pulses Empezar
-            if (btnStart) {
-                btnStart.addEventListener("click", function () {
-                    if (startOverlay) startOverlay.style.display = "none";
-                    if (zona) zona.style.pointerEvents = "auto";
-                    startNewAttentionGame();
-                });
-            }
-
-            if (btnStartBack) {
-                btnStartBack.addEventListener("click", function () {
-                    window.location.href = "../../usuario.php";
-                });
-            }
-        });
-    </script>
+        if (btnStartBack) {
+            btnStartBack.addEventListener("click", function () {
+                window.location.href = "../../usuario.php";
+            });
+        }
+    });
+</script>
 
 </body>
-
 </html>
