@@ -222,7 +222,7 @@ $nombre = $_SESSION["nombre"];
         <div class="game-card" onclick="location.href='juegos/logicajuego/logica.php'" style="background: rgba(189, 253, 176, 0.85);">
             <h2>Lógica</h2>
             <div class="image-wrapper">
-                <img src="../../imagenes/logica.jpg" alt="Lógica">
+                <img src="../frontend/imagenes/logica.jpg" alt="Lógica">
             </div>
             <div class="btn-play btn-premium">Jugar</div>
         </div>
@@ -230,7 +230,7 @@ $nombre = $_SESSION["nombre"];
         <div class="game-card" onclick="location.href='juegos/memoriajuego/memoria.php'" style="background: rgba(200, 235, 255, 0.85);">
             <h2>Memoria</h2>
             <div class="image-wrapper">
-                <img src="../../imagenes/memoria.jpg" alt="Memoria">
+                <img src="../frontend/imagenes/memoria.jpg" alt="Memoria">
             </div>
             <div class="btn-play btn-premium">Jugar</div>
         </div>
@@ -238,7 +238,7 @@ $nombre = $_SESSION["nombre"];
         <div class="game-card" onclick="location.href='juegos/razonamientojuego/razonamiento.php'" style="background: rgba(252, 209, 160, 0.85);">
             <h2>Razonamiento</h2>
             <div class="image-wrapper">
-                <img src="../../imagenes/razonamiento.jpg" alt="Razonamiento">
+                <img src="../frontend/imagenes/razonamiento.jpg" alt="Razonamiento">
             </div>
             <div class="btn-play btn-premium">Jugar</div>
         </div>
@@ -246,7 +246,7 @@ $nombre = $_SESSION["nombre"];
         <div class="game-card" onclick="location.href='juegos/atencionjuego/atencion.php'" style="background: rgba(255, 164, 164, 0.85);">
             <h2>Atención</h2>
             <div class="image-wrapper">
-                <img src="../../imagenes/atencion.png" alt="Atención">
+                <img src="../frontend/imagenes/atencion.png" alt="Atención">
             </div>
             <div class="btn-play btn-premium">Jugar</div>
         </div>

@@ -15,6 +15,6 @@ header("Pragma: no-cache");
 header("Expires: 0");
 
 // Redirigir a la pantalla principal
-header("Location: neuro.html");
+header("Location: ../frontend/neuro.html");
 exit;
 ?>
