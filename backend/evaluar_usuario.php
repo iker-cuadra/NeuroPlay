@@ -28,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["save_evaluation"])) {
     $memoria      = trim($_POST["memoria"] ?? "Fácil");
     $logica       = trim($_POST["logica"] ?? "Fácil");
     $razonamiento = trim($_POST["razonamiento"] ?? "Fácil");
-    $atencion     = trim($_POST["atencion"] ?? "Fácil"); 
+    $atencion     = trim($_POST["atencion"] ?? "Fácil");
 
     try {
         if ($user_id_post > 0 && $profesional_id > 0) {
@@ -119,13 +119,55 @@ if (!$usuario) {
     exit;
 }
 
-// Lógica para determinar la ruta de la foto
-$ruta_foto = 'uploads/default.png';
-if ($usuario['rol'] === 'profesional' && $usuario['foto'] === 'default.png') {
-    $ruta_foto = '../frontend/imagenes/admin.jpg';
-} elseif (!empty($usuario['foto']) && $usuario['foto'] !== 'default.png') {
-    $ruta_foto = 'uploads/' . htmlspecialchars($usuario['foto']);
+// ----------------------------------------------------
+// FOTO DE PERFIL (predeterminada por rol o subida por usuario)
+// ----------------------------------------------------
+function resolverRutaFotoPerfil(array $usuario): string {
+    $rol  = strtolower(trim((string)($usuario['rol'] ?? 'usuario')));
+    $foto = trim((string)($usuario['foto'] ?? ''));
+
+    // Defaults por rol (en uploads/)
+    $defaultPorRol = [
+        'usuario'      => 'default_usuario.png',
+        'familiar'     => 'default_familiar.png',
+        'profesional'  => 'default_profesional.png',
+    ];
+
+    // Nombres que consideramos "default genérico" (no personalizado)
+    $defaults = [
+        '',
+        'default.png',
+        'default_usuario.png',
+        'default_familiar.png',
+        'default_profesional.png',
+    ];
+
+    // Seguridad: evitar rutas tipo ../
+    $fotoSeguro = $foto !== '' ? basename($foto) : '';
+
+    // Carpeta de uploads
+    $uploadsDirFisico = __DIR__ . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
+
+    // Si hay foto personalizada y existe, usarla
+    if ($fotoSeguro !== '' && !in_array($fotoSeguro, $defaults, true)) {
+        if (file_exists($uploadsDirFisico . $fotoSeguro)) {
+            return 'uploads/' . $fotoSeguro;
+        }
+        // Si no existe físicamente, caer al default por rol
+    }
+
+    // Si no hay foto o es default genérico, escoger por rol
+    $defaultElegido = $defaultPorRol[$rol] ?? 'default.png';
+
+    // Si el default por rol no existe, caer a default.png
+    if (!file_exists($uploadsDirFisico . $defaultElegido)) {
+        $defaultElegido = 'default.png';
+    }
+
+    return 'uploads/' . $defaultElegido;
 }
+
+$ruta_foto = resolverRutaFotoPerfil($usuario);
 
 // ----------------------------------------------------
 // CARGAR DATOS DE DIFICULTADES (tabla dificultades_asignadas)
@@ -518,7 +560,7 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
             <?php endif; ?>
 
             <div class="profile-card">
-                <img src="<?= $ruta_foto ?>" alt="Foto de <?= htmlspecialchars($usuario["nombre"]) ?>">
+                <img src="<?= htmlspecialchars($ruta_foto) ?>" alt="Foto de <?= htmlspecialchars($usuario["nombre"]) ?>">
                 <div class="profile-info">
                     <h2><?= htmlspecialchars($usuario["nombre"]) ?> (ID: <?= (int)$usuario["id"] ?>)</h2>
 
