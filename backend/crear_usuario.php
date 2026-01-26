@@ -138,7 +138,7 @@ html, body{
 
 .header{
     width:100%; height:var(--header-h);
-    background-image:url('imagenes/Banner.svg');
+    background-image:url('../frontend/imagenes/Banner.svg');
     background-size:cover; background-position:center;
     position:relative; flex:0 0 auto;
 }
