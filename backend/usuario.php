@@ -59,9 +59,10 @@ $nombre = $_SESSION["nombre"];
         .header {
             width: 100%;
             height: 160px;
-            background-image: url('../frontend/imagenes/Banner.svg');
+            background-image: url('../frontend/imagenes/fondo.svg');
             background-size: cover;
-            background-position: center;
+            background-position: center center;
+            background-repeat: no-repeat;
             position: relative;
             opacity: 0;
             transform: translateY(-30px);
@@ -73,6 +74,21 @@ $nombre = $_SESSION["nombre"];
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+
+        .center-title {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: 700;
+            font-size: 48px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            opacity: 0;
+            animation: fadeIn 0.6s ease forwards 0.6s;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .user-role {
@@ -250,6 +266,7 @@ $nombre = $_SESSION["nombre"];
     <div class="canvas-bg"></div>
 
     <div class="header">
+        <div class="center-title">Centro Pere Bas</div>
         <a href="logout.php" class="logout-button btn-premium">
             <i class="fas fa-sign-out-alt"></i> Cerrar sesión
         </a>

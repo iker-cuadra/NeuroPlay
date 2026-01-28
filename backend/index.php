@@ -108,11 +108,9 @@ html, body {
     }
 }
 
-.logo-circle h2 {
-    font-size: 32px;
-    font-weight: 700;
-    color: #2271b1;
-    margin: 0;
+.logo-circle svg {
+    width: 48px;
+    height: 48px;
 }
 
 .login-header h1 {
@@ -303,8 +301,9 @@ button[type="submit"]:active {
         height: 72px;
     }
     
-    .logo-circle h2 {
-        font-size: 28px;
+    .logo-circle svg {
+        width: 42px;
+        height: 42px;
     }
     
     .login-header h1 {
@@ -327,8 +326,9 @@ button[type="submit"]:active {
         height: 64px;
     }
     
-    .logo-circle h2 {
-        font-size: 24px;
+    .logo-circle svg {
+        width: 38px;
+        height: 38px;
     }
     
     .login-header h1 {
@@ -345,7 +345,10 @@ button[type="submit"]:active {
     <div style="width: 100%; max-width: 420px;">
         <div class="login-header">
             <div class="logo-circle">
-                <h2>PB</h2>
+                <svg viewBox="0 0 24 24" fill="none" stroke="#2271b1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/>
+                    <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/>
+                </svg>
             </div>
             <h1>Centro Pere Bas</h1>
         </div>
