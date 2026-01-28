@@ -103,14 +103,31 @@ foreach ($usuarios as $u) {
     $tabla_html .= '  <td>' . htmlspecialchars($u["email"]) . '</td>';
     $tabla_html .= '  <td><span class="role-badge ' . htmlspecialchars($u["rol"]) . '">' . htmlspecialchars($u["rol"]) . '</span></td>';
     $tabla_html .= '  <td>';
-    $tabla_html .= '    <div style="display:flex; gap:10px; justify-content:center;">';
+    $tabla_html .= '    <div style="display:flex; gap:8px; justify-content:center;">';
 
+    // BOTÓN EVALUAR (solo para usuarios)
     if (($u["rol"] ?? "") === "usuario") {
-        $tabla_html .= '      <a class="action-btn btn-evaluar" href="evaluar_usuario.php' . qs_keep_ajax($filtro_rol, $pagina_actual, ["user_id" => (int)$u["id"]]) . '"><i class="fas fa-cog"></i></a>';
+        $tabla_html .= '      <a class="action-btn btn-evaluar" ';
+        $tabla_html .= '         href="evaluar_usuario.php' . qs_keep_ajax($filtro_rol, $pagina_actual, ["user_id" => (int)$u["id"]]) . '">';
+        $tabla_html .= '        <i class="fas fa-chart-line"></i>';
+        $tabla_html .= '        <span class="btn-text">Evaluar</span>';
+        $tabla_html .= '      </a>';
     }
 
-    $tabla_html .= '      <a class="action-btn btn-editar" href="gestionar_users.php' . qs_keep_ajax($filtro_rol, $pagina_actual, ["editar_id" => (int)$u["id"]]) . '"><i class="fas fa-pen"></i></a>';
-    $tabla_html .= '      <a class="action-btn btn-eliminar" href="gestionar_users.php' . qs_keep_ajax($filtro_rol, $pagina_actual, ["eliminar_id" => (int)$u["id"]]) . '" onclick="return confirm(\'¿Seguro?\');"><i class="fas fa-trash"></i></a>';
+    // BOTÓN EDITAR
+    $tabla_html .= '      <a class="action-btn btn-editar" ';
+    $tabla_html .= '         href="gestionar_users.php' . qs_keep_ajax($filtro_rol, $pagina_actual, ["editar_id" => (int)$u["id"]]) . '">';
+    $tabla_html .= '        <i class="fas fa-user-edit"></i>';
+    $tabla_html .= '        <span class="btn-text">Editar</span>';
+    $tabla_html .= '      </a>';
+
+    // BOTÓN ELIMINAR
+    $tabla_html .= '      <a class="action-btn btn-eliminar" ';
+    $tabla_html .= '         href="gestionar_users.php' . qs_keep_ajax($filtro_rol, $pagina_actual, ["eliminar_id" => (int)$u["id"]]) . '" ';
+    $tabla_html .= '         onclick="return confirm(\'⚠️ ¿Estás seguro de que deseas eliminar este usuario?\\n\\nEsta acción no se puede deshacer y se eliminarán todos sus datos asociados.\');">';
+    $tabla_html .= '        <i class="fas fa-trash-alt"></i>';
+    $tabla_html .= '        <span class="btn-text">Eliminar</span>';
+    $tabla_html .= '      </a>';
 
     $tabla_html .= '    </div>';
     $tabla_html .= '  </td>';
@@ -122,8 +139,6 @@ foreach ($usuarios as $u) {
 // -------------------------
 $paginacion_html = "";
 if ($total_paginas > 1) {
-    $paginacion_html .= '<div class="pagination-container">';
-
     if ($pagina_actual <= 1) {
         $paginacion_html .= '<span class="page-link disabled"><i class="fas fa-chevron-left"></i></span>';
     } else {
@@ -140,8 +155,6 @@ if ($total_paginas > 1) {
     } else {
         $paginacion_html .= '<a href="#" class="page-link page-ajax" data-page="' . ($pagina_actual + 1) . '"><i class="fas fa-chevron-right"></i></a>';
     }
-
-    $paginacion_html .= '</div>';
 }
 
 // -------------------------

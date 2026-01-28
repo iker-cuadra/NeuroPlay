@@ -447,29 +447,81 @@ html, body{
 .filter-buttons a:hover:not(.active) { background: #f8f9fa; transform: translateY(-1px); }
 .filter-buttons a.active{ background: #4a4a4a; color: #fff; border-color: #4a4a4a; transform: scale(1.05); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
-/* ANIMACIÓN FILAS Y BOTONES ACCIÓN */
+/* ANIMACIÓN FILAS Y BOTONES ACCIÓN MEJORADOS */
 tbody tr{ background: #fff; border-radius: 18px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); transition: all 0.3s ease; }
 tbody tr:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
 
+/* BOTONES DE ACCIÓN REDISEÑADOS - MÁS INTUITIVOS (SIN TOOLTIPS) */
 .action-btn{
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 10px 14px;
-    border-radius: 14px;
+    gap: 6px;
+    padding: 10px 16px;
+    border-radius: 12px;
     text-decoration: none;
-    font-weight: 900;
+    font-weight: 700;
     font-size: 13px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    border: 2px solid transparent;
 }
-.action-btn:hover { transform: translateY(-4px) scale(1.1); box-shadow: 0 8px 18px rgba(0,0,0,0.12); }
-.action-btn:active { transform: scale(0.9); }
 
-.btn-evaluar{ background: linear-gradient(180deg, #ecfdf5, #dcfce7); color: #166534; }
-.btn-editar{ background: linear-gradient(180deg, #eef2ff, #e0e7ff); color: #1e3a8a; }
-.btn-eliminar{ background: linear-gradient(180deg, #fff1f2, #ffe4e6); color: #9f1239; }
+.action-btn i {
+    font-size: 14px;
+    transition: transform 0.3s ease;
+}
+
+.action-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+.action-btn:hover i {
+    transform: scale(1.2);
+}
+
+.action-btn:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+/* Colores específicos para cada acción - Más distintivos */
+.btn-evaluar {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border-color: #059669;
+}
+.btn-evaluar:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+.btn-editar {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border-color: #2563eb;
+}
+.btn-editar:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+.btn-eliminar {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border-color: #dc2626;
+}
+.btn-eliminar:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+}
+
+/* Texto descriptivo en botones - Ocultar en móviles */
+.btn-text {
+    font-size: 12px;
+    letter-spacing: 0.3px;
+}
 
 /* ANIMACIÓN Y DISEÑO PAGINACIÓN */
 .pagination-container { display: flex; justify-content: center; align-items: center; gap: 8px; padding: 15px 0; margin-top: auto; }
@@ -584,6 +636,23 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
 .editing-active .form-grid {
     gap: 15px;
     margin-bottom: 20px;
+}
+
+/* RESPONSIVE - Ocultar texto en móviles */
+@media (max-width: 768px) {
+    .btn-text {
+        display: none;
+    }
+    
+    .action-btn {
+        padding: 10px 12px;
+        min-width: 42px;
+    }
+    
+    .action-btn i {
+        font-size: 16px;
+        margin: 0;
+    }
 }
 </style>
 </head>
@@ -712,7 +781,7 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
                             <th>Nombre</th>
                             <th>Email</th>
                             <th style="width:130px;">Rol</th>
-                            <th style="width:260px; text-align:center;">Acciones</th>
+                            <th style="width:340px; text-align:center;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-usuarios">
@@ -726,12 +795,25 @@ thead th{ text-align: left; font-size: 13px; color: var(--muted); font-weight: 8
                             <td><?= htmlspecialchars($u["email"]) ?></td>
                             <td><span class="role-badge <?= $u["rol"] ?>"><?= $u["rol"] ?></span></td>
                             <td>
-                                <div style="display:flex; gap:10px; justify-content:center;">
+                                <div style="display:flex; gap:8px; justify-content:center;">
                                     <?php if ($u['rol']==='usuario'): ?>
-                                        <a class="action-btn btn-evaluar" href="evaluar_usuario.php<?= qs_keep(["user_id"=>$u["id"]]) ?>"><i class="fas fa-cog"></i></a>
+                                        <a class="action-btn btn-evaluar" 
+                                           href="evaluar_usuario.php<?= qs_keep(["user_id"=>$u["id"]]) ?>">
+                                            <i class="fas fa-chart-line"></i>
+                                            <span class="btn-text">Evaluar</span>
+                                        </a>
                                     <?php endif; ?>
-                                    <a class="action-btn btn-editar" href="gestionar_users.php<?= qs_keep(["editar_id"=>$u["id"]]) ?>"><i class="fas fa-pen"></i></a>
-                                    <a class="action-btn btn-eliminar" href="gestionar_users.php<?= qs_keep(["eliminar_id"=>$u["id"]]) ?>" onclick="return confirm('¿Seguro?');"><i class="fas fa-trash"></i></a>
+                                    <a class="action-btn btn-editar" 
+                                       href="gestionar_users.php<?= qs_keep(["editar_id"=>$u["id"]]) ?>">
+                                        <i class="fas fa-user-edit"></i>
+                                        <span class="btn-text">Editar</span>
+                                    </a>
+                                    <a class="action-btn btn-eliminar" 
+                                       href="gestionar_users.php<?= qs_keep(["eliminar_id"=>$u["id"]]) ?>"
+                                       onclick="return confirm('⚠️ ¿Estás seguro de que deseas eliminar este usuario?\n\nEsta acción no se puede deshacer y se eliminarán todos sus datos asociados.');">
+                                        <i class="fas fa-trash-alt"></i>
+                                        <span class="btn-text">Eliminar</span>
+                                    </a>
                                 </div>
                             </td>
                         </tr>
