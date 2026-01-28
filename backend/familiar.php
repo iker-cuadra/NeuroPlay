@@ -1,37 +1,33 @@
 <?php
-// Asegúrate de iniciar la sesión si 'auth.php' no lo hace
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
+
 require_once "includes/conexion.php";
-require_once "includes/auth.php"; 
+require_once "includes/auth.php";
 
-// Solo permite acceso a familiares
-requireRole("familiar"); 
+requireRole("familiar");
 
-// Evitar volver atrás con el navegador una vez cerrada la sesión
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 header("Expires: 0");
 
-$nombre = $_SESSION["nombre"] ?? 'Familiar';
+$nombre = $_SESSION["nombre"] ?? "Familiar";
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel del Familiar - Centro Pere Bas</title>
+    <title>Panel del Familiar</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
     <style>
         :root{
-            --nav-height: 80px;
-            --primary: #3b82f6;
-            --text-dark: #1f2937;
+            --header-h: 160px;
         }
 
         html, body {
@@ -39,16 +35,15 @@ $nombre = $_SESSION["nombre"] ?? 'Familiar';
             padding: 0;
             height: 100%;
             width: 100%;
-            overflow-x: hidden;
+            overflow: hidden;
             font-family: 'Poppins', sans-serif;
         }
 
         /* --- FONDO MESH ANIMADO --- */
         .canvas-bg {
             position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: -1; 
-            background: #e5e5e5;
+            inset: 0;
+            z-index: -1;
             background-image:
                 radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
                 radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
@@ -64,112 +59,94 @@ $nombre = $_SESSION["nombre"] ?? 'Familiar';
             100% { background-position: 100% 100%; }
         }
 
-        .layout {
-            min-height: 100vh;
+        .layout{
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            padding-top: var(--nav-height);
         }
 
-        /* --- NAVBAR ESTILO ACTUALIZADO --- */
-        .navbar {
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: var(--nav-height);
-    /* El 0.8 controla la opacidad (0 es invisible, 1 es sólido) */
-    background: rgba(31, 41, 55, 0.75); 
-    /* El blur crea el efecto de vidrio esmerilado */
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px); /* Soporte para Safari */
-    display: flex; 
-    align-items: center; 
-    justify-content: space-between;
-    padding: 0 40px; 
-    box-sizing: border-box; 
-    z-index: 1000; 
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Sutil línea divisoria */
-}
-
-        .brand-text { 
-    font-size: 20px; 
-    font-weight: 700; 
-    color: #ffffff; /* Blanco */
-}
-
-        .nav-links {
-            display: flex;
-            gap: 15px; /* Ajustado para que quepa bien el botón de Inicio */
-            align-items: center;
+        /* --- HEADER CON BANNER --- */
+        .header{
+            width: 100%;
+            height: var(--header-h);
+            background-image: url('../frontend/imagenes/Banner.svg');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            flex: 0 0 auto;
         }
 
-       .nav-item {
-    text-decoration: none; 
-    color: #d1d5db; /* Gris claro */
-    font-weight: 500; 
-    font-size: 15px;
-    display: flex; 
-    align-items: center; 
-    gap: 10px; 
-    padding: 10px 18px; 
-    border-radius: 12px; 
-    transition: 0.2s;
-}
+        .user-role{
+            position: absolute;
+            bottom: 10px;
+            left: 20px;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+        }
 
-.nav-item:hover { 
-    color: #ffffff; 
-    background: rgba(255, 255, 255, 0.1); 
-}
-
-.nav-item.active { 
-    color: #60a5fa; /* Azul claro para resaltar más */
-    background: rgba(96, 165, 250, 0.15); 
-    font-weight: 600; 
-}
-
-        .user-actions {
+        /* --- BOTÓN LOGOUT --- */
+        .logout-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
             display: flex;
             align-items: center;
-            gap: 20px;
-        }
-        
-        .role-badge {
-            background: #e0f2fe;
-            color: #0369a1;
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-size: 14px;
+            gap: 10px;
+            padding: 12px 20px;
+            font-size: 15px;
             font-weight: 600;
-        }
-
-        .btn-logout {
+            border-radius: 16px;
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            border: 1.5px solid rgba(255,255,255,0.7);
+            cursor: pointer;
             text-decoration: none;
-            color: #dc2626;
-            font-weight: 600;
-            font-size: 14px;
-            padding: 10px 20px;
-            border: 1px solid #fecaca;
-            border-radius: 12px;
-            transition: all 0.2s;
-            background: white;
+            z-index: 10;
+            overflow: hidden;
+            transition: 
+                transform 0.25s cubic-bezier(.2,.8,.2,1),
+                box-shadow 0.25s cubic-bezier(.2,.8,.2,1),
+                background 0.3s ease,
+                border-color 0.3s ease;
         }
 
-        .btn-logout:hover {
-            background: #fef2f2;
-            border-color: #dc2626;
+        .logout-button::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                120deg,
+                transparent 20%,
+                rgba(255,255,255,0.25),
+                transparent 80%
+            );
+            opacity: 0;
+            transform: translateX(-60%);
+            transition: opacity 0.35s ease, transform 0.35s ease;
         }
 
-        /* --- SECCIÓN CENTRAL Y TARJETAS --- */
+        .logout-button:hover {
+            background: rgba(255,255,255,0.12);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.35);
+            border-color: #fff;
+        }
+
+        .logout-button:hover::after {
+            opacity: 1;
+            transform: translateX(60%);
+        }
+
+        /* --- MAIN --- */
         .main-section {
-            flex: 1;
+            flex: 1 1 auto;
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 50px;
             flex-wrap: wrap;
-            padding: 40px;
+            padding: 0;
         }
 
         .card {
@@ -177,81 +154,101 @@ $nombre = $_SESSION["nombre"] ?? 'Familiar';
             width: 260px;
             padding: 30px;
             border-radius: 20px;
-            background: rgba(255, 255, 255, 0.4); 
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            background: rgba(49, 49, 49, 0.35);
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+            border: 1px solid rgba(12, 12, 12, 0.2);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
             transition: transform 0.3s, box-shadow 0.3s;
             cursor: pointer;
-            color: #1f2937;
+            margin: 0;
+            color: #fff;
         }
 
         .card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-            background: rgba(255, 255, 255, 0.6); 
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
         }
 
         .card img {
-            width: 180px;
-            height: 180px;
+            width: 200px;
+            height: 200px;
+            border-radius: 16px;
             object-fit: contain;
             margin-bottom: 20px;
         }
 
-        .card h2 { font-size: 22px; font-weight: 700; margin: 0; color: #111; }
-        .card-subtitle { margin-top: 4px; font-size: 14px; color: #555; font-weight: 500; }
+        .card h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
 
-        @media (max-width: 1000px) {
-            .navbar { padding: 0 20px; height: auto; flex-direction: column; padding-bottom: 20px; gap: 10px;}
-            .brand-text { padding: 15px 0; }
-            .nav-links { flex-wrap: wrap; justify-content: center; }
-            .layout { padding-top: 200px; }
+        .card-subtitle {
+            margin-top: 4px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+        }
+
+        /* --- SUBRAYADO IGUAL AL PROFESIONAL --- */
+        .card-label::after {
+            content: '';
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: #3b82f6;
+            margin: 8px auto 0;
+            transition: width 0.3s ease;
+        }
+
+        .card-label:hover::after {
+            width: 60px;
+        }
+
+        @media (max-width: 900px) {
+            .main-section {
+                flex-direction: column;
+                gap: 40px;
+            }
+            .card {
+                width: 220px;
+                padding: 20px;
+            }
+            .card img {
+                width: 180px;
+                height: 180px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <div class="canvas-bg"></div>
+<div class="canvas-bg"></div>
 
-    <nav class="navbar">
-        <div class="brand">
-            <div class="brand-text">Centro de día Pere Bas</div>
+<div class="layout">
+    <div class="header">
+        <div class="user-role">Panel del Familiar</div>
+        <a href="logout.php" class="logout-button">
+            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+        </a>
+    </div>
+
+    <div class="main-section">
+        <div class="card card-label" onclick="location.href='ver_progreso_familiar.php'">
+            <img src="../frontend/imagenes/progreso2.png" alt="Progreso">
+            <h2>Progreso</h2>
+            <p class="card-subtitle">Ver evolución del usuario</p>
         </div>
 
-        <div class="nav-links">
-            <a href="ver_progreso_familiar.php" class="nav-item active">
-                <i class="fas fa-chart-line"></i> Mi Progreso
-            </a>
-            <a href="lista_profesionales.php" class="nav-item">
-                <i class="fas fa-comments"></i> Chat Profesional
-            </a>
-        </div>
-
-        <div class="user-actions">
-            <span class="role-badge">Familiar</span>
-            <a href="logout.php" class="btn-logout">
-                Cerrar sesión
-            </a>
-        </div>
-    </nav>
-
-    <div class="layout">
-        <div class="main-section">
-            <div class="card" onclick="location.href='ver_progreso_familiar.php'">
-                <img src="../frontend/imagenes/progreso.svg" alt="Progreso">
-                <h2>Progreso</h2>
-                <p class="card-subtitle">Ver evolución del usuario</p>
-            </div>
-
-            <div class="card" onclick="location.href='lista_profesionales.php'">
-                <img src="../frontend/imagenes/chat.svg" alt="Profesionales">
-                <h2>Profesionales</h2>
-                <p class="card-subtitle">Contactar con el centro</p>
-            </div>
+        <div class="card card-label" onclick="location.href='lista_profesionales.php'">
+            <img src="../frontend/imagenes/chat.svg" alt="Chat">
+            <h2>Profesionales</h2>
+            <p class="card-subtitle">Contactar con el centro</p>
         </div>
     </div>
+</div>
 
 </body>
 </html>

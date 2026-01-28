@@ -55,6 +55,7 @@ $nombre = $_SESSION["nombre"];
             100% { background-position: 100% 100%; }
         }
 
+        /* ANIMACIÓN HEADER - SLIDE DOWN */
         .header {
             width: 100%;
             height: 160px;
@@ -62,6 +63,16 @@ $nombre = $_SESSION["nombre"];
             background-size: cover;
             background-position: center;
             position: relative;
+            opacity: 0;
+            transform: translateY(-30px);
+            animation: headerSlideDown 0.8s ease forwards 0.2s;
+        }
+
+        @keyframes headerSlideDown {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .user-role {
@@ -71,6 +82,14 @@ $nombre = $_SESSION["nombre"];
             color: white;
             font-weight: 700;
             font-size: 18px;
+            opacity: 0;
+            animation: fadeIn 0.6s ease forwards 0.8s;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
         }
 
         /* --- BASE BOTONES PREMIUM --- */
@@ -123,6 +142,8 @@ $nombre = $_SESSION["nombre"];
             background: rgba(255, 255, 255, 0.05);
             border: 1.5px solid rgba(255, 255, 255, 0.7);
             z-index: 100;
+            opacity: 0;
+            animation: fadeIn 0.6s ease forwards 1s;
         }
 
         /* BOTÓN JUGAR (ESTILO OSCURO) */
@@ -153,6 +174,7 @@ $nombre = $_SESSION["nombre"];
             overflow-y: auto;
         }
 
+        /* ANIMACIONES PARA LAS TARJETAS - APARECEN EN SECUENCIA */
         .game-card {
             width: 320px;
             text-align: center;
@@ -165,7 +187,23 @@ $nombre = $_SESSION["nombre"];
             cursor: pointer;
             border: 1px solid rgba(255,255,255,0.4);
             box-sizing: border-box;
+            opacity: 0;
+            transform: translateY(40px) scale(0.9);
+            animation: cardAppear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
+
+        @keyframes cardAppear {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Retrasos para cada tarjeta */
+        .game-card:nth-child(1) { animation-delay: 0.3s; }
+        .game-card:nth-child(2) { animation-delay: 0.5s; }
+        .game-card:nth-child(3) { animation-delay: 0.7s; }
+        .game-card:nth-child(4) { animation-delay: 0.9s; }
 
         .game-card:hover {
             transform: translateY(-10px);

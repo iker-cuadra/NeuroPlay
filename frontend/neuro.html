@@ -22,9 +22,17 @@ body, html {
 /* Header y botón */
 header {
     position: absolute;
-    top: 45px;      /* UN POCO MÁS ABAJO */
-    right: 45px;   /* UN PELÍN MÁS A LA DERECHA */
+    top: 45px;
+    right: 45px;
     z-index: 10;
+    opacity: 0;
+    animation: fadeInHeader 0.8s ease forwards 2s;
+}
+
+@keyframes fadeInHeader {
+    to {
+        opacity: 1;
+    }
 }
  
 /* BOTÓN TRANSPARENTE PREMIUM */
@@ -125,12 +133,46 @@ header {
     font-weight: 600;
     text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
 }
+
+/* Animación de las letras del título */
+.contenido h1 span {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(-50px) rotate(10deg);
+    animation: dropLetter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes dropLetter {
+    to {
+        opacity: 1;
+        transform: translateY(0) rotate(0deg);
+    }
+}
+
+/* Retrasos individuales para cada letra */
+.contenido h1 span:nth-child(1) { animation-delay: 0.1s; }
+.contenido h1 span:nth-child(2) { animation-delay: 0.2s; }
+.contenido h1 span:nth-child(3) { animation-delay: 0.3s; }
+.contenido h1 span:nth-child(4) { animation-delay: 0.4s; }
+.contenido h1 span:nth-child(5) { animation-delay: 0.5s; }
+.contenido h1 span:nth-child(6) { animation-delay: 0.6s; }
+.contenido h1 span:nth-child(7) { animation-delay: 0.7s; }
+.contenido h1 span:nth-child(8) { animation-delay: 0.8s; }
+.contenido h1 span:nth-child(9) { animation-delay: 0.9s; }
  
 .contenido p {
     font-size: 32px;
     margin: 15px 0 0 0;
     font-weight: 400;
     text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    animation: fadeInSubtitle 0.8s ease forwards 1.2s;
+}
+
+@keyframes fadeInSubtitle {
+    to {
+        opacity: 1;
+    }
 }
  
 /* RESPONSIVO */
@@ -175,6 +217,23 @@ window.addEventListener("popstate", function () {
 setInterval(function () {
     history.pushState(null, "", location.href);
 }, 100);
+
+// Función para dividir el texto en letras con spans
+window.addEventListener('DOMContentLoaded', function() {
+    const titulo = document.querySelector('.contenido h1');
+    const texto = titulo.textContent;
+    titulo.innerHTML = '';
+    
+    for (let i = 0; i < texto.length; i++) {
+        const span = document.createElement('span');
+        span.textContent = texto[i];
+        // Preservar espacios
+        if (texto[i] === ' ') {
+            span.style.width = '0.3em';
+        }
+        titulo.appendChild(span);
+    }
+});
 </script>
  
 </head>

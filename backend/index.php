@@ -32,207 +32,345 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <title>Centro Pere Bas - Acceso</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+}
  
 html, body {
     height: 100%;
     font-family: 'Poppins', sans-serif;
-    background-color: #000;
     overflow: hidden;
 }
  
-/* --- FONDO MESH ANIMADO --- */
-.canvas-bg {
+/* --- FONDO BLUR --- */
+.login-background {
     position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 0;
-    background: #e5e5e5;
-    background-image:
-        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
-        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
-        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%),
-        radial-gradient(at 0% 100%, hsla(321,0%,100%,1) 0, transparent 50%),
-        radial-gradient(at 100% 100%, hsla(0,0%,80%,1) 0, transparent 50%);
-    background-size: 200% 200%;
-    animation: meshMove 8s infinite alternate ease-in-out;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('../frontend/imagenes/fondo.svg') no-repeat center center;
+    background-size: cover;
+    filter: blur(8px);
+    -webkit-filter: blur(8px);
+    transform: scale(1.1);
+}
+
+/* Capa overlay */
+.login-background::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
 }
  
-@keyframes meshMove {
-    0% { background-position: 0% 0%; }
-    100% { background-position: 100% 100%; }
-}
- 
-.login-wrapper {
+/* --- CONTENEDOR PRINCIPAL --- */
+.login-container {
     position: relative;
     z-index: 1;
     display: flex;
-    width: 100vw;
-    height: 100vh;
-}
- 
-.login-left {
-    flex: 0 0 50%;
-    background: url('../frontend/imagenes/imglogin.svg') no-repeat center center;
-    background-size: cover;
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
- 
-.login-right {
-    flex: 0 0 50%;
-    display: flex;
     justify-content: center;
     align-items: center;
-    padding: 40px;
+    min-height: 100vh;
+    padding: 40px 20px;
 }
  
-/* --- LOGIN CARD CON TRANSPARENCIA GLASS --- */
+/* --- LOGO Y TÍTULO CON ANIMACIÓN --- */
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo-circle {
+    width: 84px;
+    height: 84px;
+    margin: 0 auto 20px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transform: scale(0.5) rotate(-180deg);
+    animation: logoAppear 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards 0.2s;
+}
+
+@keyframes logoAppear {
+    to {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+.logo-circle h2 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #2271b1;
+    margin: 0;
+}
+
+.login-header h1 {
+    font-size: 24px;
+    font-weight: 400;
+    color: #fff;
+    margin: 0;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    animation: fadeInTitle 0.8s ease forwards 0.6s;
+}
+
+@keyframes fadeInTitle {
+    to {
+        opacity: 1;
+    }
+}
+ 
+/* --- LOGIN CARD CON ANIMACIÓN --- */
 .login-card {
     width: 100%;
-    max-width: 440px;
-    padding: 50px 40px;
-    border-radius: 40px;
-    background: rgba(0, 0, 0, 0.35); /* Oscurecido */
-    backdrop-filter: blur(25px) saturate(180%);
-    -webkit-backdrop-filter: blur(25px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 30px 60px rgba(0,0,0,0.25);
-    text-align: center;
-    color: #fff;
+    max-width: 420px;
+    padding: 26px 24px 36px;
+    background: rgba(50, 50, 50, 0.75);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transform: translateY(30px);
+    animation: cardSlideUp 0.6s ease forwards 0.8s;
+}
+
+@keyframes cardSlideUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
  
- 
-.login-card h1 {
-    font-size: 30px;
-    font-weight: 600;
-    color: #fff;
-    margin-bottom: 8px;
-    letter-spacing: -0.5px;
+/* --- INPUTS --- */
+.form-group {
+    margin-bottom: 20px;
 }
- 
-.subtitle {
-    color: rgba(255,255,255,0.7);
-    margin-bottom: 40px;
+
+.form-group label {
+    display: block;
+    color: #ffffff;
     font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
 }
- 
-/* --- INPUTS TRANSPARENTES --- */
-input {
+
+input[type="email"],
+input[type="password"] {
     width: 100%;
-    padding: 16px 20px;
-    margin-bottom: 18px;
-    border-radius: 18px;
-    border: 1px solid rgba(255,255,255,0.3);
-    background: rgba(255, 255, 255, 0.15);
+    padding: 14px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.9);
     font-size: 16px;
-    color: #fff;
+    color: #2c3338;
     outline: none;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus {
+    border-color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+}
+
+input[type="email"]::placeholder,
+input[type="password"]::placeholder {
+    color: #a7aaad;
 }
  
-input::placeholder {
-    color: rgba(255,255,255,0.6);
+/* --- CHECKBOX REMEMBER ME --- */
+.remember-me {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.remember-me input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.remember-me label {
+    color: #ffffff;
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
 }
  
-input:focus {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: #ffffff;
-    box-shadow: 0 0 0 4px rgba(255,255,255,0.2);
-}
- 
-/* --- BOTÓN TRANSPARENTE PREMIUM --- */
-button {
+/* --- BOTÓN ESTILO NEUROPLAY --- */
+button[type="submit"] {
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
     width: 100%;
-    padding: 16px 24px;
-    border-radius: 16px; /* MISMO RADIO QUE EL OTRO BOTÓN */
-    font-size: 16px;
-    font-weight: 600;
-    color: #fff;
-    background: rgba(255,255,255,0.05);
-    border: 1.5px solid rgba(255,255,255,0.7);
+    padding: 14px 24px;
+    border-radius: 16px;
     cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    color: #ffffff;
+    background: rgba(34, 113, 177, 0.15);
+    border: 1.5px solid rgba(34, 113, 177, 0.9);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    transition: 
+        transform .25s cubic-bezier(.2,.8,.2,1), 
+        box-shadow .25s cubic-bezier(.2,.8,.2,1), 
+        background .25s ease, 
+        border-color .25s ease;
     overflow: hidden;
-    transition:
-        transform 0.25s cubic-bezier(.2,.8,.2,1),
-        box-shadow 0.25s cubic-bezier(.2,.8,.2,1),
-        background 0.3s ease,
-        border-color 0.3s ease;
 }
- 
-button::after {
+
+/* Efecto luz sutil */
+button[type="submit"]::after {
     content: "";
     position: absolute;
     inset: 0;
     background: linear-gradient(
         120deg,
         transparent 20%,
-        rgba(255,255,255,0.25),
+        rgba(255,255,255,0.3),
         transparent 80%
     );
     opacity: 0;
     transform: translateX(-60%);
-    transition: opacity 0.35s ease, transform 0.35s ease;
+    transition: opacity .35s ease, transform .35s ease;
 }
- 
-button:hover {
-    background: rgba(255,255,255,0.12);
-    transform: translateY(-2px);
-    box-shadow: 0 12px 25px rgba(0,0,0,0.35);
-    border-color: #fff;
+
+/* Hover PRO */
+button[type="submit"]:hover {
+    background: rgba(34, 113, 177, 0.25);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 30px rgba(34, 113, 177, 0.4);
+    border-color: #2271b1;
 }
- 
-button:hover::after {
+
+button[type="submit"]:hover::after {
     opacity: 1;
     transform: translateX(60%);
 }
- 
-button:active {
+
+/* Click */
+button[type="submit"]:active {
     transform: scale(0.97);
 }
  
-/* --- MENSAJE DE ERROR --- */
+/* --- MENSAJE DE ERROR CON ANIMACIÓN --- */
 .error-msg {
-    color: #ff6b6b;
-    background: rgba(255,107,107,0.1);
-    padding: 12px;
-    border-radius: 14px;
-    margin-bottom: 25px;
+    color: #d63638;
+    background: #fcf0f1;
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 20px;
     font-size: 14px;
-    border: 1px solid rgba(255,107,107,0.3);
+    border-left: 4px solid #d63638;
+    animation: shakeError 0.5s ease;
 }
- 
+
+@keyframes shakeError {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
 /* RESPONSIVO */
-@media (max-width: 992px) {
-    .login-wrapper { flex-direction: column; }
-    .login-left { flex: 0 0 35%; width: 100%; }
-    .login-right { flex: 0 0 65%; width: 100%; }
+@media (max-width: 768px) {
+    .login-card {
+        padding: 20px 18px 30px;
+    }
+    
+    .logo-circle {
+        width: 72px;
+        height: 72px;
+    }
+    
+    .logo-circle h2 {
+        font-size: 28px;
+    }
+    
+    .login-header h1 {
+        font-size: 20px;
+    }
+    
+    button[type="submit"] {
+        padding: 12px 20px;
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-card {
+        padding: 18px 16px 26px;
+    }
+    
+    .logo-circle {
+        width: 64px;
+        height: 64px;
+    }
+    
+    .logo-circle h2 {
+        font-size: 24px;
+    }
+    
+    .login-header h1 {
+        font-size: 18px;
+    }
 }
 </style>
 </head>
 <body>
  
-<div class="canvas-bg"></div>
+<div class="login-background"></div>
  
-<div class="login-wrapper">
-    <div class="login-left"></div>
- 
-    <div class="login-right">
-        <div class="login-card">
+<div class="login-container">
+    <div style="width: 100%; max-width: 420px;">
+        <div class="login-header">
+            <div class="logo-circle">
+                <h2>PB</h2>
+            </div>
             <h1>Centro Pere Bas</h1>
-            <p class="subtitle">Bienvenido</p>
+        </div>
  
+        <div class="login-card">
             <?php if ($error): ?>
                 <div class="error-msg"><?= htmlspecialchars($error) ?></div>
             <?php endif; ?>
  
             <form method="POST">
-                <input type="email" name="email" placeholder="Correo electrónico" required>
-                <input type="password" name="password" placeholder="Contraseña" required>
+                <div class="form-group">
+                    <label for="email">Correo electrónico</label>
+                    <input type="email" id="email" name="email" placeholder="ejemplo@correo.com" required autocomplete="email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" placeholder="Introduce tu contraseña" required autocomplete="current-password">
+                </div>
+                
+                <div class="remember-me">
+                    <input type="checkbox" id="remember" name="remember">
+                    <label for="remember">Recuérdame</label>
+                </div>
+                
                 <button type="submit">Iniciar Sesión</button>
             </form>
         </div>
