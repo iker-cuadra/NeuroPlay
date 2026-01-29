@@ -137,17 +137,72 @@ html, body{
 .layout{ min-height:100vh; display:flex; flex-direction:column; position:relative; z-index:1; }
 
 .header{
-    width:100%; height:var(--header-h);
-    background-image:url('../frontend/imagenes/Banner.svg');
-    background-size:cover; background-position:center;
-    position:relative; flex:0 0 auto;
+    width:100%; 
+    height:var(--header-h);
+    background-image:url('../frontend/imagenes/fondo.svg');
+    background-size:cover; 
+    background-position:center center;
+    background-repeat: no-repeat;
+    position:relative; 
+    flex:0 0 auto;
+    opacity: 0;
+    transform: translateY(-30px);
+    animation: headerSlideDown 0.8s ease forwards 0.2s;
 }
+
+@keyframes headerSlideDown {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.center-title {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: 700;
+    font-size: 48px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    opacity: 0;
+    animation: fadeIn 0.6s ease forwards 0.6s;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
 .back-arrow{
-    position:absolute; top:15px; left:15px; width:38px; height:38px;
-    display:flex; align-items:center; justify-content:center; text-decoration:none;
+    position:absolute; 
+    top:15px; 
+    left:15px; 
+    width:38px; 
+    height:38px;
+    display:flex; 
+    align-items:center; 
+    justify-content:center; 
+    text-decoration:none;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0;
+    animation: fadeIn 0.6s ease forwards 0.4s;
 }
+.back-arrow:hover { transform: scale(1.2) translateX(-3px); }
+
 .user-role{
-    position:absolute; bottom:10px; left:20px; color:white; font-weight:700; font-size:18px;
+    position:absolute; 
+    bottom:10px; 
+    left:20px; 
+    color:white; 
+    font-weight:700; 
+    font-size:18px;
+    opacity: 0;
+    animation: fadeIn 0.6s ease forwards 0.8s;
 }
 
 .page-content{
@@ -253,6 +308,7 @@ button[type="submit"]:hover{
 
 <div class="layout">
     <div class="header">
+        <div class="center-title">Centro Pere Bas</div>
         <a href="gestionar_users.php" class="back-arrow">
             <svg xmlns="http://www.w3.org/2000/svg" height="34" width="34" viewBox="0 0 24 24" fill="white">
                 <path d="M14.7 20.3 6.4 12l8.3-8.3 1.4 1.4L9.2 12l6.9 6.9Z"/>
