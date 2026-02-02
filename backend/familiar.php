@@ -22,11 +22,11 @@ $nombre = $_SESSION["nombre"] ?? "Familiar";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel del Familiar</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
     <style>
-        :root{
+        :root {
             --header-h: 160px;
         }
 
@@ -59,166 +59,167 @@ $nombre = $_SESSION["nombre"] ?? "Familiar";
             100% { background-position: 100% 100%; }
         }
 
-        .layout{
+        .layout {
             height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
-        /* --- HEADER CON BANNER --- */
-        .header{
+        /* --- HEADER --- */
+        .header {
             width: 100%;
             height: var(--header-h);
-            background-image: url('../frontend/imagenes/Banner.svg');
+            background-image: url('../frontend/imagenes/fondo.svg');
             background-size: cover;
             background-position: center;
             position: relative;
             flex: 0 0 auto;
+            opacity: 0;
+            transform: translateY(-30px);
+            animation: headerSlideDown 0.8s ease forwards 0.2s;
         }
 
-        .user-role{
+        @keyframes headerSlideDown {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* TÍTULO CENTRADO */
+        .center-title {
             position: absolute;
-            bottom: 10px;
-            left: 20px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: 700;
+            font-size: 48px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            white-space: nowrap;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            animation: fadeIn 0.6s ease forwards 0.6s;
+            margin: 0;
+            z-index: 10;
+        }
+
+        .user-role {
+            position: absolute;
+            bottom: 15px;
+            left: 25px;
             color: white;
             font-weight: 700;
             font-size: 18px;
+            opacity: 0;
+            animation: fadeIn 0.6s ease forwards 0.8s;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
         }
 
         /* --- BOTÓN LOGOUT --- */
         .logout-button {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 30px;
+            right: 45px;
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 12px 20px;
-            font-size: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
             font-weight: 600;
-            border-radius: 16px;
-            background: rgba(255,255,255,0.05);
+            border-radius: 14px;
+            background: rgba(255,255,255,0.1);
             color: #fff;
             border: 1.5px solid rgba(255,255,255,0.7);
             cursor: pointer;
             text-decoration: none;
-            z-index: 10;
-            overflow: hidden;
-            transition: 
-                transform 0.25s cubic-bezier(.2,.8,.2,1),
-                box-shadow 0.25s cubic-bezier(.2,.8,.2,1),
-                background 0.3s ease,
-                border-color 0.3s ease;
-        }
-
-        .logout-button::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(
-                120deg,
-                transparent 20%,
-                rgba(255,255,255,0.25),
-                transparent 80%
-            );
+            z-index: 100;
+            backdrop-filter: blur(5px);
             opacity: 0;
-            transform: translateX(-60%);
-            transition: opacity 0.35s ease, transform 0.35s ease;
+            animation: fadeIn 0.6s ease forwards 1s;
+            transition: all 0.3s ease;
         }
 
         .logout-button:hover {
-            background: rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.2);
             transform: translateY(-2px);
-            box-shadow: 0 12px 25px rgba(0,0,0,0.35);
-            border-color: #fff;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
         }
 
-        .logout-button:hover::after {
-            opacity: 1;
-            transform: translateX(60%);
-        }
-
-        /* --- MAIN --- */
+        /* --- SECCIÓN DE TARJETAS (IGUAL QUE PROFESIONAL) --- */
         .main-section {
-            flex: 1 1 auto;
+            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 50px;
             flex-wrap: wrap;
-            padding: 0;
+            padding: 20px;
+            opacity: 0;
+            animation: fadeIn 0.8s ease forwards 0.8s;
         }
 
         .card {
             text-align: center;
-            width: 260px;
-            padding: 30px;
-            border-radius: 20px;
-            background: rgba(49, 49, 49, 0.35);
+            width: 280px;
+            padding: 35px;
+            border-radius: 25px;
+            background: rgba(49, 49, 49, 0.4);
             backdrop-filter: blur(15px) saturate(180%);
             -webkit-backdrop-filter: blur(15px) saturate(180%);
-            border: 1px solid rgba(12, 12, 12, 0.2);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
-            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             cursor: pointer;
-            margin: 0;
             color: #fff;
         }
 
         .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+            background: rgba(60, 60, 60, 0.5);
         }
 
         .card img {
-            width: 200px;
-            height: 200px;
-            border-radius: 16px;
+            width: 180px;
+            height: 180px;
+            border-radius: 20px;
             object-fit: contain;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));
         }
 
-        .card h2 {
-            font-size: 24px;
-            font-weight: 600;
-            margin: 0;
-        }
+        .card h2 { font-size: 28px; font-weight: 600; margin: 0; }
+        .card-subtitle { margin-top: 6px; font-size: 15px; color: rgba(255,255,255,0.7); font-weight: 500; }
 
-        .card-subtitle {
-            margin-top: 4px;
-            font-size: 14px;
-            color: rgba(255,255,255,0.7);
-            font-weight: 500;
-        }
-
-        /* --- SUBRAYADO IGUAL AL PROFESIONAL --- */
+        /* Línea azul animada */
         .card-label::after {
             content: '';
             display: block;
-            width: 20px;
-            height: 2px;
+            width: 30px;
+            height: 3px;
             background: #3b82f6;
-            margin: 8px auto 0;
+            margin: 12px auto 0;
             transition: width 0.3s ease;
+            border-radius: 10px;
         }
 
-        .card-label:hover::after {
-            width: 60px;
+        .card:hover.card-label::after { 
+            width: 80px; 
         }
 
+        /* --- RESPONSIVE --- */
         @media (max-width: 900px) {
-            .main-section {
-                flex-direction: column;
-                gap: 40px;
-            }
-            .card {
-                width: 220px;
-                padding: 20px;
-            }
-            .card img {
-                width: 180px;
-                height: 180px;
-            }
+            .center-title { font-size: 36px; }
+            .main-section { flex-direction: column; gap: 30px; padding-top: 50px; }
+            .card { width: 240px; padding: 25px; }
+            .card img { width: 150px; height: 150px; }
+            .logout-button { right: 20px; top: 15px; padding: 8px 15px; font-size: 14px; }
+        }
+
+        @media (max-width: 600px) {
+            .center-title { font-size: 26px; letter-spacing: 2px; }
         }
     </style>
 </head>
@@ -229,6 +230,7 @@ $nombre = $_SESSION["nombre"] ?? "Familiar";
 
 <div class="layout">
     <div class="header">
+        <h1 class="center-title">Centro Pere Bas</h1>
         <div class="user-role">Panel del Familiar</div>
         <a href="logout.php" class="logout-button">
             <i class="fas fa-sign-out-alt"></i> Cerrar sesión

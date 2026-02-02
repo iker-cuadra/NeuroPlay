@@ -5,6 +5,9 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
+// Configurar zona horaria de España
+date_default_timezone_set('Europe/Madrid');
+
 require_once "includes/conexion.php";
 require_once "includes/auth.php";
 
@@ -270,7 +273,7 @@ $totalCount = count($historialResultados);
 <style>
 :root{
     --header-h: 160px;
-    --bg: #f0f2f5;
+    --bg: transparent;
     --card: #ffffff;
     --shadow: 0 12px 30px rgba(0,0,0,0.10);
     --radius: 20px;
@@ -281,21 +284,88 @@ $totalCount = count($historialResultados);
     --pill-active: #3f3f3f;
 }
 
-* { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; height: auto; }
-body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--text); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+    height: 100%;
+    font-family: 'Poppins', sans-serif;
+    background-color: transparent;
+}
 
-.layout { min-height: 100vh; display: flex; flex-direction: column; }
+/* FONDO DINÁMICO ANIMADO */
+.canvas-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -1;
+    background: #e5e5e5;
+    background-image:
+        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
+        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%),
+        radial-gradient(at 0% 100%, hsla(321,0%,100%,1) 0, transparent 50%),
+        radial-gradient(at 100% 100%, hsla(0,0%,80%,1) 0, transparent 50%);
+    background-size: 200% 200%;
+    animation: meshMove 8s infinite alternate ease-in-out;
+}
+
+@keyframes meshMove {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
+}
+
+.layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 1;
+}
+
+/* HEADER CON ANIMACIONES */
 .header{
     width: 100%;
     height: var(--header-h);
-    background-image: url('../frontend/imagenes/Banner.svg');
+    background-image: url('../frontend/imagenes/fondo.svg');
     background-size: cover;
-    background-position: center;
+    background-position: center center;
+    background-repeat: no-repeat;
     position: relative;
     flex: 0 0 auto;
+    opacity: 0;
+    transform: translateY(-30px);
+    animation: headerSlideDown 0.8s ease forwards 0.2s;
 }
 
+@keyframes headerSlideDown {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* TÍTULO CENTRADO */
+.center-title {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: 700;
+    font-size: 48px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    opacity: 0;
+    animation: fadeIn 0.6s ease forwards 0.6s;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+/* BOTÓN VOLVER CON ANIMACIÓN */
 .back-arrow{
     position: absolute;
     top: 15px;
@@ -306,20 +376,30 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
     align-items: center;
     justify-content: center;
     text-decoration: none;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0;
+    animation: fadeIn 0.6s ease forwards 0.4s;
 }
-.back-arrow svg{ transition: opacity 0.2s ease-in-out; }
-.back-arrow:hover svg{ opacity: 0.75; }
+.back-arrow:hover { transform: scale(1.2) translateX(-3px); }
+
 .user-role {
-    position: absolute; bottom: 10px; left: 20px;
-    color: white; font-weight: 700; font-size: 18px;
+    position: absolute;
+    bottom: 10px;
+    left: 20px;
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
+    opacity: 0;
+    animation: fadeIn 0.6s ease forwards 0.8s;
 }
 
 .page-content {
-    flex: 1;
+    flex: 1 1 auto;
     display: flex;
     justify-content: center;
     align-items: flex-start;
     padding: 14px 16px;
+    overflow-y: auto;
 }
 
 .panel {
@@ -328,7 +408,10 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     padding: 20px;
-    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
 }
 
 .panel h1 {
@@ -655,8 +738,10 @@ body { font-family: 'Poppins', sans-serif; background: #887d7dff; color: var(--t
 </head>
 
 <body>
+<div class="canvas-bg"></div>
 <div class="layout">
     <div class="header">
+        <div class="center-title">Centro Pere Bas</div>
         <a href="gestionar_users.php" class="back-arrow" aria-label="Volver">
             <svg xmlns="http://www.w3.org/2000/svg" height="34" width="34" viewBox="0 0 24 24" fill="white">
                 <path d="M14.7 20.3 6.4 12l8.3-8.3 1.4 1.4L9.2 12l6.9 6.9Z"/>
@@ -992,6 +1077,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     applyFilter('all');
+
+    // Auto-ocultar mensajes flash después de 4 segundos
+    const flashMessages = document.querySelectorAll('.flash');
+    flashMessages.forEach(flash => {
+        setTimeout(() => {
+            flash.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            flash.style.opacity = '0';
+            flash.style.transform = 'translateY(-10px)';
+            
+            setTimeout(() => {
+                flash.style.display = 'none';
+            }, 500);
+        }, 4000);
+    });
 });
 </script>
 </body>
