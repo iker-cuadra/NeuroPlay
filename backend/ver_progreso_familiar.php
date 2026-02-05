@@ -429,9 +429,87 @@ function formatSecondsToMMSS($segundos) {
             border: 1px solid #fecaca; 
         }
 
+        /* BOTÓN FLOTANTE DE MENSAJES */
+        .chat-float-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 65px;
+            height: 65px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            animation: pulseGreen 2s infinite;
+            opacity: 0;
+            animation: pulseGreen 2s infinite, fadeIn 0.8s ease forwards 1.2s;
+        }
+
+        .chat-float-btn:hover {
+            transform: scale(1.15) translateY(-5px);
+            box-shadow: 0 12px 35px rgba(16, 185, 129, 0.6);
+        }
+
+        .chat-float-btn i {
+            color: white;
+            font-size: 28px;
+        }
+
+        @keyframes pulseGreen {
+            0%, 100% {
+                box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+            }
+            50% {
+                box-shadow: 0 8px 35px rgba(16, 185, 129, 0.7);
+            }
+        }
+
+        /* Tooltip para el botón */
+        .chat-float-btn::before {
+            content: 'Contactar profesionales';
+            position: absolute;
+            right: 75px;
+            background: rgba(31, 41, 55, 0.95);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .chat-float-btn:hover::before {
+            opacity: 1;
+        }
+
         @media (max-width: 900px) {
             .center-title { font-size: 36px; }
             .charts-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .chat-float-btn {
+                width: 60px;
+                height: 60px;
+                bottom: 20px;
+                right: 20px;
+            }
+            .chat-float-btn i {
+                font-size: 24px;
+            }
+            .chat-float-btn::before {
+                display: none;
+            }
         }
 
         @media (max-width: 600px) {
@@ -539,6 +617,11 @@ function formatSecondsToMMSS($segundos) {
             </div>
         </div>
     </div>
+
+    <!-- BOTÓN FLOTANTE DE MENSAJES -->
+    <a href="lista_profesionales.php" class="chat-float-btn" aria-label="Contactar con profesionales">
+        <i class="fas fa-comment-dots"></i>
+    </a>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
