@@ -11,16 +11,24 @@ requireRole("usuario");
 $usuario_id = $_SESSION["usuario_id"];
 
 // OBTENER DIFICULTAD ASIGNADA PARA MEMORIA (Fácil / Medio / Difícil)
-$stmt = $conexion->prepare("
-    SELECT dificultad_memoria
-    FROM dificultades_asignadas
-    WHERE usuario_id = ?
-");
-$stmt->execute([$usuario_id]);
-$dificultad_memoria = $stmt->fetchColumn();
+// Inicializar variable con valor por defecto
+$dificultad_memoria = "Medio";
 
-// Dificultad por defecto si no hay asignada
-if (!$dificultad_memoria) {
+try {
+    $stmt = $conexion->prepare("
+        SELECT dificultad_memoria
+        FROM dificultades_asignadas
+        WHERE usuario_id = ?
+    ");
+    $stmt->execute([$usuario_id]);
+    $result = $stmt->fetchColumn();
+    
+    // Solo actualizar si se encontró un resultado
+    if ($result !== false && !empty($result)) {
+        $dificultad_memoria = $result;
+    }
+} catch (Exception $e) {
+    // En caso de error, mantener el valor por defecto
     $dificultad_memoria = "Medio";
 }
 ?>
@@ -30,6 +38,7 @@ if (!$dificultad_memoria) {
 <head>
     <meta charset="UTF-8">
     <title>Juego de Memoria</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
     <style>
         html,
@@ -80,7 +89,7 @@ if (!$dificultad_memoria) {
         /* CONTENEDOR DEL JUEGO (TARJETA MEJORADA) */
         .game-container {
             position: relative;
-            width: min(900px, 100%);
+            width: min(1100px, 100%);
             height: 100%;
             max-height: 100%;
 
@@ -145,7 +154,7 @@ if (!$dificultad_memoria) {
         /* PASTILLA SUPERIOR */
         .game-title-pill {
             margin-top: 4px;
-            margin-bottom: 6px;
+            margin-bottom: 0;
             padding: 6px 18px;
             border-radius: 999px;
             background: #4a4a4a;
@@ -158,9 +167,43 @@ if (!$dificultad_memoria) {
             z-index: 2;
         }
 
+        /* INFO SUPERIOR DERECHA (Timer y Dificultad) */
+        .top-right-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            text-align: right;
+            z-index: 3;
+        }
+
+        .difficulty-badge {
+            background: rgba(74, 74, 74, 0.95);
+            color: #ffffff;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .timer-display {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #4a4a4a;
+            color: #111827;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 800;
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 80px;
+        }
+
         .game-header {
-            margin-top: 30px;
-            margin-bottom: 10px;
+            margin-top: 15px;
+            margin-bottom: 8px;
             text-align: center;
             flex: 0 0 auto;
             position: relative;
@@ -169,26 +212,19 @@ if (!$dificultad_memoria) {
 
         .game-header h2 {
             margin: 0 0 6px 0;
-            font-size: 36px;
+            font-size: 38px;
             color: #1f2937;
             letter-spacing: 0.2px;
         }
 
         .game-header p {
             margin: 4px 0;
-            font-size: 19px;
+            font-size: 18px;
             color: #4b5563;
             line-height: 1.25;
         }
 
         .game-header p strong {
-            color: #111827;
-        }
-
-        .timer {
-            font-weight: 800;
-            font-size: 22px;
-            margin-top: 4px;
             color: #111827;
         }
 
@@ -199,7 +235,7 @@ if (!$dificultad_memoria) {
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 6px 0;
+            padding: 0;
             box-sizing: border-box;
             position: relative;
             z-index: 2;
@@ -208,21 +244,21 @@ if (!$dificultad_memoria) {
         /* GRID DEL JUEGO DE MEMORIA */
         .memory-grid {
             display: grid;
-            grid-template-columns: repeat(4, minmax(70px, 1fr));
-            gap: 18px;
+            grid-template-columns: repeat(4, minmax(110px, 1fr));
+            gap: 24px;
             width: 100%;
-            max-width: 520px;
+            max-width: 750px;
             margin: 0 auto;
             justify-items: center;
         }
 
         .memory-card {
             width: 100%;
-            max-width: 110px;
-            height: clamp(80px, 14vh, 120px);
+            max-width: 170px;
+            height: clamp(120px, 18vh, 170px);
             background: #4a4a4a;
             color: transparent;
-            border-radius: 16px;
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -231,7 +267,7 @@ if (!$dificultad_memoria) {
             user-select: none;
 
             border: 1px solid rgba(0, 0, 0, 0.10);
-            box-shadow: 0 10px 18px rgba(0, 0, 0, 0.14);
+            box-shadow: 0 12px 22px rgba(0, 0, 0, 0.16);
             transition: transform 0.5s ease, box-shadow 0.18s ease, filter 0.18s ease;
             position: relative;
             overflow: hidden;
@@ -239,8 +275,8 @@ if (!$dificultad_memoria) {
         }
 
         .memory-card:hover:not(.preview-mode):not(.matched) {
-            transform: translateY(-3px);
-            box-shadow: 0 16px 26px rgba(0, 0, 0, 0.18);
+            transform: translateY(-4px);
+            box-shadow: 0 18px 30px rgba(0, 0, 0, 0.20);
         }
 
         /* Fondo con imagen cuando la carta está oculta */
@@ -255,9 +291,9 @@ if (!$dificultad_memoria) {
         }
 
         .memory-card.matched {
-            box-shadow: 0 14px 26px rgba(0, 0, 0, 0.18);
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.20);
             cursor: default;
-            border: 3px solid #22c55e;
+            border: 4px solid #22c55e;
             transform: translateY(-1px);
         }
 
@@ -273,8 +309,8 @@ if (!$dificultad_memoria) {
 
         /* Mensaje motivacional */
         .motivacion {
-            margin-top: 10px;
-            font-size: 20px;
+            margin-top: 8px;
+            font-size: 19px;
             color: #1b5e20;
             font-weight: 700;
             text-align: center;
@@ -334,22 +370,36 @@ if (!$dificultad_memoria) {
             box-shadow: 0 14px 26px rgba(0, 0, 0, 0.28);
         }
 
-        @media (max-height: 760px) {
-            .memory-grid { gap: 16px; max-width: 500px; }
-            .memory-card { height: clamp(75px, 13vh, 110px); }
-            .game-header h2 { font-size: 32px; }
+        @media (max-height: 820px) {
+            .memory-grid { gap: 20px; max-width: 680px; }
+            .memory-card { height: clamp(110px, 16vh, 150px); max-width: 150px; }
+            .game-header h2 { font-size: 34px; }
             .game-title-pill { font-size: 30px; }
         }
 
-        @media (max-height: 680px) {
-            .memory-grid { gap: 14px; max-width: 460px; }
-            .memory-card { height: clamp(70px, 12vh, 100px); }
-            .game-header h2 { font-size: 30px; }
+        @media (max-height: 720px) {
+            .memory-grid { gap: 18px; max-width: 600px; }
+            .memory-card { height: clamp(100px, 14vh, 135px); max-width: 135px; }
+            .game-header h2 { font-size: 32px; }
             .game-title-pill { font-size: 28px; padding: 6px 16px; }
         }
 
         @media (max-width: 768px) {
             .game-container { padding: 16px 14px 12px 14px; }
+            .memory-grid { gap: 16px; max-width: 550px; }
+            .memory-card { max-width: 120px; }
+            .top-right-info {
+                top: 12px;
+                right: 12px;
+            }
+            .difficulty-badge {
+                font-size: 14px;
+                padding: 5px 12px;
+            }
+            .timer-display {
+                font-size: 18px;
+                padding: 6px 14px;
+            }
         }
     </style>
 </head>
@@ -365,14 +415,23 @@ if (!$dificultad_memoria) {
                 </svg>
             </a>
 
+            <!-- Info superior derecha -->
+            <div class="top-right-info">
+                <div class="difficulty-badge">
+                    Dificultad: <?= htmlspecialchars($dificultad_memoria) ?>
+                </div>
+                <div class="timer-display">
+                    <i class="far fa-clock"></i>
+                    <span id="timer">00:00</span>
+                </div>
+            </div>
+
             <!-- Pastilla superior -->
             <div class="game-title-pill">Memoria</div>
 
             <!-- Cabecera -->
             <div class="game-header">
                 <h2>Encuentra las parejas de colores</h2>
-                <p>Dificultad asignada: <strong><?= htmlspecialchars($dificultad_memoria) ?></strong></p>
-                <p class="timer">Tiempo: <span id="timer">00:00</span></p>
             </div>
 
             <!-- Cuerpo (tablero) -->
@@ -385,11 +444,7 @@ if (!$dificultad_memoria) {
 
             <!-- OVERLAY FINAL -->
             <div id="game-overlay" class="game-overlay">
-                <div class="overlay-content">
-                    <p>¡Has completado el juego de memoria!</p>
-                    <button id="btn-restart" class="btn-game">Jugar otra vez</button>
-                    <button id="btn-volver" class="btn-game">Volver al panel</button>
-                </div>
+                <div id="overlay-content" class="overlay-content"></div>
             </div>
 
             <!-- OVERLAY INICIAL -->
@@ -561,7 +616,7 @@ if (!$dificultad_memoria) {
         // ==========================
         function createMemoryGrid(area, cards, columns) {
             area.innerHTML = "";
-            area.style.gridTemplateColumns = `repeat(${columns}, minmax(70px, 1fr))`;
+            area.style.gridTemplateColumns = `repeat(${columns}, minmax(110px, 1fr))`;
 
             let firstCard = null;
             let secondCard = null;
@@ -680,11 +735,9 @@ if (!$dificultad_memoria) {
 
                                     setTimeout(() => {
                                         if (motivacionDiv) {
-                                            motivacionDiv.textContent =
-                                                obtenerMensajeMotivacion() +
-                                                ` (Tiempo: ${document.getElementById('timer').textContent})`;
+                                            motivacionDiv.textContent = obtenerMensajeMotivacion();
                                         }
-                                        showOverlay();
+                                        mostrarResumenFinal(segundosTotales);
                                     }, 300);
                                 }
                             }, 500);
@@ -713,6 +766,45 @@ if (!$dificultad_memoria) {
             }
         }
 
+        function mostrarResumenFinal(tiempoTotal) {
+            const overlayContent = document.getElementById('overlay-content');
+            
+            const min = String(Math.floor(tiempoTotal / 60)).padStart(2, '0');
+            const sec = String(tiempoTotal % 60).padStart(2, '0');
+            const tiempoFormateado = `${min}:${sec}`;
+
+            overlayContent.innerHTML = `
+                <i class="fas fa-trophy" style="font-size:3rem; color:#facc15; margin-bottom:8px;"></i>
+                <p>¡Juego completado!</p>
+                <p style="font-size:18px; font-weight:normal;">Aciertos: <strong>${aciertos}</strong> | Fallos: <strong>${fallos}</strong></p>
+                <p style="font-size:18px; font-weight:normal;">Tiempo jugado: <strong>${tiempoFormateado}</strong></p>
+                
+                <div style="margin-top: 14px;">
+                    <button id="btn-restart" class="btn-game">Jugar otra vez</button>
+                    <button id="btn-volver" class="btn-game">Volver al panel</button>
+                </div>
+            `;
+
+            showOverlay();
+
+            // Re-asignar eventos a los nuevos botones
+            const btnRestart = document.getElementById('btn-restart');
+            const btnVolver = document.getElementById('btn-volver');
+
+            if (btnRestart) {
+                btnRestart.addEventListener('click', function () {
+                    hideOverlay();
+                    loadMemoryGame(document.getElementById("zona-memoria"));
+                });
+            }
+
+            if (btnVolver) {
+                btnVolver.addEventListener('click', function () {
+                    window.location.href = "../../usuario.php";
+                });
+            }
+        }
+
         // Iniciar juego al cargar la página
         document.addEventListener("DOMContentLoaded", function () {
             const area = document.getElementById("zona-memoria");
@@ -735,22 +827,6 @@ if (!$dificultad_memoria) {
 
             if (btnStartBack) {
                 btnStartBack.addEventListener("click", function () {
-                    window.location.href = "../../usuario.php";
-                });
-            }
-
-            const btnRestart = document.getElementById("btn-restart");
-            const btnVolver = document.getElementById("btn-volver");
-
-            if (btnRestart) {
-                btnRestart.addEventListener("click", function () {
-                    hideOverlay();
-                    loadMemoryGame(area);
-                });
-            }
-
-            if (btnVolver) {
-                btnVolver.addEventListener("click", function () {
                     window.location.href = "../../usuario.php";
                 });
             }

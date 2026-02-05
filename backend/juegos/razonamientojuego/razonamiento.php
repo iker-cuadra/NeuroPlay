@@ -6,16 +6,24 @@ requireRole("usuario");
 $usuario_id = $_SESSION["usuario_id"] ?? 0;
 
 // OBTENER DIFICULTAD ASIGNADA (tal cual está en la BD)
-$stmt = $conexion->prepare("
-    SELECT dificultad_razonamiento
-    FROM dificultades_asignadas
-    WHERE usuario_id = ?
-");
-$stmt->execute([$usuario_id]);
-$dificultad_razonamiento = $stmt->fetchColumn();
+// Inicializar variable con valor por defecto
+$dificultad_razonamiento = "Medio";
 
-// Si no hay dificultad asignada, dejamos un valor por defecto
-if (!$dificultad_razonamiento) {
+try {
+    $stmt = $conexion->prepare("
+        SELECT dificultad_razonamiento
+        FROM dificultades_asignadas
+        WHERE usuario_id = ?
+    ");
+    $stmt->execute([$usuario_id]);
+    $result = $stmt->fetchColumn();
+    
+    // Solo actualizar si se encontró un resultado
+    if ($result !== false && !empty($result)) {
+        $dificultad_razonamiento = $result;
+    }
+} catch (Exception $e) {
+    // En caso de error, mantener el valor por defecto
     $dificultad_razonamiento = "Medio";
 }
 ?>
@@ -26,7 +34,6 @@ if (!$dificultad_razonamiento) {
     <title>Juego de Razonamiento</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        /* (Tu CSS intacto) */
         html, body {
             margin: 0;
             padding: 0;
@@ -72,7 +79,7 @@ if (!$dificultad_razonamiento) {
 
         .game-container {
             position: relative;
-            width: min(900px, 100%);
+            width: min(1100px, 100%);
             height: 100%;
             max-height: 100%;
             background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
@@ -127,9 +134,43 @@ if (!$dificultad_razonamiento) {
             transform: translateX(-2px);
         }
 
+        /* INFO SUPERIOR DERECHA (Timer y Dificultad) */
+        .top-right-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            text-align: right;
+            z-index: 3;
+        }
+
+        .difficulty-badge {
+            background: rgba(74, 74, 74, 0.95);
+            color: #ffffff;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .timer-display {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #4a4a4a;
+            color: #111827;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 800;
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 80px;
+        }
+
         .game-title-pill {
             margin-top: 4px;
-            margin-bottom: 6px;
+            margin-bottom: 0;
             padding: 6px 18px;
             border-radius: 999px;
             background: #4a4a4a;
@@ -143,8 +184,8 @@ if (!$dificultad_razonamiento) {
         }
 
         .game-header {
-            margin-top: 30px;
-            margin-bottom: 10px;
+            margin-top: 15px;
+            margin-bottom: 8px;
             text-align: center;
             flex: 0 0 auto;
             position: relative;
@@ -153,26 +194,19 @@ if (!$dificultad_razonamiento) {
 
         .game-header h2 {
             margin: 0 0 6px 0;
-            font-size: 36px;
+            font-size: 38px;
             color: #1f2937;
             letter-spacing: 0.2px;
         }
 
         .game-header p {
             margin: 4px 0;
-            font-size: 19px;
+            font-size: 18px;
             color: #4b5563;
             line-height: 1.25;
         }
 
         .game-header p strong {
-            color: #111827;
-        }
-
-        .timer {
-            font-weight: 800;
-            font-size: 22px;
-            margin-top: 4px;
             color: #111827;
         }
 
@@ -182,7 +216,7 @@ if (!$dificultad_razonamiento) {
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 6px 0;
+            padding: 0;
             box-sizing: border-box;
             position: relative;
             z-index: 2;
@@ -190,71 +224,72 @@ if (!$dificultad_razonamiento) {
 
         .reasoning-area {
             width: 100%;
-            max-width: 700px;
+            max-width: 850px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
         .sequence-display {
-            font-size: 2.6rem;
-            padding: 20px 22px;
+            font-size: 3.2rem;
+            padding: 28px 30px;
             background: #111827;
             color: white;
-            border-radius: 20px;
-            margin-bottom: 16px;
-            letter-spacing: 10px;
+            border-radius: 22px;
+            margin-bottom: 20px;
+            letter-spacing: 14px;
             box-shadow: inset 0 2px 10px rgba(0,0,0,0.5), 0 14px 26px rgba(0,0,0,0.16);
             text-align: center;
             border: 1px solid rgba(255,255,255,0.10);
         }
 
         .sequence-question {
-            margin: 0 0 16px 0;
-            font-size: 1.05rem;
+            margin: 0 0 20px 0;
+            font-size: 1.15rem;
             color: #4b5563;
             text-align: center;
+            font-weight: 600;
         }
 
         .pattern-container {
             display: flex;
-            gap: 18px;
+            gap: 24px;
             flex-wrap: wrap;
             justify-content: center;
         }
 
         .pattern-option {
-            width: 104px;
-            height: 104px;
-            border-radius: 22px;
+            width: 130px;
+            height: 130px;
+            border-radius: 24px;
             background: #374151;
             color: white;
-            font-size: 3rem;
+            font-size: 3.8rem;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             border: 1px solid rgba(0,0,0,0.10);
-            box-shadow: 0 12px 20px rgba(0,0,0,0.14);
+            box-shadow: 0 14px 24px rgba(0,0,0,0.16);
             transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
         }
 
         .pattern-option:hover {
             transform: translateY(-4px);
             background: #4b5563;
-            box-shadow: 0 16px 26px rgba(0,0,0,0.18);
+            box-shadow: 0 18px 30px rgba(0,0,0,0.20);
         }
 
         .pattern-option.correct {
             background: #16a34a !important;
-            border: 3px solid rgba(190,242,100,0.95);
+            border: 4px solid rgba(190,242,100,0.95);
             transform: translateY(-2px) scale(1.03);
-            box-shadow: 0 18px 30px rgba(0,0,0,0.20);
+            box-shadow: 0 20px 34px rgba(0,0,0,0.22);
         }
 
         .pattern-option.incorrect {
             background: #b91c1c !important;
-            border: 3px solid rgba(252,165,165,0.95);
+            border: 4px solid rgba(252,165,165,0.95);
             animation: shake 0.4s;
         }
 
@@ -265,11 +300,11 @@ if (!$dificultad_razonamiento) {
         }
 
         .logic-message {
-            margin-top: 10px;
+            margin-top: 8px;
             font-weight: 700;
             text-align: center;
-            font-size: 1rem;
-            min-height: 18px;
+            font-size: 19px;
+            min-height: 24px;
             color: #374151;
             flex: 0 0 auto;
             position: relative;
@@ -326,18 +361,38 @@ if (!$dificultad_razonamiento) {
             box-shadow: 0 14px 26px rgba(0,0,0,0.28);
         }
 
+        @media (max-height: 820px) {
+            .sequence-display { font-size: 2.8rem; padding: 24px 26px; letter-spacing: 12px; }
+            .pattern-option { width: 115px; height: 115px; font-size: 3.4rem; }
+            .game-header h2 { font-size: 34px; }
+            .game-title-pill { font-size: 30px; }
+        }
+
+        @media (max-height: 720px) {
+            .sequence-display { font-size: 2.4rem; padding: 20px 22px; letter-spacing: 10px; }
+            .pattern-option { width: 105px; height: 105px; font-size: 3rem; }
+            .game-header h2 { font-size: 32px; }
+            .game-title-pill { font-size: 28px; padding: 6px 16px; }
+        }
+
         @media (max-width: 768px) {
             .game-container { padding: 16px 14px 12px 14px; }
             .sequence-display { font-size: 2.2rem; padding: 18px; letter-spacing: 7px; }
-            .pattern-option { width: 92px; height: 92px; font-size: 2.6rem; }
+            .pattern-option { width: 92px; height: 92px; font-size: 2.6rem; gap: 18px; }
             .game-title-pill { font-size: 30px; }
             .game-header h2 { font-size: 32px; }
-        }
-
-        @media (max-height: 680px) {
-            .sequence-display { margin-bottom: 12px; font-size: 2rem; }
-            .sequence-question { margin-bottom: 12px; }
-            .game-title-pill { font-size: 28px; padding: 6px 16px; }
+            .top-right-info {
+                top: 12px;
+                right: 12px;
+            }
+            .difficulty-badge {
+                font-size: 14px;
+                padding: 5px 12px;
+            }
+            .timer-display {
+                font-size: 18px;
+                padding: 6px 14px;
+            }
         }
     </style>
 </head>
@@ -354,19 +409,23 @@ if (!$dificultad_razonamiento) {
             </svg>
         </a>
 
+        <!-- Info superior derecha -->
+        <div class="top-right-info">
+            <div class="difficulty-badge">
+                Dificultad: <?= htmlspecialchars($dificultad_razonamiento) ?>
+            </div>
+            <div class="timer-display">
+                <i class="far fa-clock"></i>
+                <span id="tiempo">00:00</span>
+            </div>
+        </div>
+
         <div class="game-title-pill">Razonamiento</div>
 
         <div class="game-header">
             <h2>Secuencias lógicas</h2>
             <p>
-                Dificultad asignada:
-                <strong><?= htmlspecialchars($dificultad_razonamiento) ?></strong>
-                &nbsp;|&nbsp;
                 Ronda: <strong id="ronda-indicador">1/10</strong>
-            </p>
-            <p class="timer">
-                <i class="far fa-clock"></i>
-                Tiempo: <span id="tiempo">00:00</span>
             </p>
         </div>
 
@@ -624,16 +683,20 @@ if (!$dificultad_razonamiento) {
         detenerTemporizador();
 
         const aciertos = resultados.filter(r => r.correcta === 1).length;
+        const fallos = TOTAL_RONDAS - aciertos;
         const totalTiempo = resultados.reduce((acc, r) => acc + (parseInt(r.tiempo_segundos,10) || 0), 0);
 
         const overlayContent = document.getElementById("overlay-content");
 
+        const min = String(Math.floor(totalTiempo / 60)).padStart(2, '0');
+        const sec = String(totalTiempo % 60).padStart(2, '0');
+        const tiempoFormateado = `${min}:${sec}`;
+
         overlayContent.innerHTML = `
             <i class="fas fa-trophy" style="font-size:3rem; color:#facc15; margin-bottom:8px;"></i>
-            <p>¡Ejercicio completado!</p>
-            <p style="font-size:18px; font-weight:normal;">Has acertado <strong>${aciertos}</strong> de <strong>${TOTAL_RONDAS}</strong> secuencias.</p>
-            <p style="font-size:18px; font-weight:normal;">Fallos: <strong>${TOTAL_RONDAS - aciertos}</strong></p>
-            <p style="font-size:18px; font-weight:normal;">Tiempo total: <strong>${totalTiempo}s</strong></p>
+            <p>¡Juego completado!</p>
+            <p style="font-size:18px; font-weight:normal;">Aciertos: <strong>${aciertos}</strong> | Fallos: <strong>${fallos}</strong></p>
+            <p style="font-size:18px; font-weight:normal;">Tiempo jugado: <strong>${tiempoFormateado}</strong></p>
 
             <div style="margin-top: 14px;">
                 <button id="btn-restart" class="btn-game">Jugar otra vez</button>

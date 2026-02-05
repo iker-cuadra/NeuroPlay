@@ -10,16 +10,24 @@ requireRole("usuario");
 // OBTENER DIFICULTAD ASIGNADA PARA LÓGICA (Fácil / Medio / Difícil)
 $usuario_id = $_SESSION["usuario_id"];
 
-$stmt = $conexion->prepare("
-    SELECT dificultad_logica
-    FROM dificultades_asignadas
-    WHERE usuario_id = ?
-");
-$stmt->execute([$usuario_id]);
-$dificultad_logica = $stmt->fetchColumn();
+// Inicializar variable con valor por defecto
+$dificultad_logica = "Medio";
 
-// Dificultad por defecto si no hay asignada
-if (!$dificultad_logica) {
+try {
+    $stmt = $conexion->prepare("
+        SELECT dificultad_logica
+        FROM dificultades_asignadas
+        WHERE usuario_id = ?
+    ");
+    $stmt->execute([$usuario_id]);
+    $result = $stmt->fetchColumn();
+    
+    // Solo actualizar si se encontró un resultado
+    if ($result !== false && !empty($result)) {
+        $dificultad_logica = $result;
+    }
+} catch (Exception $e) {
+    // En caso de error, mantener el valor por defecto
     $dificultad_logica = "Medio";
 }
 ?>
@@ -29,6 +37,7 @@ if (!$dificultad_logica) {
 <head>
     <meta charset="UTF-8">
     <title>Juego de Lógica - Sudoku 4x4</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
     <style>
         html,
@@ -37,7 +46,6 @@ if (!$dificultad_logica) {
             padding: 0;
             height: 100%;
             font-family: Arial, Helvetica, sans-serif;
-           
             overflow: hidden;
             font-size: 18px;
         }
@@ -80,7 +88,7 @@ if (!$dificultad_logica) {
         /* CONTENEDOR DEL JUEGO (TARJETA MEJORADA) */
         .game-container {
             position: relative;
-            width: min(900px, 100%);
+            width: min(1100px, 100%);
             height: 100%;
             max-height: 100%;
 
@@ -145,7 +153,7 @@ if (!$dificultad_logica) {
         /* PASTILLA SUPERIOR "Lógica" */
         .game-title-pill {
             margin-top: 4px;
-            margin-bottom: 6px;
+            margin-bottom: 0;
             padding: 6px 18px;
             border-radius: 999px;
             background: #4a4a4a;
@@ -158,9 +166,43 @@ if (!$dificultad_logica) {
             z-index: 2;
         }
 
+        /* INFO SUPERIOR DERECHA (Timer y Dificultad) */
+        .top-right-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            text-align: right;
+            z-index: 3;
+        }
+
+        .difficulty-badge {
+            background: rgba(74, 74, 74, 0.95);
+            color: #ffffff;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .timer-display {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #4a4a4a;
+            color: #111827;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 800;
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 80px;
+        }
+
         .game-header {
-            margin-top: 30px;
-            margin-bottom: 10px;
+            margin-top: 15px;
+            margin-bottom: 8px;
             text-align: center;
             flex: 0 0 auto;
             position: relative;
@@ -176,19 +218,12 @@ if (!$dificultad_logica) {
 
         .game-header p {
             margin: 4px 0;
-            font-size: 19px;
+            font-size: 18px;
             color: #4b5563;
             line-height: 1.25;
         }
 
         .game-header p strong {
-            color: #111827;
-        }
-
-        .timer {
-            font-weight: 800;
-            font-size: 22px;
-            margin-top: 4px;
             color: #111827;
         }
 
@@ -199,7 +234,7 @@ if (!$dificultad_logica) {
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 6px 0;
+            padding: 0;
             box-sizing: border-box;
             position: relative;
             z-index: 2;
@@ -209,30 +244,30 @@ if (!$dificultad_logica) {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 20px;
+            gap: 30px;
             width: 100%;
             flex-wrap: wrap;
         }
 
         .sudoku-grid {
             display: grid;
-            grid-template-columns: repeat(4, minmax(70px, 1fr));
-            gap: 10px;
-            padding: 14px;
-            border-radius: 18px;
+            grid-template-columns: repeat(4, minmax(90px, 1fr));
+            gap: 14px;
+            padding: 20px;
+            border-radius: 20px;
             background: #f1f3f6;
             box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.10);
-            max-width: 380px;
+            max-width: 550px;
             width: 100%;
         }
 
         .sudoku-cell {
             width: 100%;
-            height: clamp(70px, 14vh, 110px);
-            border-radius: 12px;
+            height: clamp(90px, 16vh, 130px);
+            border-radius: 14px;
             border: 2px solid rgba(17, 24, 39, 0.55);
             text-align: center;
-            font-size: 36px;
+            font-size: 42px;
             font-weight: 800;
             box-sizing: border-box;
             box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
@@ -273,19 +308,19 @@ if (!$dificultad_logica) {
         .numbers-palette {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            padding: 14px;
-            border-radius: 18px;
+            gap: 16px;
+            padding: 20px;
+            border-radius: 20px;
             background: #f1f3f6;
             box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
         }
 
         .draggable-number {
-            width: 70px;
-            height: 70px;
-            border-radius: 12px;
+            width: 85px;
+            height: 85px;
+            border-radius: 14px;
             border: 2px solid rgba(255, 255, 255, 0.3);
-            font-size: 36px;
+            font-size: 42px;
             font-weight: 800;
             display: flex;
             align-items: center;
@@ -331,8 +366,8 @@ if (!$dificultad_logica) {
 
         /* MENSAJE / FEEDBACK */
         .logic-message {
-            margin-top: 10px;
-            font-size: 20px;
+            margin-top: 8px;
+            font-size: 19px;
             color: #1b5e20;
             font-weight: 700;
             min-height: 24px;
@@ -393,18 +428,18 @@ if (!$dificultad_logica) {
         }
 
         /* Ajustes para alturas más bajas */
-        @media (max-height: 760px) {
-            .sudoku-grid { max-width: 350px; gap: 8px; }
-            .sudoku-cell { height: clamp(65px, 13vh, 100px); font-size: 32px; }
-            .draggable-number { width: 60px; height: 60px; font-size: 32px; }
+        @media (max-height: 820px) {
+            .sudoku-grid { max-width: 480px; gap: 12px; }
+            .sudoku-cell { height: clamp(80px, 14vh, 115px); font-size: 38px; }
+            .draggable-number { width: 75px; height: 75px; font-size: 38px; }
             .game-header h2 { font-size: 34px; }
             .game-title-pill { font-size: 30px; }
         }
 
-        @media (max-height: 680px) {
-            .sudoku-grid { max-width: 330px; gap: 8px; }
-            .sudoku-cell { height: clamp(60px, 12vh, 90px); font-size: 30px; }
-            .draggable-number { width: 55px; height: 55px; font-size: 30px; }
+        @media (max-height: 720px) {
+            .sudoku-grid { max-width: 420px; gap: 10px; }
+            .sudoku-cell { height: clamp(70px, 12vh, 100px); font-size: 34px; }
+            .draggable-number { width: 65px; height: 65px; font-size: 34px; }
             .game-header h2 { font-size: 32px; }
             .game-title-pill { font-size: 28px; padding: 6px 16px; }
         }
@@ -413,6 +448,18 @@ if (!$dificultad_logica) {
             .game-container { padding: 16px 14px 12px 14px; }
             .logic-area { flex-direction: column; }
             .numbers-palette { flex-direction: row; }
+            .top-right-info {
+                top: 12px;
+                right: 12px;
+            }
+            .difficulty-badge {
+                font-size: 14px;
+                padding: 5px 12px;
+            }
+            .timer-display {
+                font-size: 18px;
+                padding: 6px 14px;
+            }
         }
     </style>
 </head>
@@ -430,6 +477,17 @@ if (!$dificultad_logica) {
                 </svg>
             </a>
 
+            <!-- Info superior derecha -->
+            <div class="top-right-info">
+                <div class="difficulty-badge">
+                    Dificultad: <?= htmlspecialchars($dificultad_logica) ?>
+                </div>
+                <div class="timer-display">
+                    <i class="far fa-clock"></i>
+                    <span id="timer">00:00</span>
+                </div>
+            </div>
+
             <!-- Pastilla superior -->
             <div class="game-title-pill">Lógica</div>
 
@@ -437,8 +495,6 @@ if (!$dificultad_logica) {
             <div class="game-header">
                 <h2>Sudoku 4x4</h2>
                 <p>Arrastra los números del <strong>1 al 4</strong> a las casillas vacías, sin repetir en filas ni columnas.</p>
-                <p>Dificultad asignada: <strong><?= htmlspecialchars($dificultad_logica) ?></strong></p>
-                <p class="timer">Tiempo: <span id="timer">00:00</span></p>
             </div>
 
             <!-- Cuerpo (tablero) -->
@@ -454,11 +510,7 @@ if (!$dificultad_logica) {
 
             <!-- OVERLAY FINAL -->
             <div id="game-overlay" class="game-overlay">
-                <div class="overlay-content">
-                    <p>¡Sudoku completado!</p>
-                    <button id="btn-restart" class="btn-game" type="button">Jugar otra vez</button>
-                    <button id="btn-volver" class="btn-game" type="button">Volver al panel</button>
-                </div>
+                <div id="overlay-content" class="overlay-content"></div>
             </div>
 
             <!-- OVERLAY INICIAL (antes de empezar) -->
@@ -756,15 +808,54 @@ if (!$dificultad_logica) {
                     dificultad: dificultadLogicaBD,
                     aciertos: aciertos,
                     fallos: fallos,
-                    nivel_alcanzado: totalVacias, // en sudoku: cuántas vacías completó (aquí completó todas)
+                    nivel_alcanzado: totalVacias,
                     detalles_json: JSON.stringify(detalles)
                 });
 
-                msg.textContent = "¡Muy bien! Has completado el sudoku correctamente. Tiempo: " +
-                    document.getElementById('timer').textContent;
+                msg.textContent = "";
                 msg.style.color = '#1b5e20';
 
-                showOverlay();
+                // Mostrar resumen final
+                mostrarResumenFinal(segundosTotales);
+            }
+        }
+
+        function mostrarResumenFinal(tiempoTotal) {
+            const overlayContent = document.getElementById('overlay-content');
+            
+            const min = String(Math.floor(tiempoTotal / 60)).padStart(2, '0');
+            const sec = String(tiempoTotal % 60).padStart(2, '0');
+            const tiempoFormateado = `${min}:${sec}`;
+
+            overlayContent.innerHTML = `
+                <i class="fas fa-trophy" style="font-size:3rem; color:#facc15; margin-bottom:8px;"></i>
+                <p>¡Sudoku completado!</p>
+                <p style="font-size:18px; font-weight:normal;">Aciertos: <strong>${aciertos}</strong> | Fallos: <strong>${fallos}</strong></p>
+                <p style="font-size:18px; font-weight:normal;">Tiempo jugado: <strong>${tiempoFormateado}</strong></p>
+                
+                <div style="margin-top: 14px;">
+                    <button id="btn-restart" class="btn-game">Jugar otra vez</button>
+                    <button id="btn-volver" class="btn-game">Volver al panel</button>
+                </div>
+            `;
+
+            showOverlay();
+
+            // Re-asignar eventos a los nuevos botones
+            const btnRestart = document.getElementById('btn-restart');
+            const btnVolver = document.getElementById('btn-volver');
+
+            if (btnRestart) {
+                btnRestart.addEventListener('click', function () {
+                    hideOverlay();
+                    loadLogicGame(document.getElementById("zona-logica"));
+                });
+            }
+
+            if (btnVolver) {
+                btnVolver.addEventListener('click', function () {
+                    window.location.href = "../../usuario.php";
+                });
             }
         }
 
@@ -792,22 +883,6 @@ if (!$dificultad_logica) {
 
             if (btnStartBack) {
                 btnStartBack.addEventListener('click', function () {
-                    window.location.href = "../../usuario.php";
-                });
-            }
-
-            const btnRestart = document.getElementById('btn-restart');
-            const btnVolver = document.getElementById('btn-volver');
-
-            if (btnRestart) {
-                btnRestart.addEventListener('click', function () {
-                    hideOverlay();
-                    loadLogicGame(area);
-                });
-            }
-
-            if (btnVolver) {
-                btnVolver.addEventListener('click', function () {
                     window.location.href = "../../usuario.php";
                 });
             }
