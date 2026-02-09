@@ -822,14 +822,13 @@ try {
 
         function mostrarResumenFinal(tiempoTotal) {
             const overlayContent = document.getElementById('overlay-content');
-            
             const min = String(Math.floor(tiempoTotal / 60)).padStart(2, '0');
             const sec = String(tiempoTotal % 60).padStart(2, '0');
             const tiempoFormateado = `${min}:${sec}`;
 
             overlayContent.innerHTML = `
                 <i class="fas fa-trophy" style="font-size:3rem; color:#facc15; margin-bottom:8px;"></i>
-                <p>¡Sudoku completado!</p>
+                <p>¡Juego completado!</p>
                 <p style="font-size:18px; font-weight:normal;">Aciertos: <strong>${aciertos}</strong> | Fallos: <strong>${fallos}</strong></p>
                 <p style="font-size:18px; font-weight:normal;">Tiempo jugado: <strong>${tiempoFormateado}</strong></p>
                 

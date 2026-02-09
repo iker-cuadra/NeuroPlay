@@ -842,19 +842,22 @@ html, body {
                             <span class="filter-count"><?= (int)$totalCount ?></span>
                         </button>
 
-                        <?php if (!empty($juegosDisponibles['memoria'])): ?>
-                            <button type="button" class="filter-btn" data-filter="memoria">
-                                <i class="fas fa-brain"></i>
-                                Memoria
-                                <span class="filter-count"><?= (int)$counts['memoria'] ?></span>
-                            </button>
-                        <?php endif; ?>
+                      
 
                         <?php if (!empty($juegosDisponibles['logica'])): ?>
                             <button type="button" class="filter-btn" data-filter="logica">
                                 <i class="fas fa-lightbulb"></i>
                                 Lógica
                                 <span class="filter-count"><?= (int)$counts['logica'] ?></span>
+                            </button>
+
+                            
+                        <?php endif; ?>
+                          <?php if (!empty($juegosDisponibles['memoria'])): ?>
+                            <button type="button" class="filter-btn" data-filter="memoria">
+                                <i class="fas fa-brain"></i>
+                                Memoria
+                                <span class="filter-count"><?= (int)$counts['memoria'] ?></span>
                             </button>
                         <?php endif; ?>
 

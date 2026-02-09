@@ -776,7 +776,7 @@ try {
                 if (overlayContent) {
                     overlayContent.innerHTML = `
                      <i class="fas fa-trophy" style="font-size:3rem; color:#facc15; margin-bottom:8px;"></i>
-                     <h3>¡Juego terminado!</h3>
+                     <h3>¡Juego completado!</h3>
                     <p>Puntuación (0-100): <strong>${puntuacionNormalizada}</strong></p>
                     <p>Score (cruda): <strong>${gameScore}</strong></p>
                     <p>Aciertos: <strong>${aciertos}</strong> | Fallos: <strong>${fallos}</strong></p>
