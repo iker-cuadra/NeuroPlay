@@ -113,6 +113,87 @@ try {
             100% { background-position: 100% 100%; }
         }
 
+        /* PARTÍCULAS FLOTANTES DECORATIVAS */
+        .floating-particles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            background: radial-gradient(circle, rgba(255,255,255,0.8), rgba(255,255,255,0));
+            border-radius: 50%;
+            animation: float linear infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .particle:nth-child(1) {
+            left: 10%;
+            width: 8px;
+            height: 8px;
+            animation-duration: 15s;
+            animation-delay: 0s;
+        }
+
+        .particle:nth-child(2) {
+            left: 25%;
+            width: 5px;
+            height: 5px;
+            animation-duration: 12s;
+            animation-delay: 2s;
+        }
+
+        .particle:nth-child(3) {
+            left: 40%;
+            width: 10px;
+            height: 10px;
+            animation-duration: 18s;
+            animation-delay: 4s;
+        }
+
+        .particle:nth-child(4) {
+            left: 60%;
+            width: 6px;
+            height: 6px;
+            animation-duration: 14s;
+            animation-delay: 1s;
+        }
+
+        .particle:nth-child(5) {
+            left: 75%;
+            width: 9px;
+            height: 9px;
+            animation-duration: 16s;
+            animation-delay: 3s;
+        }
+
+        .particle:nth-child(6) {
+            left: 90%;
+            width: 7px;
+            height: 7px;
+            animation-duration: 13s;
+            animation-delay: 5s;
+        }
+
         .layout {
             min-height: 100vh;
             display: flex;
@@ -166,22 +247,46 @@ try {
             to { opacity: 1; }
         }
 
-        /* BOTÓN VOLVER */
+        /* BOTÓN VOLVER MEJORADO */
         .back-arrow {
             position: absolute;
             top: 15px;
             left: 15px;
-            width: 38px;
-            height: 38px;
+            width: 48px;
+            height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             opacity: 0;
             animation: fadeIn 0.6s ease forwards 0.4s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
-        .back-arrow:hover { transform: scale(1.2) translateX(-3px); }
+        
+        .back-arrow:hover { 
+            transform: translateX(-8px) scale(1.15);
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .back-arrow:active {
+            transform: translateX(-5px) scale(1.05);
+        }
+
+        .back-arrow svg {
+            transition: transform 0.3s ease;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        .back-arrow:hover svg {
+            transform: translateX(-3px);
+        }
 
         .user-role {
             position: absolute;
@@ -200,292 +305,372 @@ try {
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            padding: 30px 16px;
+            padding: 40px 16px;
             overflow-y: auto;
         }
 
         .panel { 
-            width: min(1150px, 95vw); 
+            width: min(1200px, 95vw); 
             background: transparent;
             border-radius: 24px; 
-            padding: 35px; 
-            box-shadow: none;
-            backdrop-filter: none;
+            padding: 20px; 
             margin-bottom: 30px;
+        }
+
+        /* HEADER DEL PANEL CON GLASSMORPHISM */
+        .panel-header {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 30px 40px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards 0.4s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .panel-title { 
-            font-size: 26px; 
+            font-size: 36px; 
             font-weight: 800; 
-            margin-bottom: 25px; 
+            margin-bottom: 12px; 
             display: flex; 
             align-items: center; 
-            gap: 12px; 
+            justify-content: center;
+            gap: 15px; 
             color: white;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2); 
-            padding-bottom: 15px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .panel-title i {
+            font-size: 38px;
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
         }
 
         .subtitle {
-            text-align: center;
-            color: white;
-            font-size: 15px;
-            margin-bottom: 30px;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 16px;
             font-weight: 400;
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
         }
 
-        /* CONTENEDOR DE PROFESIONALES CON SCROLL LATERAL */
-        .profesionales-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 1000px;
-            margin: 30px auto 0;
-            padding: 0 90px;
-        }
-
-        .profesionales-scroll {
-            display: flex;
+        /* GRID DE PROFESIONALES */
+        .profesionales-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 30px;
-            overflow: hidden;
-            scroll-behavior: smooth;
-            padding: 20px 10px 30px;
-            scroll-snap-type: x mandatory;
-            justify-content: flex-start;
-            width: 960px;
+            padding: 10px;
         }
 
-        .profesionales-scroll::-webkit-scrollbar {
-            display: none;
-        }
-
-        /* FLECHAS DE NAVEGACIÓN MEJORADAS */
-        .scroll-arrow {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 55px;
-            height: 55px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 10;
-            border: 3px solid rgba(59, 130, 246, 0.2);
-            backdrop-filter: blur(10px);
-        }
-
-        .scroll-arrow:hover {
-            background: #3b82f6;
-            transform: translateY(-50%) scale(1.15);
-            box-shadow: 0 15px 40px rgba(59, 130, 246, 0.4);
-            border-color: #3b82f6;
-        }
-
-        .scroll-arrow:hover i {
-            color: white;
-            transform: scale(1.2);
-        }
-
-        .scroll-arrow:active {
-            transform: translateY(-50%) scale(1.05);
-        }
-
-        .scroll-arrow i {
-            font-size: 22px;
-            color: #3b82f6;
-            transition: all 0.3s ease;
-        }
-
-        .scroll-arrow.left {
-            left: -80px;
-        }
-
-        .scroll-arrow.right {
-            right: -80px;
-        }
-
-        .scroll-arrow.disabled {
-            opacity: 0.2;
-            cursor: not-allowed;
-            pointer-events: none;
-            transform: translateY(-50%) scale(0.9);
-        }
-
-        /* TARJETAS PROFESIONALES SIN HOVER */
+        /* TARJETA PROFESIONAL ESTILO CRISTAL */
         .profesional-card {
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 40px 30px 30px;
-            border-radius: 24px;
-            background: white;
-            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15);
+            padding: 40px 30px;
+            border-radius: 28px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                        inset 0 -1px 0 rgba(255, 255, 255, 0.1);
             cursor: pointer;
-            border: 2px solid transparent;
-            width: 300px;
-            min-width: 300px;
-            flex-shrink: 0;
-            scroll-snap-align: start;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            overflow: hidden;
             opacity: 0;
-            transform: translateX(-50px) translateY(20px);
-            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: scale(0.9) translateY(30px);
+            animation: cardPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .profesional-card.visible {
-            opacity: 1;
-            transform: translateX(0) translateY(0);
+        .profesional-card:nth-child(1) { animation-delay: 0.5s; }
+        .profesional-card:nth-child(2) { animation-delay: 0.6s; }
+        .profesional-card:nth-child(3) { animation-delay: 0.7s; }
+        .profesional-card:nth-child(4) { animation-delay: 0.8s; }
+        .profesional-card:nth-child(5) { animation-delay: 0.9s; }
+        .profesional-card:nth-child(6) { animation-delay: 1s; }
+
+        @keyframes cardPop {
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
-        .profesional-card:nth-child(1).visible { transition-delay: 0.1s; }
-        .profesional-card:nth-child(2).visible { transition-delay: 0.2s; }
-        .profesional-card:nth-child(3).visible { transition-delay: 0.3s; }
-        .profesional-card:nth-child(4).visible { transition-delay: 0.1s; }
-        .profesional-card:nth-child(5).visible { transition-delay: 0.2s; }
-        .profesional-card:nth-child(6).visible { transition-delay: 0.3s; }
-
-        /* Solo efecto al hacer clic */
-        .profesional-card:active {
-            transform: scale(0.98);
+        .profesional-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 12px 30px rgba(59, 130, 246, 0.15),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                        inset 0 -1px 0 rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.5);
         }
 
-        /* Imagen del profesional */
+        /* IMAGEN CON ANIMACIÓN */
+        .prof-image-wrapper {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 25px;
+        }
+
         .profesional-card img {
-            width: 120px;
-            height: 120px;
+            width: 130px;
+            height: 130px;
             border-radius: 50%;
             object-fit: cover;
-            border: 4px solid #f3f4f6;
-            margin-bottom: 20px;
+            border: 5px solid white;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transition: all 0.4s ease;
         }
 
-        /* Información del profesional */
+        .profesional-card:hover img {
+            transform: scale(1.04);
+            box-shadow: 0 10px 28px rgba(59, 130, 246, 0.25);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+
+        /* INFORMACIÓN DEL PROFESIONAL */
         .prof-info {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             width: 100%;
-        }
-
-        .profesional-card h2 {
-            font-size: 1.3rem;
-            margin: 0 0 8px;
-            color: #1f2937;
-            font-weight: 600;
+            position: relative;
+            z-index: 1;
         }
 
         .prof-role {
-            display: inline-block;
-            font-size: 0.75rem;
-            color: #3b82f6;
-            background: #eff6ff;
-            padding: 5px 14px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            font-weight: 600;
-        }
-
-        .profesional-card p {
-            font-size: 0.9rem;
-            color: #6b7280;
-            margin: 0;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: 6px;
+            font-size: 0.7rem;
+            color: #3b82f6;
+            background: rgba(239, 246, 255, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
         }
 
-        .profesional-card p i {
+        /* Efecto de brillo en el badge */
+        .prof-role::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.4), transparent);
+            transform: rotate(45deg);
+            animation: badgeShine 3s ease-in-out infinite;
+        }
+
+        @keyframes badgeShine {
+            0%, 100% { transform: translateX(-100%) rotate(45deg); }
+            50% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        .profesional-card:hover .prof-role {
+            transform: scale(1.02);
+            background: rgba(239, 246, 255, 0.7);
+            box-shadow: 0 3px 10px rgba(59, 130, 246, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .prof-role i {
             font-size: 0.8rem;
+            animation: iconBounce 2s ease-in-out infinite;
         }
 
-        /* Botón de acción */
-        .chat-indicator {
-            width: 100%;
-            color: white;
-            font-weight: 600;
-            font-size: 15px;
+        @keyframes iconBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+
+        .profesional-card h2 {
+            font-size: 1.4rem;
+            margin: 0 0 12px;
+            color: #1f2937;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .prof-email {
+            font-size: 0.85rem;
+            color: #4b5563;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            padding: 14px 20px;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            border-radius: 14px;
+            padding: 8px 16px;
+            background: rgba(249, 250, 251, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 12px;
+            margin: 0;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .prof-email i {
+            color: #3b82f6;
+            font-size: 0.9rem;
+        }
+
+        /* BOTÓN CON EFECTO CRISTAL */
+        .chat-button {
+            width: 100%;
+            color: #3b82f6;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 24px;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid rgba(59, 130, 246, 0.5);
+            border-radius: 16px;
             margin-top: auto;
-            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.5);
         }
 
-        .chat-indicator i {
+        .profesional-card:hover .chat-button {
+            background: rgba(59, 130, 246, 0.85);
+            color: white;
+            border-color: rgba(59, 130, 246, 0.7);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.25),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(15px);
+        }
+
+        .chat-button i {
             font-size: 16px;
+            transition: all 0.3s ease;
         }
 
-        /* Estado vacío */
+        .profesional-card:hover .chat-button i {
+            transform: translateX(3px);
+        }
+
+        .chat-button span {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ESTADO VACÍO MEJORADO */
         .empty-state {
             width: 100%;
             text-align: center;
-            padding: 80px 20px;
+            padding: 100px 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .empty-state-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid rgba(255, 255, 255, 0.3);
         }
 
         .empty-state i {
-            font-size: 70px;
-            color: rgba(255, 255, 255, 0.3);
-            margin-bottom: 20px;
+            font-size: 50px;
+            color: rgba(255, 255, 255, 0.8);
         }
 
         .empty-state h3 {
-            font-size: 20px;
+            font-size: 26px;
             color: white;
-            margin-bottom: 10px;
-            font-weight: 600;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 12px;
+            font-weight: 700;
+            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
         }
 
         .empty-state p {
-            font-size: 15px;
-            color: rgba(255, 255, 255, 0.8);
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.85);
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            margin: 0 auto;
         }
 
         /* Responsive */
         @media (max-width: 900px) {
             .center-title { font-size: 36px; }
-            .profesionales-wrapper {
-                padding: 0 50px;
-            }
-            .scroll-arrow {
-                width: 45px;
-                height: 45px;
-            }
-            .profesional-card {
-                min-width: 280px;
+            .panel-title { font-size: 30px; }
+            .profesionales-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 25px;
             }
         }
 
         @media (max-width: 600px) {
             .center-title { font-size: 26px; letter-spacing: 2px; }
-            .panel { padding: 25px 20px; }
-            .profesionales-wrapper {
-                padding: 0 45px;
+            .panel { padding: 15px; }
+            .panel-header {
+                padding: 25px 20px;
             }
-            .scroll-arrow {
-                width: 40px;
-                height: 40px;
+            .panel-title { 
+                font-size: 24px;
+                flex-direction: column;
+                gap: 10px;
             }
-            .scroll-arrow i {
-                font-size: 16px;
+            .subtitle {
+                font-size: 14px;
+            }
+            .profesionales-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
             }
             .profesional-card {
-                min-width: 260px;
+                padding: 30px 25px;
             }
             .profesional-card img {
-                width: 100px;
-                height: 100px;
+                width: 110px;
+                height: 110px;
             }
         }
     </style>
@@ -493,6 +678,16 @@ try {
 <body>
 
     <div class="canvas-bg"></div>
+    
+    <!-- PARTÍCULAS FLOTANTES -->
+    <div class="floating-particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
 
     <div class="layout">
         <div class="header">
@@ -507,136 +702,55 @@ try {
 
         <div class="page-content">
             <div class="panel">
-                <h1 class="panel-title">
-                    <i class="fas fa-user-md"></i> Nuestros Profesionales
-                </h1>
-                <p class="subtitle">Contacta directamente con los profesionales de nuestro centro</p>
+                <div class="panel-header">
+                    <h1 class="panel-title">
+                        <i class="fas fa-user-md"></i>
+                        <span>Nuestros Profesionales</span>
+                    </h1>
+                    <p class="subtitle">Conecta directamente con el equipo especializado de nuestro centro</p>
+                </div>
 
-                <div class="profesionales-wrapper">
-                    <?php if (count($profesionales) > 0): ?>
-                        <div class="scroll-arrow left" onclick="scrollProfesionales(-1)">
-                            <i class="fas fa-chevron-left"></i>
-                        </div>
-                        
-                        <div class="profesionales-scroll" id="profesionales-scroll">
-                            <?php foreach ($profesionales as $profesional): ?>
-                                <div class="profesional-card" onclick="location.href='chat.php?destinatario_id=<?= $profesional['id'] ?>'">
+                <?php if (count($profesionales) > 0): ?>
+                    <div class="profesionales-grid">
+                        <?php foreach ($profesionales as $profesional): ?>
+                            <div class="profesional-card" onclick="location.href='chat.php?destinatario_id=<?= $profesional['id'] ?>'">
+                                
+                                <div class="prof-image-wrapper">
                                     <img src="uploads/<?= htmlspecialchars(foto_a_mostrar($profesional['foto'] ?? '', $profesional['rol']), ENT_QUOTES) ?>" 
                                          alt="<?= htmlspecialchars($profesional['nombre']) ?>">
-                                    
-                                    <div class="prof-info">
-                                        <span class="prof-role">Profesional</span>
-                                        <h2><?= htmlspecialchars($profesional['nombre']) ?></h2>
-                                        <p><i class="fas fa-envelope"></i><?= htmlspecialchars($profesional['email']) ?></p>
-                                    </div>
-                                    <div class="chat-indicator">
-                                        <i class="fas fa-paper-plane"></i>
-                                        <span>Enviar Mensaje</span>
-                                    </div>
                                 </div>
-                            <?php endforeach; ?>
-                        </div>
-                        
-                        <div class="scroll-arrow right" onclick="scrollProfesionales(1)">
-                            <i class="fas fa-chevron-right"></i>
-                        </div>
-                    <?php else: ?>
-                        <div class="empty-state">
+                                
+                                <div class="prof-info">
+                                    <span class="prof-role">
+                                        <i class="fas fa-stethoscope"></i>
+                                        Profesional
+                                    </span>
+                                    <h2><?= htmlspecialchars($profesional['nombre']) ?></h2>
+                                    <p class="prof-email">
+                                        <i class="fas fa-envelope"></i>
+                                        <?= htmlspecialchars($profesional['email']) ?>
+                                    </p>
+                                </div>
+                                
+                                <div class="chat-button">
+                                    <i class="fas fa-comments"></i>
+                                    <span>Abrir Chat</span>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
                             <i class="fas fa-user-clock"></i>
-                            <h3>No hay profesionales disponibles</h3>
-                            <p>En este momento no hay profesionales activos en el sistema</p>
                         </div>
-                    <?php endif; ?>
-                </div>
+                        <h3>No hay profesionales disponibles</h3>
+                        <p>En este momento no hay profesionales activos en el sistema. Por favor, inténtalo más tarde.</p>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 
-    <script>
-        let currentPage = 0;
-        const cardsPerPage = 3;
-        
-        function scrollProfesionales(direction) {
-            const container = document.getElementById('profesionales-scroll');
-            const cards = container.querySelectorAll('.profesional-card');
-            const totalCards = cards.length;
-            const maxPages = Math.ceil(totalCards / cardsPerPage);
-            
-            // Calcular nueva página
-            currentPage += direction;
-            if (currentPage < 0) currentPage = 0;
-            if (currentPage >= maxPages) currentPage = maxPages - 1;
-            
-            // Calcular scroll position (ancho de tarjeta + gap) * cards por página
-            const cardWidth = 300;
-            const gap = 30;
-            const scrollAmount = (cardWidth + gap) * cardsPerPage * currentPage;
-            
-            // Hacer scroll suave
-            container.scrollTo({
-                left: scrollAmount,
-                behavior: 'smooth'
-            });
-            
-            // Animar tarjetas visibles
-            setTimeout(() => {
-                animateVisibleCards();
-            }, 100);
-            
-            // Actualizar flechas
-            setTimeout(updateArrows, 400);
-        }
-        
-        function animateVisibleCards() {
-            const container = document.getElementById('profesionales-scroll');
-            const cards = container.querySelectorAll('.profesional-card');
-            
-            // Remover clase visible de todas
-            cards.forEach(card => card.classList.remove('visible'));
-            
-            // Agregar clase visible a las que están en la página actual
-            const startIndex = currentPage * cardsPerPage;
-            const endIndex = Math.min(startIndex + cardsPerPage, cards.length);
-            
-            for (let i = startIndex; i < endIndex; i++) {
-                setTimeout(() => {
-                    cards[i].classList.add('visible');
-                }, (i - startIndex) * 100);
-            }
-        }
-        
-        function updateArrows() {
-            const container = document.getElementById('profesionales-scroll');
-            const leftArrow = document.querySelector('.scroll-arrow.left');
-            const rightArrow = document.querySelector('.scroll-arrow.right');
-            
-            if (!container || !leftArrow || !rightArrow) return;
-            
-            const cards = container.querySelectorAll('.profesional-card');
-            const totalCards = cards.length;
-            const maxPages = Math.ceil(totalCards / cardsPerPage);
-            
-            // Deshabilitar flecha izquierda si está en la primera página
-            if (currentPage <= 0) {
-                leftArrow.classList.add('disabled');
-            } else {
-                leftArrow.classList.remove('disabled');
-            }
-            
-            // Deshabilitar flecha derecha si está en la última página
-            if (currentPage >= maxPages - 1) {
-                rightArrow.classList.add('disabled');
-            } else {
-                rightArrow.classList.remove('disabled');
-            }
-        }
-        
-        // Inicializar
-        document.addEventListener('DOMContentLoaded', () => {
-            currentPage = 0;
-            animateVisibleCards();
-            updateArrows();
-        });
-    </script>
 </body>
 </html>
